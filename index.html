@@ -25,13 +25,16 @@
 </head>
 <body>
   <h1>🏚️ Betrayal - 50個房間板塊</h1>
-  <p class="progress">進度: 30/50 (60%) | 第三批完成</p>
+  <p class="progress">進度: 40/50 (80%) | 第四批完成</p>
   
   <h2>🟢 Ground Floor (1F) - 18/18 ✅</h2>
   <div class="grid" id="ground"></div>
   
-  <h2>🟡 Upper Floor (2F) - 12/16</h2>
+  <h2>🟡 Upper Floor (2F) - 16/16 ✅</h2>
   <div class="grid" id="upper"></div>
+  
+  <h2>🔴 Basement (B1) - 6/16</h2>
+  <div class="grid" id="basement"></div>
 
   <script>
     const groundRooms = [
@@ -68,7 +71,19 @@
       { id: '28-balcony', name: '陽台', en: 'Balcony', level: '2f', omen: false, event: true },
       { id: '29-tower', name: '塔樓', en: 'Tower', level: '2f', omen: true, event: false },
       { id: '30-observatory', name: '天文台', en: 'Observatory', level: '2f', omen: true, event: true },
+      { id: '31-solarium', name: '日光浴室', en: 'Solarium', level: '2f', omen: false, event: true },
+      { id: '32-sewing_room', name: '縫紉室', en: 'Sewing Room', level: '2f', omen: false, event: true },
+      { id: '33-dressing_room', name: '更衣室', en: 'Dressing Room', level: '2f', omen: false, event: true },
+      { id: '34-sitting_room', name: '起居室', en: 'Sitting Room', level: '2f', omen: false, event: true },
     ];
+
+    const basementRooms = [
+      { id: '35-cellar', name: '地窖', en: 'Cellar', level: 'b1', omen: false, event: true },
+      { id: '36-wine_cellar', name: '酒窖', en: 'Wine Cellar', level: 'b1', omen: true, event: false },
+      { id: '37-root_cellar', name: '蔬菜窖', en: 'Root Cellar', level: 'b1', omen: false, event: true },
+      { id: '38-workshop', name: '工作坊', en: 'Workshop', level: 'b1', omen: false, event: true },
+      { id: '39-laundry', name: '洗衣房', en: 'Laundry Room', level: 'b1', omen: false, event: true },
+      { id: '40-storage', name: '儲藏室', en: 'Storage Room', level: 'b1', omen: false, event: true },
 
     function renderRoom(room, container) {
       const div = document.createElement('div');
@@ -87,6 +102,7 @@
     
     groundRooms.forEach(room => renderRoom(room, document.getElementById('ground')));
     upperRooms.forEach(room => renderRoom(room, document.getElementById('upper')));
+    basementRooms.forEach(room => renderRoom(room, document.getElementById('basement')));
   </script>
 </body>
 </html>
