@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Betrayal - 50個房間板塊</title>
+  <title>Betrayal - 50房間 + 角色 + 物品</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 20px; }
@@ -21,22 +21,57 @@
     .level-1f { border-left: 3px solid #4ade80; }
     .level-2f { border-left: 3px solid #fbbf24; }
     .level-b1 { border-left: 3px solid #f87171; }
+    .character { border-left: 3px solid #3b82f6; }
+    .card-item { border-left: 3px solid #60a5fa; }
+    .card-omen { border-left: 3px solid #a78bfa; }
+    .card-event { border-left: 3px solid #4ade80; }
+    .section-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .tab { padding: 10px 20px; background: rgba(255,255,255,0.1); border-radius: 20px; cursor: pointer; transition: all 0.3s; }
+    .tab:hover { background: rgba(255,255,255,0.2); }
+    .tab.active { background: #ff6b6b; }
+    .section { display: none; }
+    .section.active { display: block; }
   </style>
 </head>
 <body>
-  <h1>🏚️ Betrayal - 50個房間板塊</h1>
-  <p class="progress">🎉 完成！50/50 (100%) | 所有房間板塊已產生</p>
+  <h1>🏚️ Betrayal - 完整素材庫</h1>
+  <p class="progress">🎉 50房間 + 6角色 + 物品卡 | 100% 完成</p>
   
-  <h2>🟢 Ground Floor (1F) - 18/18 ✅</h2>
-  <div class="grid" id="ground"></div>
-  
-  <h2>🟡 Upper Floor (2F) - 16/16 ✅</h2>
-  <div class="grid" id="upper"></div>
-  
-  <h2>🔴 Basement (B1) - 16/16 ✅</h2>
-  <div class="grid" id="basement"></div>
+  <div class="section-tabs">
+    <div class="tab active" onclick="showSection('rooms')">🚪 房間 (50)</div>
+    <div class="tab" onclick="showSection('characters')">👤 角色 (6)</div>
+    <div class="tab" onclick="showSection('items')">🎒 物品卡</div>
+  </div>
+
+  <div id="rooms" class="section active">
+    <h2>🟢 Ground Floor (1F) - 18/18 ✅</h2>
+    <div class="grid" id="ground"></div>
+    
+    <h2>🟡 Upper Floor (2F) - 16/16 ✅</h2>
+    <div class="grid" id="upper"></div>
+    
+    <h2>🔴 Basement (B1) - 16/16 ✅</h2>
+    <div class="grid" id="basement"></div>
+  </div>
+
+  <div id="characters" class="section">
+    <h2>👥 可玩角色 (6)</h2>
+    <div class="grid" id="characters-grid"></div>
+  </div>
+
+  <div id="items" class="section">
+    <h2>🎒 物品卡</h2>
+    <div class="grid" id="items-grid"></div>
+    
+    <h2>🔮 預兆卡</h2>
+    <div class="grid" id="omens-grid"></div>
+    
+    <h2>📜 事件卡</h2>
+    <div class="grid" id="events-grid"></div>
+  </div>
 
   <script>
+    // 房間資料
     const groundRooms = [
       { id: '01-foyer', name: '玄關', en: 'Foyer', level: '1f', omen: false, event: false },
       { id: '02-entrance_hall', name: '大廳入口', en: 'Entrance Hall', level: '1f', omen: false, event: true },
@@ -96,6 +131,16 @@
       { id: '50-chasm', name: '深淵', en: 'Chasm', level: 'b1', omen: true, event: true },
     ];
 
+    // 角色資料
+    const characters = [
+      { id: 'char-missy', name: '米西', en: 'Missy Dubourde', age: 9, color: '#FF69B4', desc: '9歲小女孩' },
+      { id: 'char-zoe', name: '柔伊', en: 'Zoe Ingstrom', age: 21, color: '#9370DB', desc: '21歲年輕女性' },
+      { id: 'char-brandon', name: '布蘭登', en: 'Brandon Jaspers', age: 35, color: '#4682B4', desc: '35歲成年男性' },
+      { id: 'char-vivian', name: '薇薇安', en: 'Vivian Lopez', age: 42, color: '#DC143C', desc: '42歲中年女性' },
+      { id: 'char-peter', name: '彼得', en: 'Peter Akimoto', age: 58, color: '#8B4513', desc: '58歲老年男性' },
+      { id: 'char-madame', name: '薩拉夫人', en: 'Madame Zostra', age: 67, color: '#4B0082', desc: '67歲神秘老婦' },
+    ];
+
     function renderRoom(room, container) {
       const div = document.createElement('div');
       div.className = `item level-${room.level}`;
@@ -110,10 +155,54 @@
       `;
       container.appendChild(div);
     }
-    
+
+    function renderCharacter(char, container) {
+      const div = document.createElement('div');
+      div.className = 'item character';
+      div.innerHTML = `
+        <img src="characters/${char.id}.svg" alt="${char.name}" onerror="this.style.background='${char.color}33'; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2240%22 fill=%22${encodeURIComponent(char.color)}%22 opacity=%220.5%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%23fff%22 font-size=%2220%22>${char.name[0]}</text></svg>'">
+        <div class="item-name">${char.name}</div>
+        <div class="item-en">${char.en}</div>
+        <div class="badges">
+          <span style="color:${char.color}; font-size:11px">● ${char.age}歲</span>
+        </div>
+      `;
+      container.appendChild(div);
+    }
+
+    function renderPlaceholder(container, title, count, type) {
+      for (let i = 1; i <= count; i++) {
+        const div = document.createElement('div');
+        div.className = `item ${type}`;
+        div.innerHTML = `
+          <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 140'><rect fill='%23222' width='100' height='140' rx='5'/><text x='50' y='70' text-anchor='middle' fill='%23666' font-size='12'>${title} ${i}</text></svg>" alt="${title} ${i}">
+          <div class="item-name">${title} ${i}</div>
+          <div class="item-en">Coming Soon</div>
+        `;
+        container.appendChild(div);
+      }
+    }
+
+    // 渲染房間
     groundRooms.forEach(room => renderRoom(room, document.getElementById('ground')));
     upperRooms.forEach(room => renderRoom(room, document.getElementById('upper')));
     basementRooms.forEach(room => renderRoom(room, document.getElementById('basement')));
+
+    // 渲染角色
+    characters.forEach(char => renderCharacter(char, document.getElementById('characters-grid')));
+
+    // 渲染佔位符
+    renderPlaceholder(document.getElementById('items-grid'), '物品卡', 6, 'card-item');
+    renderPlaceholder(document.getElementById('omens-grid'), '預兆卡', 6, 'card-omen');
+    renderPlaceholder(document.getElementById('events-grid'), '事件卡', 6, 'card-event');
+
+    // Tab 切換
+    function showSection(sectionId) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(sectionId).classList.add('active');
+      event.target.classList.add('active');
+    }
   </script>
 </body>
 </html>
