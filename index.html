@@ -25,7 +25,7 @@
 </head>
 <body>
   <h1>🏚️ Betrayal - 50個房間板塊</h1>
-  <p class="progress">進度: 40/50 (80%) | 第四批完成</p>
+  <p class="progress">🎉 完成！50/50 (100%) | 所有房間板塊已產生</p>
   
   <h2>🟢 Ground Floor (1F) - 18/18 ✅</h2>
   <div class="grid" id="ground"></div>
@@ -33,7 +33,7 @@
   <h2>🟡 Upper Floor (2F) - 16/16 ✅</h2>
   <div class="grid" id="upper"></div>
   
-  <h2>🔴 Basement (B1) - 6/16</h2>
+  <h2>🔴 Basement (B1) - 16/16 ✅</h2>
   <div class="grid" id="basement"></div>
 
   <script>
@@ -84,6 +84,17 @@
       { id: '38-workshop', name: '工作坊', en: 'Workshop', level: 'b1', omen: false, event: true },
       { id: '39-laundry', name: '洗衣房', en: 'Laundry Room', level: 'b1', omen: false, event: true },
       { id: '40-storage', name: '儲藏室', en: 'Storage Room', level: 'b1', omen: false, event: true },
+      { id: '41-dark_room', name: '暗房', en: 'Dark Room', level: 'b1', omen: true, event: true },
+      { id: '42-tunnel', name: '隧道', en: 'Tunnel', level: 'b1', omen: false, event: true },
+      { id: '43-catacombs', name: '地下墓穴', en: 'Catacombs', level: 'b1', omen: true, event: true },
+      { id: '44-dungeon', name: '地牢', en: 'Dungeon', level: 'b1', omen: true, event: false },
+      { id: '45-crypt', name: '墓穴', en: 'Crypt', level: 'b1', omen: true, event: false },
+      { id: '46-pentagram', name: '祭壇室', en: 'Ritual Room', level: 'b1', omen: true, event: true },
+      { id: '47-laboratory', name: '實驗室', en: 'Laboratory', level: 'b1', omen: true, event: true },
+      { id: '48-furnace', name: '鍋爐房', en: 'Furnace Room', level: 'b1', omen: false, event: true },
+      { id: '49-cave', name: '洞穴', en: 'Cave', level: 'b1', omen: true, event: true },
+      { id: '50-chasm', name: '深淵', en: 'Chasm', level: 'b1', omen: true, event: true },
+    ];
 
     function renderRoom(room, container) {
       const div = document.createElement('div');
