@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Betrayal - 遊戲素材展示</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #fff;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+      color: #ff6b6b;
+      text-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+    }
+    h2 {
+      margin: 30px 0 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #ff6b6b;
+      color: #ffd93d;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 20px;
+    }
+    .item {
+      background: rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 15px;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+    .item:hover {
+      transform: translateY(-5px);
+      background: rgba(255,255,255,0.15);
+    }
+    .item svg {
+      width: 100px;
+      height: 100px;
+      margin-bottom: 10px;
+    }
+    .item-name {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .item-desc {
+      font-size: 12px;
+      color: #aaa;
+    }
+    .color-box {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      margin: 0 auto 10px;
+      border: 2px solid #fff;
+    }
+  </style>
+</head>
+<body>
+  <h1>🏚️ Betrayal - 遊戲素材展示</h1>
+  
+  <h2>🚪 房間板塊</h2>
+  <div class="grid" id="rooms"></div>
+  
+  <h2>👤 角色頭像</h2>
+  <div class="grid" id="characters"></div>
+  
+  <h2>🎒 物品卡牌</h2>
+  <div class="grid" id="items"></div>
+  
+  <h2>🔮 預兆卡牌</h2>
+  <div class="grid" id="omens"></div>
+
+  <script>
+    // 房間資料
+    const rooms = [
+      { name: '大廳入口', color: '#D4A574', icon: 'entrance' },
+      { name: '走廊', color: '#8B7355', icon: 'hallway' },
+      { name: '廚房', color: '#6B8E6B', icon: 'kitchen' },
+      { name: '圖書室', color: '#8B6914', icon: 'library' },
+      { name: '臥室', color: '#8B4B4B', icon: 'bedroom' },
+      { name: '地下墓穴', color: '#4A4A4A', icon: 'crypt' },
+      { name: '祭壇室', color: '#4B0082', icon: 'pentagram' },
+      { name: '塔樓', color: '#5A6B8B', icon: 'tower' },
+      { name: '荒廢花園', color: '#2F5F2F', icon: 'garden' },
+      { name: '實驗室', color: '#4B6B4B', icon: 'laboratory' },
+    ];
+    
+    // 角色資料
+    const characters = [
+      { name: '米西', color: '#FF69B4', age: 9 },
+      { name: '柔伊', color: '#9370DB', age: 21 },
+      { name: '布蘭登', color: '#4682B4', age: 35 },
+      { name: '薇薇安', color: '#DC143C', age: 42 },
+      { name: '彼得', color: '#8B4513', age: 58 },
+      { name: '薩拉夫人', color: '#4B0082', age: 67 },
+    ];
+    
+    // 物品資料
+    const items = [
+      { name: '十字架', type: 'item', color: '#C0C0C0' },
+      { name: '醫療包', type: 'item', color: '#DC143C' },
+      { name: '手槍', type: 'item', color: '#4A4A4A' },
+      { name: '蠟燭', type: 'item', color: '#FFD700' },
+      { name: '地下室鑰匙', type: 'item', color: '#8B7355' },
+    ];
+    
+    // 預兆資料
+    const omens = [
+      { name: '染血的匕首', type: 'omen', color: '#8B0000' },
+      { name: '詭異的畫像', type: 'omen', color: '#4A3728' },
+      { name: '破碎的鏡子', type: 'omen', color: '#87CEEB' },
+      { name: '神秘的符咒', type: 'omen', color: '#4B0082' },
+      { name: '狗靈', type: 'omen', color: '#8B8B9B' },
+      { name: '家族戒指', type: 'omen', color: '#FFD700' },
+    ];
+
+    // 渲染函數
+    function renderGrid(data, containerId, type) {
+      const container = document.getElementById(containerId);
+      data.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        
+        if (type === 'room') {
+          div.innerHTML = `
+            <svg viewBox="0 0 100 100" style="background: ${item.color}30; border-radius: 8px;">
+              <rect x="10" y="10" width="80" height="80" fill="${item.color}" opacity="0.3" stroke="${item.color}" stroke-width="2"/>
+              <text x="50" y="55" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold">${item.name[0]}</text>
+            </svg>
+            <div class="item-name">${item.name}</div>
+            <div class="color-box" style="background: ${item.color}"></div>
+          `;
+        } else if (type === 'character') {
+          div.innerHTML = `
+            <svg viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="45" fill="${item.color}40" stroke="${item.color}" stroke-width="3"/>
+              <circle cx="35" cy="40" r="5" fill="#333"/>
+              <circle cx="65" cy="40" r="5" fill="#333"/>
+              <path d="M40 60 Q50 70 60 60" stroke="#333" stroke-width="2" fill="none"/>
+            </svg>
+            <div class="item-name">${item.name}</div>
+            <div class="item-desc">${item.age}歲</div>
+          `;
+        } else {
+          div.innerHTML = `
+            <svg viewBox="0 0 100 100">
+              <rect x="15" y="10" width="70" height="80" rx="5" fill="#2d3748" stroke="${item.color}" stroke-width="3"/>
+              <rect x="15" y="10" width="70" height="20" rx="5" fill="${item.color}"/>
+              <text x="50" y="60" text-anchor="middle" fill="#fff" font-size="10">${item.name[0]}</text>
+            </svg>
+            <div class="item-name">${item.name}</div>
+          `;
+        }
+        
+        container.appendChild(div);
+      });
+    }
+
+    // 渲染所有
+    renderGrid(rooms, 'rooms', 'room');
+    renderGrid(characters, 'characters', 'character');
+    renderGrid(items, 'items', 'card');
+    renderGrid(omens, 'omens', 'card');
+  </script>
+</body>
+</html>
