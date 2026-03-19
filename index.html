@@ -133,12 +133,12 @@
 
     // 角色資料
     const characters = [
-      { id: 'char-missy', name: '米西', en: 'Missy Dubourde', age: 9, color: '#FF69B4', desc: '9歲小女孩' },
-      { id: 'char-zoe', name: '柔伊', en: 'Zoe Ingstrom', age: 21, color: '#9370DB', desc: '21歲年輕女性' },
-      { id: 'char-brandon', name: '布蘭登', en: 'Brandon Jaspers', age: 35, color: '#4682B4', desc: '35歲成年男性' },
-      { id: 'char-vivian', name: '薇薇安', en: 'Vivian Lopez', age: 42, color: '#DC143C', desc: '42歲中年女性' },
-      { id: 'char-peter', name: '彼得', en: 'Peter Akimoto', age: 58, color: '#8B4513', desc: '58歲老年男性' },
-      { id: 'char-madame', name: '薩拉夫人', en: 'Madame Zostra', age: 67, color: '#4B0082', desc: '67歲神秘老婦' },
+      { id: 'missy', name: '米西', en: 'Missy Dubourde', age: 9, color: '#FF69B4', desc: '9歲小女孩' },
+      { id: 'zoe', name: '柔伊', en: 'Zoe Ingstrom', age: 21, color: '#9370DB', desc: '21歲年輕女性' },
+      { id: 'brandon', name: '布蘭登', en: 'Brandon Jaspers', age: 35, color: '#4682B4', desc: '35歲成年男性' },
+      { id: 'vivian', name: '薇薇安', en: 'Vivian Lopez', age: 42, color: '#DC143C', desc: '42歲中年女性' },
+      { id: 'peter', name: '彼得', en: 'Peter Akimoto', age: 58, color: '#8B4513', desc: '58歲老年男性' },
+      { id: 'madame', name: '薩拉夫人', en: 'Madame Zostra', age: 67, color: '#4B0082', desc: '67歲神秘老婦' },
     ];
 
     function renderRoom(room, container) {
@@ -160,7 +160,10 @@
       const div = document.createElement('div');
       div.className = 'item character';
       div.innerHTML = `
-        <img src="characters/${char.id}.svg" alt="${char.name}" onerror="this.style.background='${char.color}33'; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2240%22 fill=%22${encodeURIComponent(char.color)}%22 opacity=%220.5%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%23fff%22 font-size=%2220%22>${char.name[0]}</text></svg>'">
+        <div style="display:flex; gap:5px; margin-bottom:10px;">
+          <img src="characters/portrait-${char.id}.svg" alt="${char.name}" style="width:70px; height:70px; border-radius:50%;" onerror="this.style.background='${char.color}33'">
+          <img src="characters/full-${char.id}.svg" alt="${char.name}" style="width:70px; height:70px; border-radius:8px;" onerror="this.style.background='${char.color}33'">
+        </div>
         <div class="item-name">${char.name}</div>
         <div class="item-en">${char.en}</div>
         <div class="badges">

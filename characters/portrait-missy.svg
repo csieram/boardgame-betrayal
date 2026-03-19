@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="200" height="200">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF69B4"/><stop offset="100%" style="stop-color:#C71585"/>
+    </linearGradient>
+    <radialGradient id="faceGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#FFE4E1"/><stop offset="100%" style="stop-color:#FFC0CB"/>
+    </radialGradient>
+    <filter id="softShadow">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+      <feOffset dx="1" dy="1"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.3"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  
+  <!-- 背景圓形 -->
+  <circle cx="50" cy="50" r="48" fill="url(#bgGrad)" stroke="#8B008B" stroke-width="2"/>
+  
+  <!-- 頭髮後層（雙馬尾） -->
+  <ellipse cx="22" cy="45" rx="10" ry="14" fill="#8B4513" filter="url(#softShadow)"/>
+  <ellipse cx="78" cy="45" rx="10" ry="14" fill="#8B4513" filter="url(#softShadow)"/>
+  
+  <!-- 臉 -->
+  <circle cx="50" cy="50" r="26" fill="url(#faceGrad)" filter="url(#softShadow)"/>
+  
+  <!-- 瀏海 -->
+  <path d="M26,34 Q38,24 50,27 Q62,24 74,34 Q68,20 50,18 Q32,20 26,34" fill="#8B4513"/>
+  
+  <!-- 眉毛 -->
+  <path d="M38,39 Q42,37 46,39" fill="none" stroke="#8B4513" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M54,39 Q58,37 62,39" fill="none" stroke="#8B4513" stroke-width="1.5" stroke-linecap="round"/>
+  
+  <!-- 眼睛（大而明亮） -->
+  <ellipse cx="42" cy="47" rx="5" ry="6" fill="#FFF"/>
+  <ellipse cx="58" cy="47" rx="5" ry="6" fill="#FFF"/>
+  <circle cx="43" cy="48" r="3.5" fill="#4682B4"/>
+  <circle cx="57" cy="48" r="3.5" fill="#4682B4"/>
+  <circle cx="44" cy="47" r="1.5" fill="#FFF"/>
+  <circle cx="56" cy="47" r="1.5" fill="#FFF"/>
+  
+  <!-- 腮紅 -->
+  <ellipse cx="35" cy="57" rx="4" ry="2.5" fill="#FFB6C1" opacity="0.6"/>
+  <ellipse cx="65" cy="57" rx="4" ry="2.5" fill="#FFB6C1" opacity="0.6"/>
+  
+  <!-- 鼻子 -->
+  <circle cx="50" cy="54" r="1.2" fill="#FFB6C1"/>
+  
+  <!-- 微笑 -->
+  <path d="M44,63 Q50,69 56,63" fill="none" stroke="#CD853F" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- 蝴蝶結 -->
+  <path d="M50,20 L42,14 L42,24 Z" fill="#FF1493" filter="url(#softShadow)"/>
+  <path d="M50,20 L58,14 L58,24 Z" fill="#FF1493" filter="url(#softShadow)"/>
+  <circle cx="50" cy="20" r="2.5" fill="#C71585"/>
+</svg>
