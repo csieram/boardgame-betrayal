@@ -25,12 +25,12 @@
 </head>
 <body>
   <h1>🏚️ Betrayal - 50個房間板塊</h1>
-  <p class="progress">進度: 20/50 (40%) | 第二批完成</p>
+  <p class="progress">進度: 30/50 (60%) | 第三批完成</p>
   
   <h2>🟢 Ground Floor (1F) - 18/18 ✅</h2>
   <div class="grid" id="ground"></div>
   
-  <h2>🟡 Upper Floor (2F) - 2/16</h2>
+  <h2>🟡 Upper Floor (2F) - 12/16</h2>
   <div class="grid" id="upper"></div>
 
   <script>
@@ -58,6 +58,16 @@
     const upperRooms = [
       { id: '19-master_bedroom', name: '主臥室', en: 'Master Bedroom', level: '2f', omen: true, event: false },
       { id: '20-bedroom', name: '臥室', en: 'Bedroom', level: '2f', omen: false, event: true },
+      { id: '21-guest_room', name: '客房', en: 'Guest Room', level: '2f', omen: false, event: true },
+      { id: '22-child_room', name: '兒童房', en: "Child's Room", level: '2f', omen: true, event: false },
+      { id: '23-nursery', name: '嬰兒房', en: 'Nursery', level: '2f', omen: true, event: true },
+      { id: '24-bathroom', name: '浴室', en: 'Bathroom', level: '2f', omen: false, event: true },
+      { id: '25-hallway', name: '走廊', en: 'Hallway', level: '2f', omen: false, event: true },
+      { id: '26-loft', name: '閣樓', en: 'Loft', level: '2f', omen: false, event: true },
+      { id: '27-attic', name: '頂樓', en: 'Attic', level: '2f', omen: true, event: true },
+      { id: '28-balcony', name: '陽台', en: 'Balcony', level: '2f', omen: false, event: true },
+      { id: '29-tower', name: '塔樓', en: 'Tower', level: '2f', omen: true, event: false },
+      { id: '30-observatory', name: '天文台', en: 'Observatory', level: '2f', omen: true, event: true },
     ];
 
     function renderRoom(room, container) {
