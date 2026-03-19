@@ -1,53 +1,93 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="300" height="300">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="400" height="400">
   <defs>
     <linearGradient id="floorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#7B6354"/><stop offset="50%" style="stop-color:#5A4A3A"/><stop offset="100%" style="stop-color:#3A2A1A"/>
+      <stop offset="0%" style="stop-color:#7B6354"/><stop offset="30%" style="stop-color:#5A4A3A"/><stop offset="60%" style="stop-color:#4A3A2A"/><stop offset="100%" style="stop-color:#2A1A0A"/>
     </linearGradient>
-    <pattern id="floorPattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-      <rect width="20" height="20" fill="url(#floorGrad)"/>
-      <line x1="0" y1="0" x2="0" y2="20" stroke="#2A1A0A" stroke-width="0.5" opacity="0.5"/>
-      <line x1="0" y1="0" x2="20" y2="0" stroke="#2A1A0A" stroke-width="0.5" opacity="0.5"/>
+    <pattern id="woodPattern" x="0" y="0" width="10" height="40" patternUnits="userSpaceOnUse">
+      <rect width="10" height="40" fill="url(#floorGrad)"/>
+      <line x1="0" y1="0" x2="0" y2="40" stroke="#1A0A00" stroke-width="0.3" opacity="0.5"/>
+      <ellipse cx="3" cy="12" rx="1.5" ry="2.5" fill="#3A2A1A" opacity="0.3"/>
     </pattern>
-    <linearGradient id="doorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#8B6B4B"/><stop offset="100%" style="stop-color:#4A2A0A"/>
+    <linearGradient id="doorWood" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#5A3A1A"/><stop offset="50%" style="stop-color:#7B5B3B"/><stop offset="100%" style="stop-color:#4A2A0A"/>
     </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="1" dy="1" stdDeviation="1" flood-opacity="0.3"/>
+    <linearGradient id="goldTrim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700"/><stop offset="50%" style="stop-color:#B8860B"/><stop offset="100%" style="stop-color:#D4AF37"/>
+    </linearGradient>
+    <radialGradient id="lampGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#FFF8DC;stop-opacity:0.9"/><stop offset="40%" style="stop-color:#FFD700;stop-opacity:0.4"/><stop offset="100%" style="stop-color:#FFD700;stop-opacity:0"/>
+    </radialGradient>
+    <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2"/><feOffset dx="2" dy="2" result="offsetblur"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.3"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="innerGlow">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur"/>
+      <feComposite in="blur" in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="shadowDiff"/>
+      <feFlood flood-color="#FFD700" flood-opacity="0.3"/><feComposite in2="shadowDiff" operator="in"/>
+      <feComposite in2="SourceGraphic" operator="over"/>
     </filter>
   </defs>
-  <rect x="8" y="8" width="84" height="84" fill="url(#floorPattern)" stroke="#2A1A0A" stroke-width="2"/>
-  <g filter="url(#shadow)">
-    <rect x="38" y="-2" width="24" height="14" fill="#2A1A0A"/>
-    <rect x="40" y="0" width="20" height="12" fill="url(#doorGrad)" stroke="#A08060" stroke-width="1.5"/>
-    <rect x="42" y="2" width="16" height="8" fill="#3A2A1A" opacity="0.6"/>
-    <circle cx="55" cy="6" r="1.5" fill="#D4AF37"/>
+  <rect x="8" y="8" width="84" height="84" fill="url(#woodPattern)" stroke="#1A0A00" stroke-width="2"/>
+  <rect x="10" y="10" width="80" height="80" fill="none" stroke="#3A2A1A" stroke-width="0.5" opacity="0.5"/>
+  <g filter="url(#softShadow)">
+    <rect x="36" y="-4" width="28" height="16" fill="#1A0A00"/>
+    <rect x="38" y="-2" width="24" height="14" fill="url(#doorWood)"/>
+    <line x1="50" y1="-2" x2="50" y2="12" stroke="#2A1A0A" stroke-width="0.5"/>
+    <line x1="38" y1="5" x2="62" y2="5" stroke="#2A1A0A" stroke-width="0.5"/>
+    <rect x="38" y="-2" width="24" height="14" fill="none" stroke="url(#goldTrim)" stroke-width="1"/>
+    <circle cx="55" cy="6" r="2" fill="url(#goldTrim)"/><circle cx="55" cy="6" r="1" fill="#B8860B"/>
   </g>
-  <g filter="url(#shadow)">
-    <rect x="88" y="38" width="14" height="24" fill="#2A1A0A"/>
-    <rect x="90" y="40" width="12" height="20" fill="url(#doorGrad)" stroke="#A08060" stroke-width="1.5"/>
-    <rect x="92" y="42" width="8" height="16" fill="#3A2A1A" opacity="0.6"/>
-    <circle cx="96" cy="55" r="1.5" fill="#D4AF37"/>
+  <g filter="url(#softShadow)">
+    <rect x="36" y="88" width="28" height="16" fill="#1A0A00"/>
+    <rect x="38" y="90" width="24" height="14" fill="url(#doorWood)"/>
+    <line x1="50" y1="90" x2="50" y2="104" stroke="#2A1A0A" stroke-width="0.5"/>
+    <line x1="38" y1="97" x2="62" y2="97" stroke="#2A1A0A" stroke-width="0.5"/>
+    <rect x="38" y="90" width="24" height="14" fill="none" stroke="url(#goldTrim)" stroke-width="1"/>
+    <circle cx="55" cy="94" r="2" fill="url(#goldTrim)"/><circle cx="55" cy="94" r="1" fill="#B8860B"/>
   </g>
-  <g filter="url(#shadow)">
-    <rect x="-2" y="38" width="14" height="24" fill="#2A1A0A"/>
-    <rect x="0" y="40" width="12" height="20" fill="url(#doorGrad)" stroke="#A08060" stroke-width="1.5"/>
-    <rect x="2" y="42" width="8" height="16" fill="#3A2A1A" opacity="0.6"/>
-    <circle cx="6" cy="55" r="1.5" fill="#D4AF37"/>
+  <g filter="url(#softShadow)">
+    <rect x="88" y="36" width="16" height="28" fill="#1A0A00"/>
+    <rect x="90" y="38" width="12" height="24" fill="url(#doorWood)"/>
+    <line x1="90" y1="50" x2="102" y2="50" stroke="#2A1A0A" stroke-width="0.5"/>
+    <line x1="96" y1="38" x2="96" y2="62" stroke="#2A1A0A" stroke-width="0.5"/>
+    <rect x="90" y="38" width="12" height="24" fill="none" stroke="url(#goldTrim)" stroke-width="1"/>
+    <circle cx="96" cy="55" r="2" fill="url(#goldTrim)"/><circle cx="96" cy="55" r="1" fill="#B8860B"/>
+  </g>
+  <g filter="url(#softShadow)">
+    <rect x="-4" y="36" width="16" height="28" fill="#1A0A00"/>
+    <rect x="-2" y="38" width="12" height="24" fill="url(#doorWood)"/>
+    <line x1="-2" y1="50" x2="10" y2="50" stroke="#2A1A0A" stroke-width="0.5"/>
+    <line x1="4" y1="38" x2="4" y2="62" stroke="#2A1A0A" stroke-width="0.5"/>
+    <rect x="-2" y="38" width="12" height="24" fill="none" stroke="url(#goldTrim)" stroke-width="1"/>
+    <circle cx="4" cy="55" r="2" fill="url(#goldTrim)"/><circle cx="4" cy="55" r="1" fill="#B8860B"/>
   </g>
   <rect x="22" y="22" width="56" height="56" fill="#4A3728" opacity="0.2" rx="3"/>
-  <circle cx="50" cy="50" r="18" fill="#5A4334" opacity="0.3"/>
-  <g filter="url(#shadow)">
-    <line x1="50" y1="20" x2="50" y2="38" stroke="#4A4A4A" stroke-width="2"/>
+  <circle cx="50" cy="50" r="20" fill="#5A4334" opacity="0.3"/>
+  <g filter="url(#softShadow)">
+    <line x1="50" y1="20" x2="50" y2="38" stroke="#3A3A3A" stroke-width="2"/>
     <circle cx="50" cy="42" r="10" fill="#FFD700" opacity="0.4"/>
-    <circle cx="50" cy="42" r="6" fill="#FFF8DC" opacity="0.9"/>
-    <circle cx="50" cy="42" r="14" fill="#FFD700" opacity="0.1"/>
+    <circle cx="50" cy="42" r="6" fill="#FFF8DC" opacity="0.9" filter="url(#innerGlow)"/>
+    <circle cx="50" cy="42" r="16" fill="url(#lampGlow)"/>
+    <circle cx="50" cy="42" r="24" fill="url(#lampGlow)" opacity="0.5"/>
   </g>
-  <g filter="url(#shadow)">
-    <rect x="28" y="58" width="44" height="22" fill="#4A3A2A" stroke="#2A1A0A" stroke-width="1"/>
-    <line x1="28" y1="63" x2="72" y2="63" stroke="#2A1A0A" stroke-width="1"/>
-    <line x1="28" y1="69" x2="72" y2="69" stroke="#2A1A0A" stroke-width="1"/>
-    <line x1="28" y1="75" x2="72" y2="75" stroke="#2A1A0A" stroke-width="1"/>
-    <line x1="28" y1="58" x2="28" y2="80" stroke="#5A3A1A" stroke-width="2"/>
-    <line x1="72" y1="58" x2="72" y2="80" stroke="#5A3A1A" stroke-width="2"/>
+  <g filter="url(#softShadow)">
+    <rect x="26" y="58" width="48" height="24" fill="#4A3A2A" stroke="#2A1A0A" stroke-width="1"/>
+    <line x1="26" y1="63" x2="74" y2="63" stroke="#2A1A0A" stroke-width="0.8"/>
+    <line x1="26" y1="68" x2="74" y2="68" stroke="#2A1A0A" stroke-width="0.8"/>
+    <line x1="26" y1="73" x2="74" y2="73" stroke="#2A1A0A" stroke-width="0.8"/>
+    <line x1="26" y1="78" x2="74" y2="78" stroke="#2A1A0A" stroke-width="0.8"/>
+    <rect x="26" y="58" width="48" height="4" fill="#6B5B4B" opacity="0.5"/>
+    <rect x="26" y="63" width="48" height="4" fill="#5B4B3B" opacity="0.5"/>
+    <rect x="26" y="68" width="48" height="4" fill="#4B3B2B" opacity="0.5"/>
+    <rect x="26" y="73" width="48" height="4" fill="#3B2B1B" opacity="0.5"/>
+    <line x1="26" y1="56" x2="26" y2="82" stroke="#5A3A1A" stroke-width="3"/>
+    <line x1="74" y1="56" x2="74" y2="82" stroke="#5A3A1A" stroke-width="3"/>
+    <line x1="26" y1="58" x2="74" y2="58" stroke="#5A3A1A" stroke-width="2"/>
   </g>
+  <circle cx="12" cy="12" r="3" fill="#3A2A1A" opacity="0.4"/>
+  <circle cx="88" cy="12" r="3" fill="#3A2A1A" opacity="0.4"/>
+  <circle cx="12" cy="88" r="3" fill="#3A2A1A" opacity="0.4"/>
+  <circle cx="88" cy="88" r="3" fill="#3A2A1A" opacity="0.4"/>
 </svg>
