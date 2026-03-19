@@ -35,7 +35,7 @@
 </head>
 <body>
   <h1>🏚️ Betrayal - 完整素材庫</h1>
-  <p class="progress">🎉 50房間 + 6角色 + 物品卡 | 100% 完成</p>
+  <p class="progress">🎉 50房間 + 6角色 + 34卡牌 | 100% 完成</p>
   
   <div class="section-tabs">
     <div class="tab active" onclick="showSection('rooms')">🚪 房間 (50)</div>
@@ -60,13 +60,13 @@
   </div>
 
   <div id="items" class="section">
-    <h2>🎒 物品卡</h2>
+    <h2>🎒 物品卡 (12)</h2>
     <div class="grid" id="items-grid"></div>
     
-    <h2>🔮 預兆卡</h2>
+    <h2>🔮 預兆卡 (10)</h2>
     <div class="grid" id="omens-grid"></div>
     
-    <h2>📜 事件卡</h2>
+    <h2>📜 事件卡 (12)</h2>
     <div class="grid" id="events-grid"></div>
   </div>
 
@@ -194,10 +194,64 @@
     // 渲染角色
     characters.forEach(char => renderCharacter(char, document.getElementById('characters-grid')));
 
-    // 渲染佔位符
-    renderPlaceholder(document.getElementById('items-grid'), '物品卡', 6, 'card-item');
-    renderPlaceholder(document.getElementById('omens-grid'), '預兆卡', 6, 'card-omen');
-    renderPlaceholder(document.getElementById('events-grid'), '事件卡', 6, 'card-event');
+    // 卡牌資料
+    const items = [
+      { id: 'item-cross', name: '十字架', en: 'Cross' },
+      { id: 'item-medkit', name: '醫療包', en: 'Medkit' },
+      { id: 'item-pistol', name: '手槍', en: 'Pistol' },
+      { id: 'item-candle', name: '蠟燭', en: 'Candle' },
+      { id: 'item-key', name: '鑰匙', en: 'Key' },
+      { id: 'item-holywater', name: '聖水', en: 'Holy Water' },
+      { id: 'item-compass', name: '羅盤', en: 'Compass' },
+      { id: 'item-camera', name: '相機', en: 'Camera' },
+      { id: 'item-matches', name: '火柴', en: 'Matches' },
+      { id: 'item-rope', name: '繩索', en: 'Rope' },
+      { id: 'item-tools', name: '工具', en: 'Tools' },
+      { id: 'item-food', name: '食物', en: 'Food' },
+    ];
+    
+    const omens = [
+      { id: 'omen-dagger', name: '染血匕首', en: 'Bloody Dagger' },
+      { id: 'omen-portrait', name: '詭異畫像', en: 'Creepy Portrait' },
+      { id: 'omen-mirror', name: '破碎鏡子', en: 'Broken Mirror' },
+      { id: 'omen-talisman', name: '神秘符咒', en: 'Mystic Talisman' },
+      { id: 'omen-dog', name: '狗靈', en: 'Ghost Dog' },
+      { id: 'omen-ring', name: '家族戒指', en: 'Family Ring' },
+      { id: 'omen-book', name: '古老書籍', en: 'Ancient Book' },
+      { id: 'omen-necklace', name: '詛咒項鍊', en: 'Cursed Necklace' },
+      { id: 'omen-crystal', name: '預言水晶', en: 'Prophecy Crystal' },
+      { id: 'omen-ghostcandle', name: '幽靈蠟燭', en: 'Ghost Candle' },
+    ];
+    
+    const events = [
+      { id: 'event-voices', name: '靈異聲音', en: 'Ghostly Voices' },
+      { id: 'event-chill', name: '突然寒冷', en: 'Sudden Chill' },
+      { id: 'event-shadow', name: '詭異影子', en: 'Creepy Shadow' },
+      { id: 'event-shaking', name: '地板搖晃', en: 'Shaking Floor' },
+      { id: 'event-door', name: '門自動開關', en: 'Moving Door' },
+      { id: 'event-bloodwall', name: '牆壁滲血', en: 'Bloody Walls' },
+      { id: 'event-footprints', name: '神秘腳印', en: 'Mysterious Footprints' },
+      { id: 'event-hallucination', name: '幻聽', en: 'Hallucination' },
+      { id: 'event-time', name: '時間錯亂', en: 'Time Distortion' },
+      { id: 'event-space', name: '空間扭曲', en: 'Space Warp' },
+      { id: 'event-memory', name: '記憶閃回', en: 'Memory Flash' },
+      { id: 'event-creature', name: '未知生物', en: 'Unknown Creature' },
+    ];
+    
+    function renderCard(card, container, type) {
+      const div = document.createElement('div');
+      div.className = `item card-${type}`;
+      div.innerHTML = `
+        <img src="cards/${card.id}.svg" alt="${card.name}" style="width:100px; height:140px;">
+        <div class="item-name">${card.name}</div>
+        <div class="item-en">${card.en}</div>
+      `;
+      container.appendChild(div);
+    }
+    
+    items.forEach(card => renderCard(card, document.getElementById('items-grid'), 'item'));
+    omens.forEach(card => renderCard(card, document.getElementById('omens-grid'), 'omen'));
+    events.forEach(card => renderCard(card, document.getElementById('events-grid'), 'event'));
 
     // Tab 切換
     function showSection(sectionId) {
