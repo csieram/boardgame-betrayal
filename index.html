@@ -25,13 +25,16 @@
 </head>
 <body>
   <h1>🏚️ Betrayal - 50個房間板塊</h1>
-  <p class="progress">進度: 10/50 (20%) | 第一批完成</p>
+  <p class="progress">進度: 20/50 (40%) | 第二批完成</p>
   
-  <h2>🟢 Ground Floor (1F) - 10/18</h2>
+  <h2>🟢 Ground Floor (1F) - 18/18 ✅</h2>
   <div class="grid" id="ground"></div>
+  
+  <h2>🟡 Upper Floor (2F) - 2/16</h2>
+  <div class="grid" id="upper"></div>
 
   <script>
-    const rooms = [
+    const groundRooms = [
       { id: '01-foyer', name: '玄關', en: 'Foyer', level: '1f', omen: false, event: false },
       { id: '02-entrance_hall', name: '大廳入口', en: 'Entrance Hall', level: '1f', omen: false, event: true },
       { id: '03-living_room', name: '客廳', en: 'Living Room', level: '1f', omen: false, event: true },
@@ -42,10 +45,22 @@
       { id: '08-conservatory', name: '溫室', en: 'Conservatory', level: '1f', omen: false, event: true },
       { id: '09-ballroom', name: '舞廳', en: 'Ballroom', level: '1f', omen: true, event: true },
       { id: '10-sunroom', name: '日光室', en: 'Sunroom', level: '1f', omen: false, event: true },
+      { id: '11-gym', name: '健身房', en: 'Gymnasium', level: '1f', omen: false, event: true },
+      { id: '12-game_room', name: '遊戲室', en: 'Game Room', level: '1f', omen: false, event: true },
+      { id: '13-music_room', name: '音樂室', en: 'Music Room', level: '1f', omen: true, event: false },
+      { id: '14-art_studio', name: '畫室', en: 'Art Studio', level: '1f', omen: false, event: true },
+      { id: '15-garden', name: '花園', en: 'Garden', level: '1f', omen: false, event: true },
+      { id: '16-patio', name: '庭院', en: 'Patio', level: '1f', omen: false, event: true },
+      { id: '17-graveyard', name: '墓地', en: 'Graveyard', level: '1f', omen: true, event: true },
+      { id: '18-chapel', name: '禮拜堂', en: 'Chapel', level: '1f', omen: true, event: false },
     ];
 
-    const container = document.getElementById('ground');
-    rooms.forEach(room => {
+    const upperRooms = [
+      { id: '19-master_bedroom', name: '主臥室', en: 'Master Bedroom', level: '2f', omen: true, event: false },
+      { id: '20-bedroom', name: '臥室', en: 'Bedroom', level: '2f', omen: false, event: true },
+    ];
+
+    function renderRoom(room, container) {
       const div = document.createElement('div');
       div.className = `item level-${room.level}`;
       div.innerHTML = `
@@ -58,7 +73,10 @@
         </div>
       `;
       container.appendChild(div);
-    });
+    }
+    
+    groundRooms.forEach(room => renderRoom(room, document.getElementById('ground')));
+    upperRooms.forEach(room => renderRoom(room, document.getElementById('upper')));
   </script>
 </body>
 </html>
