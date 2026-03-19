@@ -100,7 +100,7 @@
       const div = document.createElement('div');
       div.className = `item level-${room.level}`;
       div.innerHTML = `
-        <img src="../betrayal-multi/public/rooms/${room.id}.svg" alt="${room.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23333%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%23666%22>${room.id}</text></svg>'">
+        <img src="rooms/${room.id}.svg" alt="${room.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23333%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%23666%22>${room.id}</text></svg>'">
         <div class="item-name">${room.id.split('-')[0]}. ${room.name}</div>
         <div class="item-en">${room.en}</div>
         <div class="badges">

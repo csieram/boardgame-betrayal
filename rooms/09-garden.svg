@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="300" height="300">
+  <!-- 地板 -->
+  <rect x="8" y="8" width="84" height="84" fill="#4A6A4A" stroke="#2A4A2A" stroke-width="2"/>
+  
+  <!-- 門: 北 -->
+  <rect x="40" y="-2" width="20" height="12" fill="#3D2B1A" stroke="#2A1A0A" stroke-width="2"/>
+  <rect x="42" y="0" width="16" height="10" fill="#7B5B3B" stroke="#A08060" stroke-width="2"/>
+  <rect x="44" y="2" width="12" height="6" fill="#5A4A3A" opacity="0.8"/>
+  
+  <!-- 門: 東 -->
+  <rect x="90" y="40" width="12" height="20" fill="#3D2B1A" stroke="#2A1A0A" stroke-width="2"/>
+  <rect x="90" y="42" width="10" height="16" fill="#7B5B3B" stroke="#A08060" stroke-width="2"/>
+  <rect x="92" y="44" width="6" height="12" fill="#5A4A3A" opacity="0.8"/>
+  
+  <!-- 門: 西 -->
+  <rect x="-2" y="40" width="12" height="20" fill="#3D2B1A" stroke="#2A1A0A" stroke-width="2"/>
+  <rect x="0" y="42" width="10" height="16" fill="#7B5B3B" stroke="#A08060" stroke-width="2"/>
+  <rect x="2" y="44" width="6" height="12" fill="#5A4A3A" opacity="0.8"/>
+  
+  <!-- 小徑 -->
+  <rect x="42" y="8" width="16" height="84" fill="#8B7355" opacity="0.6"/>
+  <rect x="8" y="42" width="84" height="16" fill="#8B7355" opacity="0.6"/>
+  
+  <!-- 雜草/灌木 -->
+  <circle cx="25" cy="25" r="15" fill="#3F6F3F" stroke="#2F5F2F"/>
+  <circle cx="75" cy="30" r="12" fill="#3F6F3F" stroke="#2F5F2F"/>
+  <circle cx="22" cy="72" r="14" fill="#3F6F3F" stroke="#2F5F2F"/>
+  <circle cx="78" cy="70" r="13" fill="#3F6F3F" stroke="#2F5F2F"/>
+  
+  <!-- 中央雕像 -->
+  <ellipse cx="50" cy="50" rx="8" ry="6" fill="#808080" stroke="#606060"/>
+  <rect x="46" y="35" width="8" height="18" fill="#909090" stroke="#707070"/>
+  <circle cx="50" cy="32" r="5" fill="#A0A0A0" stroke="#808080"/>
+  
+  <!-- 枯樹 -->
+  <rect x="12" y="55" width="6" height="20" fill="#4A3728"/>
+  <line x1="15" y1="60" x2="8" y2="55" stroke="#4A3728" stroke-width="2"/>
+  <line x1="15" y1="65" x2="22" y2="58" stroke="#4A3728" stroke-width="2"/>
+</svg>
