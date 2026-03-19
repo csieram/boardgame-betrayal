@@ -1,9 +1,82 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="300" height="300">
-  <defs><linearGradient id="f" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#9B8365"/><stop offset="100%" style="stop-color:#6B5344"/></linearGradient></defs>
-  <rect x="8" y="8" width="84" height="84" fill="url(#f)" stroke="#4A3728" stroke-width="2"/>
-  <rect x="40" y="-2" width="20" height="12" fill="#3D2B1A" stroke="#2A1A0A" stroke-width="2"/><rect x="42" y="0" width="16" height="10" fill="#7B5B3B" stroke="#A08060" stroke-width="2"/><rect x="44" y="2" width="12" height="6" fill="#5A4A3A" opacity="0.8"/>
-  <rect x="90" y="40" width="12" height="20" fill="#3D2B1A" stroke="#2A1A0A" stroke-width="2"/><rect x="90" y="42" width="10" height="16" fill="#7B5B3B" stroke="#A08060" stroke-width="2"/><rect x="92" y="44" width="6" height="12" fill="#5A4A3A" opacity="0.8"/>
-  <rect x="-2" y="40" width="12" height="20" fill="#3D2B1A" stroke="#2A1A0A" stroke-width="2"/><rect x="0" y="42" width="10" height="16" fill="#7B5B3B" stroke="#A08060" stroke-width="2"/><rect x="2" y="44" width="6" height="12" fill="#5A4A3A" opacity="0.8"/>
-  <circle cx="50" cy="50" r="15" fill="#5A4A3A" stroke="#3A2A1A"/>
-  <text x="50" y="55" text-anchor="middle" fill="#D4AF37" font-size="12" font-weight="bold">玄</text>
+  <defs>
+    <!-- 地板漸層 -->
+    <linearGradient id="floorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B7355"/>
+      <stop offset="50%" style="stop-color:#6B5344"/>
+      <stop offset="100%" style="stop-color:#4A3728"/>
+    </linearGradient>
+    <!-- 地板紋理 -->
+    <pattern id="floorPattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+      <rect width="20" height="20" fill="url(#floorGrad)"/>
+      <line x1="0" y1="0" x2="0" y2="20" stroke="#3A2718" stroke-width="0.5" opacity="0.5"/>
+      <line x1="0" y1="0" x2="20" y2="0" stroke="#3A2718" stroke-width="0.5" opacity="0.5"/>
+    </pattern>
+    <!-- 門的漸層 -->
+    <linearGradient id="doorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B6B4B"/>
+      <stop offset="100%" style="stop-color:#5A3A1A"/>
+    </linearGradient>
+    <!-- 陰影 -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="1" dy="1" stdDeviation="1" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- 地板 -->
+  <rect x="8" y="8" width="84" height="84" fill="url(#floorPattern)" stroke="#2A1A0A" stroke-width="2"/>
+  
+  <!-- 門: 北 -->
+  <g filter="url(#shadow)">
+    <rect x="38" y="-2" width="24" height="14" fill="#2A1A0A"/>
+    <rect x="40" y="0" width="20" height="12" fill="url(#doorGrad)" stroke="#A08060" stroke-width="1.5"/>
+    <rect x="42" y="2" width="16" height="8" fill="#4A3A2A" opacity="0.6"/>
+    <!-- 門把 -->
+    <circle cx="55" cy="6" r="1.5" fill="#D4AF37"/>
+  </g>
+  
+  <!-- 門: 東 -->
+  <g filter="url(#shadow)">
+    <rect x="88" y="38" width="14" height="24" fill="#2A1A0A"/>
+    <rect x="90" y="40" width="12" height="20" fill="url(#doorGrad)" stroke="#A08060" stroke-width="1.5"/>
+    <rect x="92" y="42" width="8" height="16" fill="#4A3A2A" opacity="0.6"/>
+    <circle cx="96" cy="55" r="1.5" fill="#D4AF37"/>
+  </g>
+  
+  <!-- 門: 西 -->
+  <g filter="url(#shadow)">
+    <rect x="-2" y="38" width="14" height="24" fill="#2A1A0A"/>
+    <rect x="0" y="40" width="12" height="20" fill="url(#doorGrad)" stroke="#A08060" stroke-width="1.5"/>
+    <rect x="2" y="42" width="8" height="16" fill="#4A3A2A" opacity="0.6"/>
+    <circle cx="6" cy="55" r="1.5" fill="#D4AF37"/>
+  </g>
+  
+  <!-- 中央地毯 -->
+  <rect x="25" y="25" width="50" height="50" fill="#5A3A2A" opacity="0.3" rx="2"/>
+  <rect x="28" y="28" width="44" height="44" fill="none" stroke="#8B7355" stroke-width="1" opacity="0.5" rx="2"/>
+  
+  <!-- 吊燈 -->
+  <g filter="url(#shadow)">
+    <line x1="50" y1="8" x2="50" y2="35" stroke="#4A4A4A" stroke-width="2"/>
+    <line x1="50" y1="35" x2="42" y2="45" stroke="#D4AF37" stroke-width="1"/>
+    <line x1="50" y1="35" x2="58" y2="45" stroke="#D4AF37" stroke-width="1"/>
+    <circle cx="50" cy="42" r="10" fill="#FFD700" opacity="0.4" filter="url(#shadow)"/>
+    <circle cx="50" cy="42" r="6" fill="#FFF8DC" opacity="0.9"/>
+    <!-- 光暈 -->
+    <circle cx="50" cy="42" r="15" fill="#FFD700" opacity="0.1"/>
+  </g>
+  
+  <!-- 樓梯 -->
+  <g filter="url(#shadow)">
+    <rect x="28" y="58" width="44" height="22" fill="#5A4A3A" stroke="#3A2A1A" stroke-width="1"/>
+    <line x1="28" y1="63" x2="72" y2="63" stroke="#3A2A1A" stroke-width="1"/>
+    <line x1="28" y1="69" x2="72" y2="69" stroke="#3A2A1A" stroke-width="1"/>
+    <line x1="28" y1="75" x2="72" y2="75" stroke="#3A2A1A" stroke-width="1"/>
+    <!-- 樓梯扶手 -->
+    <line x1="28" y1="58" x2="28" y2="80" stroke="#654321" stroke-width="2"/>
+    <line x1="72" y1="58" x2="72" y2="80" stroke="#654321" stroke-width="2"/>
+  </g>
+  
+  <!-- 牆角陰影 -->
+  <rect x="8" y="8" width="84" height="84" fill="none" stroke="#000" stroke-width="2" opacity="0.2" rx="3"/>
 </svg>
