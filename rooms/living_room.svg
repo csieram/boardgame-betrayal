@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="400" height="400">
+  <defs>
+    <linearGradient id="floorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B7355"/>
+      <stop offset="100%" style="stop-color:#5A4A3A"/>
+    </linearGradient>
+    <linearGradient id="doorWood" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#6B4B2A"/>
+      <stop offset="50%" style="stop-color:#8B6B4B"/>
+      <stop offset="100%" style="stop-color:#4A2A0A"/>
+    </linearGradient>
+    <linearGradient id="goldTrim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700"/>
+      <stop offset="50%" style="stop-color:#B8860B"/>
+      <stop offset="100%" style="stop-color:#FFD700"/>
+    </linearGradient>
+    <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="3" dy="3" result="offsetblur"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.5"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  
+  <rect x="8" y="8" width="84" height="84" fill="url(#floorGrad)" stroke="#2A1A0A" stroke-width="2"/>
+  
+  <!-- Large sofa -->
+  <g filter="url(#softShadow)">
+    <rect x="20" y="50" width="45" height="22" fill="#8B4513" stroke="#654321" stroke-width="2" rx="2"/>
+    <rect x="22" y="45" width="41" height="8" fill="#A0522D" rx="1"/>
+  </g>
+  
+  <!-- Coffee table -->
+  <g filter="url(#softShadow)">
+    <rect x="30" y="72" width="25" height="10" fill="#6B5344" stroke="#4A3324" stroke-width="1" rx="1"/>
+    <line x1="34" y1="82" x2="34" y2="88" stroke="#4A3324" stroke-width="2"/>
+    <line x1="51" y1="82" x2="51" y2="88" stroke="#4A3324" stroke-width="2"/>
+  </g>
+  
+  <!-- Fireplace -->
+  <g filter="url(#softShadow)">
+    <rect x="70" y="40" width="20" height="30" fill="#4A4A4A" stroke="#333" stroke-width="2" rx="1"/>
+    <rect x="74" y="48" width="12" height="18" fill="#2A2A2A"/>
+    <ellipse cx="80" cy="55" rx="4" ry="6" fill="#FF6B35" opacity="0.5"/>
+  </g>
+  
+  <!-- Door North -->
+  <g filter="url(#softShadow)">
+    <rect x="36" y="-4" width="28" height="16" fill="#1A0A00"/>
+    <rect x="38" y="-2" width="24" height="14" fill="url(#doorWood)"/>
+    <line x1="50" y1="-2" x2="50" y2="12" stroke="#2A1A0A" stroke-width="0.5"/>
+    <line x1="38" y1="5" x2="62" y2="5" stroke="#2A1A0A" stroke-width="0.5"/>
+    <rect x="38" y="-2" width="24" height="14" fill="none" stroke="url(#goldTrim)" stroke-width="1.5"/>
+    <circle cx="55" cy="6" r="2.5" fill="url(#goldTrim)"/>
+    <circle cx="55" cy="6" r="1.5" fill="#B8860B"/>
+  </g>
+</svg>
