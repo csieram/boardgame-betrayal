@@ -97,57 +97,57 @@
   </div>
 
   <script>
-    // 官方房間資料 (根據你提供的列表)
+    // 官方房間資料 (根據你提供的列表) + 檔案名稱映射
     const officialRooms = {
       basement: [
-        { id: 'abandoned_room', name: '廢棄房間', en: 'Abandoned Room', symbol: 'O', doors: 'N' },
-        { id: 'arsenal', name: '軍械庫', en: 'Arsenal', symbol: 'I', doors: 'N,E' },
-        { id: 'bloody_room', name: '血跡房間', en: 'Bloody Room', symbol: 'E', doors: 'N' },
-        { id: 'catacombs', name: '地下墓穴', en: 'Catacombs', symbol: null, doors: 'N,E,S' },
-        { id: 'cavern', name: '洞穴', en: 'Cavern', symbol: 'E', doors: 'N' },
-        { id: 'charred_room', name: '燒焦房間', en: 'Charred Room', symbol: 'O', doors: 'N' },
-        { id: 'chasm', name: '深淵', en: 'Chasm', symbol: null, doors: 'N,E' },
-        { id: 'crypt', name: '墓穴', en: 'Crypt', symbol: 'I', doors: 'N' },
-        { id: 'dungeon', name: '地牢', en: 'Dungeon', symbol: null, doors: 'N' },
-        { id: 'furnace_room', name: '鍋爐房', en: 'Furnace Room', symbol: 'O', doors: 'N,E' },
-        { id: 'graveyard', name: '墓地', en: 'Graveyard', symbol: null, doors: 'N,E' },
-        { id: 'larder', name: '儲藏室', en: 'Larder', symbol: 'I', doors: 'N' },
-        { id: 'operating_lab', name: '手術實驗室', en: 'Operating Laboratory', symbol: 'I', doors: 'N' },
-        { id: 'pentagram_chamber', name: '五芒星密室', en: 'Pentagram Chamber', symbol: 'O', doors: 'N' },
-        { id: 'research_lab', name: '研究實驗室', en: 'Research Laboratory', symbol: 'I', doors: 'N' },
-        { id: 'servants_quarters', name: '僕人房', en: 'Servants Quarters', symbol: null, doors: 'N,E' },
-        { id: 'underground_lake', name: '地下湖', en: 'Underground Lake', symbol: null, doors: 'N' },
-        { id: 'vault', name: '金庫', en: 'Vault', symbol: 'I', doors: 'N' },
+        { id: 'abandoned_room', file: '27-attic.svg', name: '廢棄房間', en: 'Abandoned Room', symbol: 'O', doors: 'N' },
+        { id: 'arsenal', file: '38-workshop.svg', name: '軍械庫', en: 'Arsenal', symbol: 'I', doors: 'N,E' },
+        { id: 'bloody_room', file: '19-master_bedroom.svg', name: '血跡房間', en: 'Bloody Room', symbol: 'E', doors: 'N' },
+        { id: 'catacombs', file: '43-catacombs.svg', name: '地下墓穴', en: 'Catacombs', symbol: null, doors: 'N,E,S' },
+        { id: 'cavern', file: '49-cave.svg', name: '洞穴', en: 'Cavern', symbol: 'E', doors: 'N' },
+        { id: 'charred_room', file: '48-furnace.svg', name: '燒焦房間', en: 'Charred Room', symbol: 'O', doors: 'N' },
+        { id: 'chasm', file: '50-chasm.svg', name: '深淵', en: 'Chasm', symbol: null, doors: 'N,E' },
+        { id: 'crypt', file: '45-crypt.svg', name: '墓穴', en: 'Crypt', symbol: 'I', doors: 'N' },
+        { id: 'dungeon', file: '44-dungeon.svg', name: '地牢', en: 'Dungeon', symbol: null, doors: 'N' },
+        { id: 'furnace_room', file: '48-furnace.svg', name: '鍋爐房', en: 'Furnace Room', symbol: 'O', doors: 'N,E' },
+        { id: 'graveyard', file: '17-graveyard.svg', name: '墓地', en: 'Graveyard', symbol: null, doors: 'N,E' },
+        { id: 'larder', file: '37-root_cellar.svg', name: '儲藏室', en: 'Larder', symbol: 'I', doors: 'N' },
+        { id: 'operating_lab', file: '47-laboratory.svg', name: '手術實驗室', en: 'Operating Laboratory', symbol: 'I', doors: 'N' },
+        { id: 'pentagram_chamber', file: '46-pentagram.svg', name: '五芒星密室', en: 'Pentagram Chamber', symbol: 'O', doors: 'N' },
+        { id: 'research_lab', file: '47-laboratory.svg', name: '研究實驗室', en: 'Research Laboratory', symbol: 'I', doors: 'N' },
+        { id: 'servants_quarters', file: '21-guest_room.svg', name: '僕人房', en: 'Servants Quarters', symbol: null, doors: 'N,E' },
+        { id: 'underground_lake', file: '42-tunnel.svg', name: '地下湖', en: 'Underground Lake', symbol: null, doors: 'N' },
+        { id: 'vault', file: '40-storage.svg', name: '金庫', en: 'Vault', symbol: 'I', doors: 'N' },
       ],
       ground: [
-        { id: 'ballroom', name: '舞廳', en: 'Ballroom', symbol: null, doors: 'N,S' },
-        { id: 'chapel', name: '禮拜堂', en: 'Chapel', symbol: 'O', doors: 'N' },
-        { id: 'dining_room', name: '餐廳', en: 'Dining Room', symbol: 'I', doors: 'N,E' },
-        { id: 'entrance_hall', name: '入口大廳', en: 'Entrance Hall', symbol: null, doors: 'N,S' },
-        { id: 'foyer', name: '玄關', en: 'Foyer', symbol: null, doors: 'N,S' },
-        { id: 'garden', name: '花園', en: 'Garden', symbol: 'E', doors: 'N,E' },
-        { id: 'gymnasium', name: '健身房', en: 'Gymnasium', symbol: 'E', doors: 'N,E' },
-        { id: 'kitchen', name: '廚房', en: 'Kitchen', symbol: 'I', doors: 'N,E' },
-        { id: 'library', name: '圖書室', en: 'Library', symbol: 'I', doors: 'N,E' },
-        { id: 'patio', name: '庭院', en: 'Patio', symbol: null, doors: 'N,E' },
-        { id: 'storeroom', name: '儲物間', en: 'Storeroom', symbol: 'I', doors: 'N' },
-        { id: 'tower', name: '塔樓', en: 'Tower', symbol: null, doors: 'N' },
+        { id: 'ballroom', file: '09-ballroom.svg', name: '舞廳', en: 'Ballroom', symbol: null, doors: 'N,S' },
+        { id: 'chapel', file: '18-chapel.svg', name: '禮拜堂', en: 'Chapel', symbol: 'O', doors: 'N' },
+        { id: 'dining_room', file: '05-dining_room.svg', name: '餐廳', en: 'Dining Room', symbol: 'I', doors: 'N,E' },
+        { id: 'entrance_hall', file: '02-entrance_hall.svg', name: '入口大廳', en: 'Entrance Hall', symbol: null, doors: 'N,S' },
+        { id: 'foyer', file: '01-foyer.svg', name: '玄關', en: 'Foyer', symbol: null, doors: 'N,S' },
+        { id: 'garden', file: '15-garden.svg', name: '花園', en: 'Garden', symbol: 'E', doors: 'N,E' },
+        { id: 'gymnasium', file: '11-gym.svg', name: '健身房', en: 'Gymnasium', symbol: 'E', doors: 'N,E' },
+        { id: 'kitchen', file: '04-kitchen.svg', name: '廚房', en: 'Kitchen', symbol: 'I', doors: 'N,E' },
+        { id: 'library', file: '07-library.svg', name: '圖書室', en: 'Library', symbol: 'I', doors: 'N,E' },
+        { id: 'patio', file: '16-patio.svg', name: '庭院', en: 'Patio', symbol: null, doors: 'N,E' },
+        { id: 'storeroom', file: '40-storage.svg', name: '儲物間', en: 'Storeroom', symbol: 'I', doors: 'N' },
+        { id: 'tower', file: '08-tower.svg', name: '塔樓', en: 'Tower', symbol: null, doors: 'N' },
       ],
       upper: [
-        { id: 'attic', name: '閣樓', en: 'Attic', symbol: 'I', doors: 'N' },
-        { id: 'balcony', name: '陽台', en: 'Balcony', symbol: null, doors: 'N,S' },
-        { id: 'bedroom', name: '臥室', en: 'Bedroom', symbol: 'O', doors: 'N' },
-        { id: 'gallery', name: '畫廊', en: 'Gallery', symbol: null, doors: 'N,E' },
-        { id: 'junk_room', name: '雜物間', en: 'Junk Room', symbol: 'O', doors: 'N' },
-        { id: 'master_bedroom', name: '主臥室', en: 'Master Bedroom', symbol: 'O', doors: 'N,E' },
-        { id: 'nursery', name: '嬰兒房', en: 'Nursery', symbol: 'O', doors: 'N' },
-        { id: 'walkway', name: '走道', en: 'Walkway', symbol: null, doors: 'N,S' },
+        { id: 'attic', file: '27-attic.svg', name: '閣樓', en: 'Attic', symbol: 'I', doors: 'N' },
+        { id: 'balcony', file: '28-balcony.svg', name: '陽台', en: 'Balcony', symbol: null, doors: 'N,S' },
+        { id: 'bedroom', file: '20-bedroom.svg', name: '臥室', en: 'Bedroom', symbol: 'O', doors: 'N' },
+        { id: 'gallery', file: '33-dressing_room.svg', name: '畫廊', en: 'Gallery', symbol: null, doors: 'N,E' },
+        { id: 'junk_room', file: '26-loft.svg', name: '雜物間', en: 'Junk Room', symbol: 'O', doors: 'N' },
+        { id: 'master_bedroom', file: '19-master_bedroom.svg', name: '主臥室', en: 'Master Bedroom', symbol: 'O', doors: 'N,E' },
+        { id: 'nursery', file: '23-nursery.svg', name: '嬰兒房', en: 'Nursery', symbol: 'O', doors: 'N' },
+        { id: 'walkway', file: '25-hallway.svg', name: '走道', en: 'Walkway', symbol: null, doors: 'N,S' },
       ],
       multi: [
-        { id: 'grand_staircase', name: '大樓梯', en: 'Grand Staircase', symbol: null, doors: 'N,S', note: 'G↔U' },
-        { id: 'stairs_from_basement', name: '地下室樓梯', en: 'Stairs from Basement', symbol: null, doors: 'N', note: 'to G' },
-        { id: 'mystic_elevator', name: '神秘電梯', en: 'Mystic Elevator', symbol: null, doors: 'N', note: 'Any floor' },
-        { id: 'collapsed_room', name: '坍塌房間', en: 'Collapsed Room', symbol: null, doors: 'N', note: 'Drop to B' },
+        { id: 'grand_staircase', file: '01-foyer.svg', name: '大樓梯', en: 'Grand Staircase', symbol: null, doors: 'N,S', note: 'G↔U' },
+        { id: 'stairs_from_basement', file: '42-tunnel.svg', name: '地下室樓梯', en: 'Stairs from Basement', symbol: null, doors: 'N', note: 'to G' },
+        { id: 'mystic_elevator', file: '01-foyer.svg', name: '神秘電梯', en: 'Mystic Elevator', symbol: null, doors: 'N', note: 'Any floor' },
+        { id: 'collapsed_room', file: '27-attic.svg', name: '坍塌房間', en: 'Collapsed Room', symbol: null, doors: 'N', note: 'Drop to B' },
       ]
     };
 
@@ -177,17 +177,13 @@
       const badgeClass = isOfficial ? 'official' : 'unofficial';
       const badgeText = isOfficial ? '✓ 官方' : '✗ 擴充';
       
-      // 嘗試找到對應的 SVG 檔案
-      const possibleFiles = [
-        `${room.id}.svg`,
-        room.id.replace(/_/g, '-') + '.svg',
-        room.id.replace(/'/g, '') + '.svg',
-      ];
+      // 使用映射的檔案名稱
+      const svgFile = room.file || `${room.id}.svg`;
       
       div.innerHTML = `
         <span class="official-badge ${badgeClass}">${badgeText}</span>
-        <img src="rooms/${room.id}.svg" alt="${room.name}" 
-             onerror="this.src='rooms/01-foyer.svg'"
+        <img src="rooms/${svgFile}" alt="${room.name}" 
+             onerror="this.style.opacity='0.3'; this.parentElement.innerHTML+='<div style=\'color:#666;font-size:12px;margin-top:10px\'>圖片製作中</div>';"
              style="width:150px; height:150px; object-fit:contain;">
         <div class="item-name">${room.name}</div>
         <div class="item-en">${room.en}</div>
