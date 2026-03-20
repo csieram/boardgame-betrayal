@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Betrayal - 50房間 + 角色 + 物品</title>
+  <title>Betrayal - 官方房間 + 擴充房間</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 20px; }
@@ -11,47 +11,73 @@
     .progress { text-align: center; color: #4ade80; margin-bottom: 20px; font-size: 16px; }
     h2 { margin: 30px 0 15px; padding-bottom: 10px; border-bottom: 2px solid #ff6b6b; color: #ffd93d; }
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
-    .item { background: rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; text-align: center; }
+    .item { background: rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; text-align: center; position: relative; }
     .item img { width: 150px; height: 150px; margin-bottom: 10px; border-radius: 8px; background: #0f0f1a; object-fit: contain; }
     .item-name { font-weight: bold; margin-bottom: 5px; font-size: 14px; }
     .item-en { font-size: 12px; color: #aaa; }
-    .badges { margin-top: 5px; }
-    .omen { color: #9F7AEA; font-size: 11px; }
-    .event { color: #4ade80; font-size: 11px; }
+    .badges { margin-top: 5px; display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
+    .symbol-e { color: #4ade80; font-size: 10px; background: rgba(74,222,128,0.2); padding: 2px 6px; border-radius: 4px; }
+    .symbol-i { color: #60a5fa; font-size: 10px; background: rgba(96,165,250,0.2); padding: 2px 6px; border-radius: 4px; }
+    .symbol-o { color: #a78bfa; font-size: 10px; background: rgba(167,139,250,0.2); padding: 2px 6px; border-radius: 4px; }
+    .symbol-none { color: #9ca3af; font-size: 10px; background: rgba(156,163,175,0.2); padding: 2px 6px; border-radius: 4px; }
+    .official-badge { position: absolute; top: 10px; right: 10px; font-size: 10px; padding: 2px 6px; border-radius: 4px; }
+    .official { background: #4ade80; color: #000; }
+    .unofficial { background: #f87171; color: #fff; }
     .level-1f { border-left: 3px solid #4ade80; }
     .level-2f { border-left: 3px solid #fbbf24; }
     .level-b1 { border-left: 3px solid #f87171; }
-    .character { border-left: 3px solid #3b82f6; }
-    .card-item { border-left: 3px solid #60a5fa; }
-    .card-omen { border-left: 3px solid #a78bfa; }
-    .card-event { border-left: 3px solid #4ade80; }
     .section-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
     .tab { padding: 10px 20px; background: rgba(255,255,255,0.1); border-radius: 20px; cursor: pointer; transition: all 0.3s; }
     .tab:hover { background: rgba(255,255,255,0.2); }
     .tab.active { background: #ff6b6b; }
     .section { display: none; }
     .section.active { display: block; }
+    .stats { text-align: center; margin-bottom: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 12px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 10px; }
+    .stat-item { padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; }
+    .stat-number { font-size: 24px; font-weight: bold; color: #4ade80; }
+    .stat-label { font-size: 12px; color: #aaa; }
   </style>
 </head>
 <body>
-  <h1>🏚️ Betrayal - 完整素材庫</h1>
-  <p class="progress">🎉 50房間 + 6角色 + 34卡牌 | 100% 完成</p>
+  <h1>🏚️ Betrayal - 房間圖鑑</h1>
+  <p class="progress">官方 45 房間 + 擴充房間 | 含 Symbol 標記</p>
+  
+  <div class="stats">
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-number" id="b1-count">18</div>
+        <div class="stat-label">地下室 (B1)</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number" id="g-count">12</div>
+        <div class="stat-label">一樓 (1F)</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number" id="u-count">10</div>
+        <div class="stat-label">二樓 (2F)</div>
+      </div>
+    </div>
+  </div>
   
   <div class="section-tabs">
-    <div class="tab active" onclick="showSection('rooms')">🚪 房間 (50)</div>
-    <div class="tab" onclick="showSection('characters')">👤 角色 (6)</div>
-    <div class="tab" onclick="showSection('items')">🎒 物品卡</div>
+    <div class="tab active" onclick="showSection('rooms')">🚪 房間</div>
+    <div class="tab" onclick="showSection('characters')">👤 角色</div>
+    <div class="tab" onclick="showSection('items')">🎒 卡牌</div>
   </div>
 
   <div id="rooms" class="section active">
-    <h2>🟢 Ground Floor (1F) - 18/18 ✅</h2>
+    <h2>🔴 Basement (B1) - 官方 18 個</h2>
+    <div class="grid" id="basement"></div>
+    
+    <h2>🟢 Ground Floor (1F) - 官方 12 個</h2>
     <div class="grid" id="ground"></div>
     
-    <h2>🟡 Upper Floor (2F) - 16/16 ✅</h2>
+    <h2>🟡 Upper Floor (2F) - 官方 10 個</h2>
     <div class="grid" id="upper"></div>
     
-    <h2>🔴 Basement (B1) - 16/16 ✅</h2>
-    <div class="grid" id="basement"></div>
+    <h2>⚪ 跨樓層 / 擴充房間</h2>
+    <div class="grid" id="multi"></div>
   </div>
 
   <div id="characters" class="section">
@@ -71,187 +97,120 @@
   </div>
 
   <script>
-    // 房間資料
-    const groundRooms = [
-      { id: '01-foyer', name: '玄關', en: 'Foyer', level: '1f', omen: false, event: false },
-      { id: '02-entrance_hall', name: '大廳入口', en: 'Entrance Hall', level: '1f', omen: false, event: true },
-      { id: '03-living_room', name: '客廳', en: 'Living Room', level: '1f', omen: false, event: true },
-      { id: '04-kitchen', name: '廚房', en: 'Kitchen', level: '1f', omen: false, event: true },
-      { id: '05-dining_room', name: '餐廳', en: 'Dining Room', level: '1f', omen: true, event: false },
-      { id: '06-study', name: '書房', en: 'Study', level: '1f', omen: false, event: true },
-      { id: '07-library', name: '圖書室', en: 'Library', level: '1f', omen: true, event: false },
-      { id: '08-conservatory', name: '溫室', en: 'Conservatory', level: '1f', omen: false, event: true },
-      { id: '09-ballroom', name: '舞廳', en: 'Ballroom', level: '1f', omen: true, event: true },
-      { id: '10-sunroom', name: '日光室', en: 'Sunroom', level: '1f', omen: false, event: true },
-      { id: '11-gym', name: '健身房', en: 'Gymnasium', level: '1f', omen: false, event: true },
-      { id: '12-game_room', name: '遊戲室', en: 'Game Room', level: '1f', omen: false, event: true },
-      { id: '13-music_room', name: '音樂室', en: 'Music Room', level: '1f', omen: true, event: false },
-      { id: '14-art_studio', name: '畫室', en: 'Art Studio', level: '1f', omen: false, event: true },
-      { id: '15-garden', name: '花園', en: 'Garden', level: '1f', omen: false, event: true },
-      { id: '16-patio', name: '庭院', en: 'Patio', level: '1f', omen: false, event: true },
-      { id: '17-graveyard', name: '墓地', en: 'Graveyard', level: '1f', omen: true, event: true },
-      { id: '18-chapel', name: '禮拜堂', en: 'Chapel', level: '1f', omen: true, event: false },
+    // 官方房間資料 (根據你提供的列表)
+    const officialRooms = {
+      basement: [
+        { id: 'abandoned_room', name: '廢棄房間', en: 'Abandoned Room', symbol: 'O', doors: 'N' },
+        { id: 'arsenal', name: '軍械庫', en: 'Arsenal', symbol: 'I', doors: 'N,E' },
+        { id: 'bloody_room', name: '血跡房間', en: 'Bloody Room', symbol: 'E', doors: 'N' },
+        { id: 'catacombs', name: '地下墓穴', en: 'Catacombs', symbol: null, doors: 'N,E,S' },
+        { id: 'cavern', name: '洞穴', en: 'Cavern', symbol: 'E', doors: 'N' },
+        { id: 'charred_room', name: '燒焦房間', en: 'Charred Room', symbol: 'O', doors: 'N' },
+        { id: 'chasm', name: '深淵', en: 'Chasm', symbol: null, doors: 'N,E' },
+        { id: 'crypt', name: '墓穴', en: 'Crypt', symbol: 'I', doors: 'N' },
+        { id: 'dungeon', name: '地牢', en: 'Dungeon', symbol: null, doors: 'N' },
+        { id: 'furnace_room', name: '鍋爐房', en: 'Furnace Room', symbol: 'O', doors: 'N,E' },
+        { id: 'graveyard', name: '墓地', en: 'Graveyard', symbol: null, doors: 'N,E' },
+        { id: 'larder', name: '儲藏室', en: 'Larder', symbol: 'I', doors: 'N' },
+        { id: 'operating_lab', name: '手術實驗室', en: 'Operating Laboratory', symbol: 'I', doors: 'N' },
+        { id: 'pentagram_chamber', name: '五芒星密室', en: 'Pentagram Chamber', symbol: 'O', doors: 'N' },
+        { id: 'research_lab', name: '研究實驗室', en: 'Research Laboratory', symbol: 'I', doors: 'N' },
+        { id: 'servants_quarters', name: '僕人房', en: 'Servants Quarters', symbol: null, doors: 'N,E' },
+        { id: 'underground_lake', name: '地下湖', en: 'Underground Lake', symbol: null, doors: 'N' },
+        { id: 'vault', name: '金庫', en: 'Vault', symbol: 'I', doors: 'N' },
+      ],
+      ground: [
+        { id: 'ballroom', name: '舞廳', en: 'Ballroom', symbol: null, doors: 'N,S' },
+        { id: 'chapel', name: '禮拜堂', en: 'Chapel', symbol: 'O', doors: 'N' },
+        { id: 'dining_room', name: '餐廳', en: 'Dining Room', symbol: 'I', doors: 'N,E' },
+        { id: 'entrance_hall', name: '入口大廳', en: 'Entrance Hall', symbol: null, doors: 'N,S' },
+        { id: 'foyer', name: '玄關', en: 'Foyer', symbol: null, doors: 'N,S' },
+        { id: 'garden', name: '花園', en: 'Garden', symbol: 'E', doors: 'N,E' },
+        { id: 'gymnasium', name: '健身房', en: 'Gymnasium', symbol: 'E', doors: 'N,E' },
+        { id: 'kitchen', name: '廚房', en: 'Kitchen', symbol: 'I', doors: 'N,E' },
+        { id: 'library', name: '圖書室', en: 'Library', symbol: 'I', doors: 'N,E' },
+        { id: 'patio', name: '庭院', en: 'Patio', symbol: null, doors: 'N,E' },
+        { id: 'storeroom', name: '儲物間', en: 'Storeroom', symbol: 'I', doors: 'N' },
+        { id: 'tower', name: '塔樓', en: 'Tower', symbol: null, doors: 'N' },
+      ],
+      upper: [
+        { id: 'attic', name: '閣樓', en: 'Attic', symbol: 'I', doors: 'N' },
+        { id: 'balcony', name: '陽台', en: 'Balcony', symbol: null, doors: 'N,S' },
+        { id: 'bedroom', name: '臥室', en: 'Bedroom', symbol: 'O', doors: 'N' },
+        { id: 'gallery', name: '畫廊', en: 'Gallery', symbol: null, doors: 'N,E' },
+        { id: 'junk_room', name: '雜物間', en: 'Junk Room', symbol: 'O', doors: 'N' },
+        { id: 'master_bedroom', name: '主臥室', en: 'Master Bedroom', symbol: 'O', doors: 'N,E' },
+        { id: 'nursery', name: '嬰兒房', en: 'Nursery', symbol: 'O', doors: 'N' },
+        { id: 'walkway', name: '走道', en: 'Walkway', symbol: null, doors: 'N,S' },
+      ],
+      multi: [
+        { id: 'grand_staircase', name: '大樓梯', en: 'Grand Staircase', symbol: null, doors: 'N,S', note: 'G↔U' },
+        { id: 'stairs_from_basement', name: '地下室樓梯', en: 'Stairs from Basement', symbol: null, doors: 'N', note: 'to G' },
+        { id: 'mystic_elevator', name: '神秘電梯', en: 'Mystic Elevator', symbol: null, doors: 'N', note: 'Any floor' },
+        { id: 'collapsed_room', name: '坍塌房間', en: 'Collapsed Room', symbol: null, doors: 'N', note: 'Drop to B' },
+      ]
+    };
+
+    // 擴充房間（非官方）
+    const unofficialRooms = [
+      { id: 'conservatory', name: '溫室', en: 'Conservatory', floor: 'ground', symbol: null },
+      { id: 'game_room', name: '遊戲室', en: 'Game Room', floor: 'ground', symbol: null },
+      { id: 'music_room', name: '音樂室', en: 'Music Room', floor: 'ground', symbol: 'O' },
+      { id: 'art_studio', name: '畫室', en: 'Art Studio', floor: 'ground', symbol: null },
+      { id: 'hallway', name: '走廊', en: 'Hallway', floor: 'ground', symbol: null },
+      { id: 'sunroom', name: '日光室', en: 'Sunroom', floor: 'ground', symbol: null },
+      { id: 'living_room', name: '客廳', en: 'Living Room', floor: 'ground', symbol: null },
+      { id: 'study', name: '書房', en: 'Study', floor: 'ground', symbol: null },
     ];
 
-    const upperRooms = [
-      { id: '19-master_bedroom', name: '主臥室', en: 'Master Bedroom', level: '2f', omen: true, event: false },
-      { id: '20-bedroom', name: '臥室', en: 'Bedroom', level: '2f', omen: false, event: true },
-      { id: '21-guest_room', name: '客房', en: 'Guest Room', level: '2f', omen: false, event: true },
-      { id: '22-child_room', name: '兒童房', en: "Child's Room", level: '2f', omen: true, event: false },
-      { id: '23-nursery', name: '嬰兒房', en: 'Nursery', level: '2f', omen: true, event: true },
-      { id: '24-bathroom', name: '浴室', en: 'Bathroom', level: '2f', omen: false, event: true },
-      { id: '25-hallway', name: '走廊', en: 'Hallway', level: '2f', omen: false, event: true },
-      { id: '26-loft', name: '閣樓', en: 'Loft', level: '2f', omen: false, event: true },
-      { id: '27-attic', name: '頂樓', en: 'Attic', level: '2f', omen: true, event: true },
-      { id: '28-balcony', name: '陽台', en: 'Balcony', level: '2f', omen: false, event: true },
-      { id: '29-tower', name: '塔樓', en: 'Tower', level: '2f', omen: true, event: false },
-      { id: '30-observatory', name: '天文台', en: 'Observatory', level: '2f', omen: true, event: true },
-      { id: '31-solarium', name: '日光浴室', en: 'Solarium', level: '2f', omen: false, event: true },
-      { id: '32-sewing_room', name: '縫紉室', en: 'Sewing Room', level: '2f', omen: false, event: true },
-      { id: '33-dressing_room', name: '更衣室', en: 'Dressing Room', level: '2f', omen: false, event: true },
-      { id: '34-sitting_room', name: '起居室', en: 'Sitting Room', level: '2f', omen: false, event: true },
-    ];
+    function getSymbolBadge(symbol) {
+      if (symbol === 'E') return '<span class="symbol-e">⚡ 事件</span>';
+      if (symbol === 'I') return '<span class="symbol-i">🎒 物品</span>';
+      if (symbol === 'O') return '<span class="symbol-o">🔮 預兆</span>';
+      return '<span class="symbol-none">○ 無</span>';
+    }
 
-    const basementRooms = [
-      { id: '35-cellar', name: '地窖', en: 'Cellar', level: 'b1', omen: false, event: true },
-      { id: '36-wine_cellar', name: '酒窖', en: 'Wine Cellar', level: 'b1', omen: true, event: false },
-      { id: '37-root_cellar', name: '蔬菜窖', en: 'Root Cellar', level: 'b1', omen: false, event: true },
-      { id: '38-workshop', name: '工作坊', en: 'Workshop', level: 'b1', omen: false, event: true },
-      { id: '39-laundry', name: '洗衣房', en: 'Laundry Room', level: 'b1', omen: false, event: true },
-      { id: '40-storage', name: '儲藏室', en: 'Storage Room', level: 'b1', omen: false, event: true },
-      { id: '41-dark_room', name: '暗房', en: 'Dark Room', level: 'b1', omen: true, event: true },
-      { id: '42-tunnel', name: '隧道', en: 'Tunnel', level: 'b1', omen: false, event: true },
-      { id: '43-catacombs', name: '地下墓穴', en: 'Catacombs', level: 'b1', omen: true, event: true },
-      { id: '44-dungeon', name: '地牢', en: 'Dungeon', level: 'b1', omen: true, event: false },
-      { id: '45-crypt', name: '墓穴', en: 'Crypt', level: 'b1', omen: true, event: false },
-      { id: '46-pentagram', name: '祭壇室', en: 'Ritual Room', level: 'b1', omen: true, event: true },
-      { id: '47-laboratory', name: '實驗室', en: 'Laboratory', level: 'b1', omen: true, event: true },
-      { id: '48-furnace', name: '鍋爐房', en: 'Furnace Room', level: 'b1', omen: false, event: true },
-      { id: '49-cave', name: '洞穴', en: 'Cave', level: 'b1', omen: true, event: true },
-      { id: '50-chasm', name: '深淵', en: 'Chasm', level: 'b1', omen: true, event: true },
-    ];
-
-    // 角色資料
-    const characters = [
-      { id: 'missy', name: '米西', en: 'Missy Dubourde', age: 9, color: '#FF69B4', desc: '9歲小女孩' },
-      { id: 'zoe', name: '柔伊', en: 'Zoe Ingstrom', age: 21, color: '#9370DB', desc: '21歲年輕女性' },
-      { id: 'brandon', name: '布蘭登', en: 'Brandon Jaspers', age: 35, color: '#4682B4', desc: '35歲成年男性' },
-      { id: 'vivian', name: '薇薇安', en: 'Vivian Lopez', age: 42, color: '#DC143C', desc: '42歲中年女性' },
-      { id: 'peter', name: '彼得', en: 'Peter Akimoto', age: 58, color: '#8B4513', desc: '58歲老年男性' },
-      { id: 'madame', name: '薩拉夫人', en: 'Madame Zostra', age: 67, color: '#4B0082', desc: '67歲神秘老婦' },
-    ];
-
-    function renderRoom(room, container) {
+    function renderRoom(room, container, level, isOfficial = true) {
       const div = document.createElement('div');
-      div.className = `item level-${room.level}`;
+      div.className = `item level-${level}`;
+      
+      const badgeClass = isOfficial ? 'official' : 'unofficial';
+      const badgeText = isOfficial ? '✓ 官方' : '✗ 擴充';
+      
+      // 嘗試找到對應的 SVG 檔案
+      const possibleFiles = [
+        `${room.id}.svg`,
+        room.id.replace(/_/g, '-') + '.svg',
+        room.id.replace(/'/g, '') + '.svg',
+      ];
+      
       div.innerHTML = `
-        <img src="rooms/${room.id}.svg" alt="${room.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23333%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%23666%22>${room.id}</text></svg>'">
-        <div class="item-name">${room.id.split('-')[0]}. ${room.name}</div>
+        <span class="official-badge ${badgeClass}">${badgeText}</span>
+        <img src="rooms/${room.id}.svg" alt="${room.name}" 
+             onerror="this.src='rooms/01-foyer.svg'"
+             style="width:150px; height:150px; object-fit:contain;">
+        <div class="item-name">${room.name}</div>
         <div class="item-en">${room.en}</div>
         <div class="badges">
-          ${room.omen ? '<span class="omen">🔮 預兆</span>' : ''}
-          ${room.event ? '<span class="event">📜 事件</span>' : ''}
+          ${getSymbolBadge(room.symbol)}
+          ${room.doors ? `<span style="font-size:10px; color:#888;">🚪 ${room.doors}</span>` : ''}
+          ${room.note ? `<span style="font-size:10px; color:#fbbf24;">📌 ${room.note}</span>` : ''}
         </div>
       `;
       container.appendChild(div);
     }
 
-    function renderCharacter(char, container) {
-      const div = document.createElement('div');
-      div.className = 'item character';
-      div.innerHTML = `
-        <div style="display:flex; gap:5px; margin-bottom:10px;">
-          <img src="characters/portrait-${char.id}.svg" alt="${char.name}" style="width:70px; height:70px; border-radius:50%;" onerror="this.style.background='${char.color}33'">
-          <img src="characters/full-${char.id}.svg" alt="${char.name}" style="width:70px; height:70px; border-radius:8px;" onerror="this.style.background='${char.color}33'">
-        </div>
-        <div class="item-name">${char.name}</div>
-        <div class="item-en">${char.en}</div>
-        <div class="badges">
-          <span style="color:${char.color}; font-size:11px">● ${char.age}歲</span>
-        </div>
-      `;
-      container.appendChild(div);
-    }
+    // 渲染官方房間
+    officialRooms.basement.forEach(r => renderRoom(r, document.getElementById('basement'), 'b1', true));
+    officialRooms.ground.forEach(r => renderRoom(r, document.getElementById('ground'), '1f', true));
+    officialRooms.upper.forEach(r => renderRoom(r, document.getElementById('upper'), '2f', true));
+    officialRooms.multi.forEach(r => renderRoom(r, document.getElementById('multi'), '1f', true));
 
-    function renderPlaceholder(container, title, count, type) {
-      for (let i = 1; i <= count; i++) {
-        const div = document.createElement('div');
-        div.className = `item ${type}`;
-        div.innerHTML = `
-          <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 140'><rect fill='%23222' width='100' height='140' rx='5'/><text x='50' y='70' text-anchor='middle' fill='%23666' font-size='12'>${title} ${i}</text></svg>" alt="${title} ${i}">
-          <div class="item-name">${title} ${i}</div>
-          <div class="item-en">Coming Soon</div>
-        `;
-        container.appendChild(div);
-      }
-    }
-
-    // 渲染房間
-    groundRooms.forEach(room => renderRoom(room, document.getElementById('ground')));
-    upperRooms.forEach(room => renderRoom(room, document.getElementById('upper')));
-    basementRooms.forEach(room => renderRoom(room, document.getElementById('basement')));
-
-    // 渲染角色
-    characters.forEach(char => renderCharacter(char, document.getElementById('characters-grid')));
-
-    // 卡牌資料
-    const items = [
-      { id: 'item-cross', name: '十字架', en: 'Cross' },
-      { id: 'item-medkit', name: '醫療包', en: 'Medkit' },
-      { id: 'item-pistol', name: '手槍', en: 'Pistol' },
-      { id: 'item-candle', name: '蠟燭', en: 'Candle' },
-      { id: 'item-key', name: '鑰匙', en: 'Key' },
-      { id: 'item-holywater', name: '聖水', en: 'Holy Water' },
-      { id: 'item-compass', name: '羅盤', en: 'Compass' },
-      { id: 'item-camera', name: '相機', en: 'Camera' },
-      { id: 'item-matches', name: '火柴', en: 'Matches' },
-      { id: 'item-rope', name: '繩索', en: 'Rope' },
-      { id: 'item-tools', name: '工具', en: 'Tools' },
-      { id: 'item-food', name: '食物', en: 'Food' },
-    ];
-    
-    const omens = [
-      { id: 'omen-dagger', name: '染血匕首', en: 'Bloody Dagger' },
-      { id: 'omen-portrait', name: '詭異畫像', en: 'Creepy Portrait' },
-      { id: 'omen-mirror', name: '破碎鏡子', en: 'Broken Mirror' },
-      { id: 'omen-talisman', name: '神秘符咒', en: 'Mystic Talisman' },
-      { id: 'omen-dog', name: '狗靈', en: 'Ghost Dog' },
-      { id: 'omen-ring', name: '家族戒指', en: 'Family Ring' },
-      { id: 'omen-book', name: '古老書籍', en: 'Ancient Book' },
-      { id: 'omen-necklace', name: '詛咒項鍊', en: 'Cursed Necklace' },
-      { id: 'omen-crystal', name: '預言水晶', en: 'Prophecy Crystal' },
-      { id: 'omen-ghostcandle', name: '幽靈蠟燭', en: 'Ghost Candle' },
-    ];
-    
-    const events = [
-      { id: 'event-voices', name: '靈異聲音', en: 'Ghostly Voices' },
-      { id: 'event-chill', name: '突然寒冷', en: 'Sudden Chill' },
-      { id: 'event-shadow', name: '詭異影子', en: 'Creepy Shadow' },
-      { id: 'event-shaking', name: '地板搖晃', en: 'Shaking Floor' },
-      { id: 'event-door', name: '門自動開關', en: 'Moving Door' },
-      { id: 'event-bloodwall', name: '牆壁滲血', en: 'Bloody Walls' },
-      { id: 'event-footprints', name: '神秘腳印', en: 'Mysterious Footprints' },
-      { id: 'event-hallucination', name: '幻聽', en: 'Hallucination' },
-      { id: 'event-time', name: '時間錯亂', en: 'Time Distortion' },
-      { id: 'event-space', name: '空間扭曲', en: 'Space Warp' },
-      { id: 'event-memory', name: '記憶閃回', en: 'Memory Flash' },
-      { id: 'event-creature', name: '未知生物', en: 'Unknown Creature' },
-    ];
-    
-    function renderCard(card, container, type) {
-      const div = document.createElement('div');
-      div.className = `item card-${type}`;
-      div.innerHTML = `
-        <img src="cards/${card.id}.svg" alt="${card.name}" style="width:100px; height:140px;">
-        <div class="item-name">${card.name}</div>
-        <div class="item-en">${card.en}</div>
-      `;
-      container.appendChild(div);
-    }
-    
-    items.forEach(card => renderCard(card, document.getElementById('items-grid'), 'item'));
-    omens.forEach(card => renderCard(card, document.getElementById('omens-grid'), 'omen'));
-    events.forEach(card => renderCard(card, document.getElementById('events-grid'), 'event'));
+    // 渲染擴充房間
+    unofficialRooms.forEach(r => {
+      const container = document.getElementById(r.floor === 'ground' ? 'ground' : 'upper');
+      renderRoom(r, container, r.floor === 'ground' ? '1f' : '2f', false);
+    });
 
     // Tab 切換
     function showSection(sectionId) {
