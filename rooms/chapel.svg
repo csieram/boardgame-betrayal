@@ -1,105 +1,84 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="400" height="400">
   <defs>
     <linearGradient id="floorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#9B8365"/><stop offset="30%" style="stop-color:#7B6354"/><stop offset="60%" style="stop-color:#5A4A3A"/><stop offset="100%" style="stop-color:#3A2A1A"/>
+      <stop offset="0%" style="stop-color:#8B7355"/>
+      <stop offset="100%" style="stop-color:#5A4A3A"/>
     </linearGradient>
-    <pattern id="woodPattern" x="0" y="0" width="10" height="40" patternUnits="userSpaceOnUse">
-      <rect width="10" height="40" fill="url(#floorGrad)"/>
-      <line x1="0" y1="0" x2="0" y2="40" stroke="#2A1A0A" stroke-width="0.3" opacity="0.6"/>
-      <line x1="5" y1="0" x2="5" y2="40" stroke="#3A2A1A" stroke-width="0.2" opacity="0.4"/>
-      <ellipse cx="3" cy="10" rx="2" ry="3" fill="#4A3A2A" opacity="0.3"/>
-      <ellipse cx="7" cy="30" rx="1.5" ry="2" fill="#4A3A2A" opacity="0.2"/>
-    </pattern>
     <linearGradient id="doorWood" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#6B4B2A"/><stop offset="20%" style="stop-color:#8B6B4B"/><stop offset="40%" style="stop-color:#5A3A1A"/><stop offset="60%" style="stop-color:#7B5B3B"/><stop offset="100%" style="stop-color:#4A2A0A"/>
+      <stop offset="0%" style="stop-color:#6B4B2A"/>
+      <stop offset="50%" style="stop-color:#8B6B4B"/>
+      <stop offset="100%" style="stop-color:#4A2A0A"/>
     </linearGradient>
     <linearGradient id="goldTrim" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700"/><stop offset="50%" style="stop-color:#B8860B"/><stop offset="100%" style="stop-color:#D4AF37"/>
+      <stop offset="0%" style="stop-color:#FFD700"/>
+      <stop offset="50%" style="stop-color:#B8860B"/>
+      <stop offset="100%" style="stop-color:#FFD700"/>
     </linearGradient>
-    <radialGradient id="lampGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" style="stop-color:#FFF8DC;stop-opacity:0.9"/><stop offset="30%" style="stop-color:#FFD700;stop-opacity:0.5"/><stop offset="70%" style="stop-color:#FFD700;stop-opacity:0.2"/><stop offset="100%" style="stop-color:#FFD700;stop-opacity:0"/>
-    </radialGradient>
-    <pattern id="carpetPattern" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
-      <rect width="8" height="8" fill="#5A3A2A"/><circle cx="4" cy="4" r="2" fill="#8B7355" opacity="0.5"/>
-    </pattern>
     <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="2"/><feOffset dx="2" dy="2" result="offsetblur"/>
-      <feComponentTransfer><feFuncA type="linear" slope="0.3"/></feComponentTransfer>
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="3" dy="3" result="offsetblur"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.5"/></feComponentTransfer>
       <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
-    <filter id="innerGlow">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
-      <feComposite in="blur" in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="shadowDiff"/>
-      <feFlood flood-color="#FFD700" flood-opacity="0.3"/><feComposite in2="shadowDiff" operator="in"/>
-      <feComposite in2="SourceGraphic" operator="over"/>
-    </filter>
   </defs>
-  <rect x="8" y="8" width="84" height="84" fill="url(#woodPattern)" stroke="#2A1A0A" stroke-width="2"/>
-  <rect x="10" y="10" width="80" height="80" fill="none" stroke="#4A3728" stroke-width="1" opacity="0.5"/>
+  
+  <!-- Floor -->
+  <rect x="8" y="8" width="84" height="84" fill="url(#floorGrad)" stroke="#2A1A0A" stroke-width="2"/>
+  
+  <!-- INTERIOR: CHAPEL - Altar and pews -->
+  <!-- Altar -->
   <g filter="url(#softShadow)">
-    <rect x="36" y="-4" width="28" height="16" fill="#2A1A0A"/>
+    <!-- Altar base -->
+    <rect x="30" y="25" width="40" height="20" fill="#5A5A6A" stroke="#3A3A4A" stroke-width="2" rx="2"/>
+    <!-- Al cloth -->
+    <rect x="32" y="27" width="36" height="14" fill="#FFF" opacity="0.8"/>
+    <!-- Cross on altar -->
+    <line x1="50" y1="22" x2="50" y2="32" stroke="#D4AF37" stroke-width="3"/>
+    <line x1="45" y1="27" x2="55" y2="27" stroke="#D4AF37" stroke-width="3"/>
+    <!-- Candles -->
+    <rect x="35" y="20" width="2" height="8" fill="#DDD"/>
+    <circle cx="36" cy="19" r="2" fill="#FF6B35" opacity="0.8"/>
+    <rect x="63" y="20" width="2" height="8" fill="#DDD"/>
+    <circle cx="64" cy="19" r="2" fill="#FF6B35" opacity="0.8"/>
+  </g>
+  
+  <!-- Pews left -->
+  <g filter="url(#softShadow)">
+    <rect x="12" y="50" width="25" height="8" fill="#6B5344" stroke="#4A3324" stroke-width="1" rx="1"/>
+    <rect x="12" y="60" width="25" height="8" fill="#6B5344" stroke="#4A3324" stroke-width="1" rx="1"/>
+    <rect x="12" y="70" width="25" height="8" fill="#6B5344" stroke="#4A3324" stroke-width="1" rx="1"/>
+  </g>
+  
+  <!-- Pews right -->
+  <g filter="url(#softShadow)">
+    <rect x="63" y="50" width="25" height="8" fill="#6B5344" stroke="#4A3324" stroke-width="1" rx="1"/>
+    <rect x="63" y="60" width="25" height="8" fill="#6B5344" stroke="#4A3324" stroke-width="1" rx="1"/>
+    <rect x="63" y="70" width="25" height="8" fill="#6B5344" stroke="#4A3324" stroke-width="1" rx="1"/>
+  </g>
+  
+  <!-- Aisle carpet -->
+  <rect x="40" y="48" width="20" height="40" fill="#8B0000" opacity="0.4"/>
+  
+  <!-- Stained glass window hint -->
+  <polygon points="50,10 60,22 40,22" fill="#4682B4" opacity="0.5" stroke="#2E5A8B" stroke-width="1"/>
+  <line x1="50" y1="10" x2="50" y2="22" stroke="#2E5A8B" stroke-width="1"/>
+  <line x1="45" y1="16" x2="55" y2="16" stroke="#2E5A8B" stroke-width="1"/>
+  
+  <!-- Door North -->
+  <g filter="url(#softShadow)">
+    <rect x="36" y="-4" width="28" height="16" fill="#1A0A00"/>
     <rect x="38" y="-2" width="24" height="14" fill="url(#doorWood)"/>
-    <line x1="50" y1="-2" x2="50" y2="12" stroke="#3A2A1A" stroke-width="0.5"/>
-    <line x1="38" y1="5" x2="62" y2="5" stroke="#3A2A1A" stroke-width="0.5"/>
-    <rect x="38" y="-2" width="24" height="14" fill="none" stroke="url(#goldTrim)" stroke-width="1"/>
-    <circle cx="55" cy="6" r="2" fill="url(#goldTrim)"/><circle cx="55" cy="6" r="1" fill="#B8860B"/>
+    <line x1="50" y1="-2" x2="50" y2="12" stroke="#2A1A0A" stroke-width="0.5"/>
+    <line x1="38" y1="5" x2="62" y2="5" stroke="#2A1A0A" stroke-width="0.5"/>
+    <rect x="38" y="-2" width="24" height="14" fill="none" stroke="url(#goldTrim)" stroke-width="1.5"/>
+    <circle cx="55" cy="6" r="2.5" fill="url(#goldTrim)"/>
+    <circle cx="55" cy="6" r="1.5" fill="#B8860B"/>
   </g>
+  
+  <!-- Symbol O -->
   <g filter="url(#softShadow)">
-    <rect x="88" y="36" width="16" height="28" fill="#2A1A0A"/>
-    <rect x="90" y="38" width="12" height="24" fill="url(#doorWood)"/>
-    <line x1="90" y1="50" x2="102" y2="50" stroke="#3A2A1A" stroke-width="0.5"/>
-    <line x1="96" y1="38" x2="96" y2="62" stroke="#3A2A1A" stroke-width="0.5"/>
-    <rect x="90" y="38" width="12" height="24" fill="none" stroke="url(#goldTrim)" stroke-width="1"/>
-    <circle cx="96" cy="55" r="2" fill="url(#goldTrim)"/><circle cx="96" cy="55" r="1" fill="#B8860B"/>
+    <circle cx="85" cy="15" r="8" fill="#8B4DA8" stroke="#6B2D88" stroke-width="1"/>
+    <circle cx="85" cy="15" r="6" fill="#AB6DC8" opacity="0.5"/>
+    <text x="85" y="19" text-anchor="middle" font-size="11" fill="#FFF" font-weight="bold" font-family="serif">O</text>
   </g>
-  <g filter="url(#softShadow)">
-    <rect x="-4" y="36" width="16" height="28" fill="#2A1A0A"/>
-    <rect x="-2" y="38" width="12" height="24" fill="url(#doorWood)"/>
-    <line x1="-2" y1="50" x2="10" y2="50" stroke="#3A2A1A" stroke-width="0.5"/>
-    <line x1="4" y1="38" x2="4" y2="62" stroke="#3A2A1A" stroke-width="0.5"/>
-    <rect x="-2" y="38" width="12" height="24" fill="none" stroke="url(#goldTrim)" stroke-width="1"/>
-    <circle cx="4" cy="55" r="2" fill="url(#goldTrim)"/><circle cx="4" cy="55" r="1" fill="#B8860B"/>
-  </g>
-  <g filter="url(#softShadow)">
-    <rect x="22" y="22" width="56" height="56" fill="url(#carpetPattern)" rx="3"/>
-    <rect x="24" y="24" width="52" height="52" fill="none" stroke="#8B7355" stroke-width="2" rx="2"/>
-    <rect x="26" y="26" width="48" height="48" fill="none" stroke="#A08060" stroke-width="0.5" rx="1"/>
-  </g>
-  <g filter="url(#softShadow)">
-    <line x1="50" y1="8" x2="50" y2="30" stroke="#4A4A4A" stroke-width="1.5"/>
-    <line x1="50" y1="30" x2="38" y2="42" stroke="#D4AF37" stroke-width="1"/>
-    <line x1="50" y1="30" x2="62" y2="42" stroke="#D4AF37" stroke-width="1"/>
-    <line x1="50" y1="30" x2="50" y2="45" stroke="#D4AF37" stroke-width="1"/>
-    <circle cx="38" cy="42" r="4" fill="#FFF8DC" filter="url(#innerGlow)"/>
-    <circle cx="62" cy="42" r="4" fill="#FFF8DC" filter="url(#innerGlow)"/>
-    <circle cx="50" cy="45" r="5" fill="#FFF8DC" filter="url(#innerGlow)"/>
-    <circle cx="50" cy="42" r="20" fill="url(#lampGlow)"/>
-    <circle cx="50" cy="42" r="30" fill="url(#lampGlow)" opacity="0.5"/>
-    <path d="M35,40 Q38,35 41,40" fill="none" stroke="#D4AF37" stroke-width="1"/>
-    <path d="M59,40 Q62,35 65,40" fill="none" stroke="#D4AF37" stroke-width="1"/>
-    <path d="M47,43 Q50,38 53,43" fill="none" stroke="#D4AF37" stroke-width="1"/>
-  </g>
-  <g filter="url(#softShadow)">
-    <rect x="26" y="58" width="48" height="24" fill="#5A4A3A" stroke="#3A2A1A" stroke-width="1"/>
-    <line x1="26" y1="63" x2="74" y2="63" stroke="#3A2A1A" stroke-width="0.8"/>
-    <line x1="26" y1="68" x2="74" y2="68" stroke="#3A2A1A" stroke-width="0.8"/>
-    <line x1="26" y1="73" x2="74" y2="73" stroke="#3A2A1A" stroke-width="0.8"/>
-    <line x1="26" y1="78" x2="74" y2="78" stroke="#3A2A1A" stroke-width="0.8"/>
-    <rect x="26" y="58" width="48" height="4" fill="#7B6B5B" opacity="0.5"/>
-    <rect x="26" y="63" width="48" height="4" fill="#6B5B4B" opacity="0.5"/>
-    <rect x="26" y="68" width="48" height="4" fill="#5B4B3B" opacity="0.5"/>
-    <rect x="26" y="73" width="48" height="4" fill="#4B3B2B" opacity="0.5"/>
-    <line x1="26" y1="56" x2="26" y2="82" stroke="#654321" stroke-width="3"/>
-    <line x1="74" y1="56" x2="74" y2="82" stroke="#654321" stroke-width="3"/>
-    <line x1="26" y1="58" x2="74" y2="58" stroke="#654321" stroke-width="2"/>
-    <line x1="32" y1="58" x2="32" y2="63" stroke="#654321" stroke-width="2"/>
-    <line x1="40" y1="58" x2="40" y2="63" stroke="#654321" stroke-width="2"/>
-    <line x1="50" y1="58" x2="50" y2="63" stroke="#654321" stroke-width="2"/>
-    <line x1="60" y1="58" x2="60" y2="63" stroke="#654321" stroke-width="2"/>
-    <line x1="68" y1="58" x2="68" y2="63" stroke="#654321" stroke-width="2"/>
-  </g>
-  <circle cx="12" cy="12" r="3" fill="#4A3728" opacity="0.5"/>
-  <circle cx="88" cy="12" r="3" fill="#4A3728" opacity="0.5"/>
-  <circle cx="12" cy="88" r="3" fill="#4A3728" opacity="0.5"/>
-  <circle cx="88" cy="88" r="3" fill="#4A3728" opacity="0.5"/>
 </svg>
