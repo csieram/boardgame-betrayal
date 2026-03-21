@@ -1,4 +1,3 @@
 {
-  "/gallery/characters/page": "app/gallery/characters/page.js",
-  "/gallery/cards/page": "app/gallery/cards/page.js"
+  "/gallery/characters/page": "app/gallery/characters/page.js"
 }
