@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="400" height="400">
+  <defs>
+    <linearGradient id="floorGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#6A7B8B"/><stop offset="50%" style="stop-color:#4A5B6B"/><stop offset="100%" style="stop-color:#2A3A4B"/></linearGradient>
+    <pattern id="stonePattern" x="0" y="0" width="15" height="15" patternUnits="userSpaceOnUse"><rect width="15" height="15" fill="url(#floorGrad)"/><line x1="0" y1="0" x2="15" y2="15" stroke="#3A4A5B" stroke-width="0.5" opacity="0.4"/><line x1="15" y1="0" x2="0" y2="15" stroke="#3A4A5B" stroke-width="0.5" opacity="0.4"/></pattern>
+    <linearGradient id="doorWood" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#5A3A1A"/><stop offset="50%" style="stop-color:#7B5B3B"/><stop offset="100%" style="stop-color:#4A2A0A"/></linearGradient>
+    <linearGradient id="goldTrim" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#FFD700"/><stop offset="50%" style="stop-color:#B8860B"/><stop offset="100%" style="stop-color:#D4AF37"/></linearGradient>
+    <linearGradient id="windowGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#87CEEB"/><stop offset="100%" style="stop-color:#E0F6FF"/></linearGradient>
+    <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/><feOffset in="blur" dx="2" dy="2" result="offsetBlur"/><feComponentTransfer><feFuncA type="linear" slope="0.4"/></feComponentTransfer><feMerge><feMergeNode in="offsetBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <polygon points="50,8 85,25 92,50 85,75 50,92 15,75 8,50 15,25" fill="url(#stonePattern)" stroke="#1A2A3B" stroke-width="2"/>
+  <g filter="url(#softShadow)">
+    <rect x="38" y="88" width="24" height="16" fill="#1A0A00"/>
+    <rect x="40" y="90" width="20" height="14" fill="url(#doorWood)"/>
+    <line x1="50" y1="90" x2="50" y2="104" stroke="#2A1A0A" stroke-width="0.5"/>
+    <rect x="40" y="90" width="20" height="14" fill="none" stroke="url(#goldTrim)" stroke-width="1.5"/>
+    <circle cx="55" cy="94" r="2" fill="url(#goldTrim)"/>
+    <circle cx="55" cy="94" r="1" fill="#B8860B"/>
+  </g>
+  <polygon points="50,18 75,30 80,50 75,70 50,82 25,70 20,50 25,30" fill="#7B8B9B" opacity="0.5"/>
+  <rect x="38" y="28" width="10" height="15" fill="url(#windowGrad)" opacity="0.7" stroke="#4A5B6B" filter="url(#softShadow)"/>
+  <rect x="52" y="28" width="10" height="15" fill="url(#windowGrad)" opacity="0.7" stroke="#4A5B6B" filter="url(#softShadow)"/>
+  <rect x="32" y="50" width="8" height="12" fill="url(#windowGrad)" opacity="0.7" stroke="#4A5B6B" filter="url(#softShadow)"/>
+  <rect x="60" y="50" width="8" height="12" fill="url(#windowGrad)" opacity="0.7" stroke="#4A5B6B" filter="url(#softShadow)"/>
+</svg>

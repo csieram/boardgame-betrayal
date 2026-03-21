@@ -1,6 +1,7 @@
 'use client';
 
 import { Room } from '@betrayal/shared';
+import { useState, useEffect } from 'react';
 
 interface RoomTileProps {
   room: Room;
@@ -10,6 +11,31 @@ interface RoomTileProps {
 }
 
 export function RoomTile({ room, rotation = 0, isDiscovered = true, onClick }: RoomTileProps) {
+  const [svgContent, setSvgContent] = useState<string>(room.icon);
+
+  useEffect(() => {
+    // 如果有 gallerySvg，加载正确的 SVG 文件
+    if (room.gallerySvg) {
+      // 添加 /betrayal 前缀
+      const svgPath = room.gallerySvg.startsWith('/betrayal') 
+        ? room.gallerySvg 
+        : `/betrayal${room.gallerySvg}`;
+      fetch(svgPath)
+        .then(res => res.text())
+        .then(svg => {
+          // 提取 SVG 内容（去掉 xmlns 等属性）
+          const match = svg.match(/<svg[^>]*>([\s\S]*)<\/svg>/);
+          if (match) {
+            setSvgContent(match[1]);
+          }
+        })
+        .catch(() => {
+          // 加载失败时使用默认 icon
+          setSvgContent(room.icon);
+        });
+    }
+  }, [room.gallerySvg, room.icon]);
+
   return (
     <div 
       className="relative w-24 h-24 cursor-pointer transition-transform hover:scale-105"
@@ -27,7 +53,7 @@ export function RoomTile({ room, rotation = 0, isDiscovered = true, onClick }: R
           opacity: isDiscovered ? 1 : 0.3
         }}
       >
-        <g dangerouslySetInnerHTML={{ __html: room.icon }}/>
+        <g dangerouslySetInnerHTML={{ __html: svgContent }}/>
       </svg>
       
       {/* Room name tooltip */}

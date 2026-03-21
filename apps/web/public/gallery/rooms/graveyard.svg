@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="400" height="400">
+  <defs>
+    <linearGradient id="floorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#5A5A5A"/>
+      <stop offset="100%" style="stop-color:#3A3A3A"/>
+    </linearGradient>
+    <linearGradient id="doorWood" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#4A2A0A"/>
+      <stop offset="50%" style="stop-color:#6B4B2B"/>
+      <stop offset="100%" style="stop-color:#3A1A00"/>
+    </linearGradient>
+    <linearGradient id="goldTrim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700"/>
+      <stop offset="50%" style="stop-color:#B8860B"/>
+      <stop offset="100%" style="stop-color:#FFD700"/>
+    </linearGradient>
+    <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="3" dy="3" result="offsetblur"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.5"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  
+  <rect x="8" y="8" width="84" height="84" fill="url(#floorGrad)" stroke="#1A0A00" stroke-width="2"/>
+  
+  <!-- Tombstone 1 -->
+  <g filter="url(#softShadow)">
+    <rect x="18" y="28" width="12" height="28" fill="#666" stroke="#444" stroke-width="1" transform="rotate(-8 24 42)"/>
+    <line x1="20" y1="32" x2="28" y2="32" stroke="#444" stroke-width="2" transform="rotate(-8 24 32)"/>
+    <line x1="24" y1="28" x2="24" y2="36" stroke="#444" stroke-width="2" transform="rotate(-8 24 32)"/>
+    <!-- Grave mound -->
+    <ellipse cx="24" cy="62" rx="16" ry="7" fill="#3A4A3A" opacity="0.6"/>
+  </g>
+  
+  <!-- Tombstone 2 -->
+  <g filter="url(#softShadow)">
+    <rect x="44" y="22" width="12" height="32" fill="#666" stroke="#444" stroke-width="1" transform="rotate(5 50 38)"/>
+    <line x1="46" y1="28" x2="54" y2="28" stroke="#444" stroke-width="2" transform="rotate(5 50 28)"/>
+    <line x1="50" y1="24" x2="50" y2="32" stroke="#444" stroke-width="2" transform="rotate(5 50 28)"/>
+    <!-- Grave mound -->
+    <ellipse cx="50" cy="62" rx="18" ry="8" fill="#3A4A3A" opacity="0.6"/>
+  </g>
+  
+  <!-- Tombstone 3 -->
+  <g filter="url(#softShadow)">
+    <rect x="70" y="30" width="11" height="26" fill="#666" stroke="#444" stroke-width="1" transform="rotate(-4 75 43)"/>
+    <line x1="72" y1="35" x2="79" y2="35" stroke="#444" stroke-width="2" transform="rotate(-4 75 35)"/>
+    <line x1="75" y1="31" x2="75" y2="39" stroke="#444" stroke-width="2" transform="rotate(-4 75 35)"/>
+    <!-- Grave mound -->
+    <ellipse cx="75" cy="64" rx="15" ry="7" fill="#3A4A3A" opacity="0.6"/>
+  </g>
+  
+  <!-- Dead grass tufts -->
+  <line x1="15" y1="75" x2="17" y2="68" stroke="#4A5A4A" stroke-width="1"/>
+  <line x1="85" y1="72" x2="87" y2="65" stroke="#4A5A4A" stroke-width="1"/>
+  <line x1="35" y1="78" x2="36" y2="72" stroke="#4A5A4A" stroke-width="1"/>
+  
+  <!-- Door North -->
+  <g filter="url(#softShadow)">
+    <rect x="36" y="-4" width="28" height="16" fill="#1A0A00"/>
+    <rect x="38" y="-2" width="24" height="14" fill="url(#doorWood)"/>
+    <line x1="50" y1="-2" x2="50" y2="12" stroke="#2A1A0A" stroke-width="0.5"/>
+    <line x1="38" y1="5" x2="62" y2="5" stroke="#2A1A0A" stroke-width="0.5"/>
+    <rect x="38" y="-2" width="24" height="14" fill="none" stroke="url(#goldTrim)" stroke-width="1.5"/>
+    <circle cx="55" cy="6" r="2.5" fill="url(#goldTrim)"/>
+    <circle cx="55" cy="6" r="1.5" fill="#B8860B"/>
+  </g>
+  
+  <!-- Door East -->
+  <g filter="url(#softShadow)">
+    <rect x="88" y="36" width="16" height="28" fill="#1A0A00"/>
+    <rect x="90" y="38" width="12" height="24" fill="url(#doorWood)"/>
+    <line x1="90" y1="50" x2="102" y2="50" stroke="#2A1A0A" stroke-width="0.5"/>
+    <line x1="96" y1="38" x2="96" y2="62" stroke="#2A1A0A" stroke-width="0.5"/>
+    <rect x="90" y="38" width="12" height="24" fill="none" stroke="url(#goldTrim)" stroke-width="1.5"/>
+    <circle cx="96" cy="55" r="2.5" fill="url(#goldTrim)"/>
+    <circle cx="96" cy="55" r="1.5" fill="#B8860B"/>
+  </g>
+</svg>

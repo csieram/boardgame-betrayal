@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="400" height="400">
+  <defs>
+    <linearGradient id="floorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B7355"/>
+      <stop offset="100%" style="stop-color:#5A4A3A"/>
+    </linearGradient>
+    <linearGradient id="doorWood" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#6B4B2A"/>
+      <stop offset="50%" style="stop-color:#8B6B4B"/>
+      <stop offset="100%" style="stop-color:#4A2A0A"/>
+    </linearGradient>
+    <linearGradient id="goldTrim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700"/>
+      <stop offset="50%" style="stop-color:#B8860B"/>
+      <stop offset="100%" style="stop-color:#FFD700"/>
+    </linearGradient>
+    <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="3" dy="3" result="offsetblur"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.5"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Floor -->
+  <rect x="8" y="8" width="84" height="84" fill="url(#floorGrad)" stroke="#2A1A0A" stroke-width="2"/>
+  
+  <!-- INTERIOR: KITCHEN - Cabinets and stove -->
+  <!-- Upper cabinets -->
+  <g filter="url(#softShadow)">
+    <rect x="12" y="12" width="76" height="20" fill="#6B5344" stroke="#4A3324" stroke-width="1" rx="1"/>
+    <!-- Cabinet doors -->
+    <rect x="14" y="14" width="22" height="16" fill="#7B6354" stroke="#5A4334" stroke-width="0.5"/>
+    <rect x="38" y="14" width="24" height="16" fill="#7B6354" stroke="#5A4334" stroke-width="0.5"/>
+    <rect x="64" y="14" width="22" height="16" fill="#7B6354" stroke="#5A4334" stroke-width="0.5"/>
+    <!-- Handles -->
+    <circle cx="30" cy="22" r="1.5" fill="#444"/>
+    <circle cx="50" cy="22" r="1.5" fill="#444"/>
+    <circle cx="70" cy="22" r="1.5" fill="#444"/>
+  </g>
+  
+  <!-- Stove -->
+  <g filter="url(#softShadow)">
+    <rect x="15" y="55" width="28" height="30" fill="#444" stroke="#222" stroke-width="1" rx="2"/>
+    <!-- Oven door -->
+    <rect x="18" y="65" width="22" height="18" fill="#222" stroke="#111" stroke-width="1"/>
+    <rect x="20" y="67" width="18" height="14" fill="#333" opacity="0.5"/>
+    <!-- Burners -->
+    <circle cx="22" cy="60" r="3" fill="#111" stroke="#000" stroke-width="0.5"/>
+    <circle cx="36" cy="60" r="3" fill="#111" stroke="#000" stroke-width="0.5"/>
+    <circle cx="29" cy="56" r="2.5" fill="#111" stroke="#000" stroke-width="0.5"/>
+  </g>
+  
+  <!-- Kitchen table -->
+  <g filter="url(#softShadow)">
+    <rect x="50" y="58" width="38" height="22" fill="#8B4513" stroke="#654321" stroke-width="1" rx="2"/>
+    <!-- Table top -->
+    <rect x="52" y="56" width="34" height="4" fill="#A0522D" stroke="#8B4513" stroke-width="0.5"/>
+    <!-- Legs -->
+    <line x1="54" y1="80" x2="54" y2="86" stroke="#654321" stroke-width="2"/>
+    <line x1="84" y1="80" x2="84" y2="86" stroke="#654321" stroke-width="2"/>
+  </g>
+  
+  <!-- Lower cabinets -->
+  <g filter="url(#softShadow)">
+    <rect x="48" y="35" width="40" height="18" fill="#6B5344" stroke="#4A3324" stroke-width="1"/>
+    <rect x="50" y="37" width="16" height="14" fill="#7B6354" stroke="#5A4334" stroke-width="0.5"/>
+    <rect x="70" y="37" width="16" height="14" fill="#7B6354" stroke="#5A4334" stroke-width="0.5"/>
+    <circle cx="62" cy="44" r="1.5" fill="#444"/>
+    <circle cx="74" cy="44" r="1.5" fill="#444"/>
+  </g>
+  
+  <!-- Sink -->
+  <rect x="20" y="36" width="20" height="14" fill="#AAA" stroke="#888" stroke-width="1" rx="1"/>
+  <ellipse cx="30" cy="40" rx="6" ry="3" fill="#87CEEB" opacity="0.3"/>
+  
+  <!-- Door North -->
+  <g filter="url(#softShadow)">
+    <rect x="36" y="-4" width="28" height="16" fill="#1A0A00"/>
+    <rect x="38" y="-2" width="24" height="14" fill="url(#doorWood)"/>
+    <line x1="50" y1="-2" x2="50" y2="12" stroke="#2A1A0A" stroke-width="0.5"/>
+    <line x1="38" y1="5" x2="62" y2="5" stroke="#2A1A0A" stroke-width="0.5"/>
+    <rect x="38" y="-2" width="24" height="14" fill="none" stroke="url(#goldTrim)" stroke-width="1.5"/>
+    <circle cx="55" cy="6" r="2.5" fill="url(#goldTrim)"/>
+    <circle cx="55" cy="6" r="1.5" fill="#B8860B"/>
+  </g>
+  
+  <!-- Door East -->
+  <g filter="url(#softShadow)">
+    <rect x="88" y="36" width="16" height="28" fill="#1A0A00"/>
+    <rect x="90" y="38" width="12" height="24" fill="url(#doorWood)"/>
+    <line x1="90" y1="50" x2="102" y2="50" stroke="#2A1A0A" stroke-width="0.5"/>
+    <line x1="96" y1="38" x2="96" y2="62" stroke="#2A1A0A" stroke-width="0.5"/>
+    <rect x="90" y="38" width="12" height="24" fill="none" stroke="url(#goldTrim)" stroke-width="1.5"/>
+    <circle cx="96" cy="55" r="2.5" fill="url(#goldTrim)"/>
+    <circle cx="96" cy="55" r="1.5" fill="#B8860B"/>
+  </g>
+  
+  <!-- Symbol I -->
+  <g filter="url(#softShadow)">
+    <circle cx="85" cy="15" r="8" fill="#3D7AB8" stroke="#2D5A98" stroke-width="1"/>
+    <circle cx="85" cy="15" r="6" fill="#5A9AD8" opacity="0.5"/>
+    <text x="85" y="19" text-anchor="middle" font-size="11" fill="#FFF" font-weight="bold" font-family="serif">I</text>
+  </g>
+</svg>

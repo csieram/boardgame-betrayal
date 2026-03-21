@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="400" height="400">
+  <defs>
+    <linearGradient id="floorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B7355"/>
+      <stop offset="100%" style="stop-color:#5A4A3A"/>
+    </linearGradient>
+    <linearGradient id="doorWood" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#6B4B2A"/>
+      <stop offset="50%" style="stop-color:#8B6B4B"/>
+      <stop offset="100%" style="stop-color:#4A2A0A"/>
+    </linearGradient>
+    <linearGradient id="goldTrim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700"/>
+      <stop offset="50%" style="stop-color:#B8860B"/>
+      <stop offset="100%" style="stop-color:#FFD700"/>
+    </linearGradient>
+    <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="3" dy="3" result="offsetblur"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.5"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Floor -->
+  <rect x="8" y="8" width="84" height="84" fill="url(#floorGrad)" stroke="#2A1A0A" stroke-width="2"/>
+  
+  <!-- INTERIOR: LIBRARY - Tall bookshelves with books -->
+  <!-- Left bookshelf -->
+  <g filter="url(#softShadow)">
+    <rect x="10" y="12" width="20" height="76" fill="#4A3728" stroke="#2A1708" stroke-width="2"/>
+    <!-- Shelves -->
+    <line x1="10" y1="22" x2="30" y2="22" stroke="#2A1708" stroke-width="2"/>
+    <line x1="10" y1="32" x2="30" y2="32" stroke="#2A1708" stroke-width="2"/>
+    <line x1="10" y1="42" x2="30" y2="42" stroke="#2A1708" stroke-width="2"/>
+    <line x1="10" y1="52" x2="30" y2="52" stroke="#2A1708" stroke-width="2"/>
+    <line x1="10" y1="62" x2="30" y2="62" stroke="#2A1708" stroke-width="2"/>
+    <line x1="10" y1="72" x2="30" y2="72" stroke="#2A1708" stroke-width="2"/>
+    <!-- Books -->
+    <rect x="12" y="14" width="3" height="8" fill="#8B0000" stroke="#5A0000" stroke-width="0.5"/>
+    <rect x="16" y="14" width="2" height="8" fill="#006400" stroke="#004000" stroke-width="0.5"/>
+    <rect x="19" y="14" width="3" height="8" fill="#00008B" stroke="#000050" stroke-width="0.5"/>
+    <rect x="23" y="14" width="2" height="8" fill="#8B4513" stroke="#5A2D0D" stroke-width="0.5"/>
+    <rect x="26" y="14" width="3" height="8" fill="#4B0082" stroke="#2D0050" stroke-width="0.5"/>
+    
+    <rect x="12" y="24" width="2" height="8" fill="#006400" stroke="#004000" stroke-width="0.5"/>
+    <rect x="15" y="24" width="3" height="8" fill="#8B4513" stroke="#5A2D0D" stroke-width="0.5"/>
+    <rect x="19" y="24" width="2" height="8" fill="#00008B" stroke="#000050" stroke-width="0.5"/>
+    <rect x="22" y="24" width="3" height="8" fill="#8B0000" stroke="#5A0000" stroke-width="0.5"/>
+    <rect x="26" y="24" width="2" height="8" fill="#4B0082" stroke="#2D0050" stroke-width="0.5"/>
+    
+    <rect x="12" y="34" width="3" height="8" fill="#00008B" stroke="#000050" stroke-width="0.5"/>
+    <rect x="16" y="34" width="2" height="8" fill="#8B0000" stroke="#5A0000" stroke-width="0.5"/>
+    <rect x="19" y="34" width="3" height="8" fill="#006400" stroke="#004000" stroke-width="0.5"/>
+    <rect x="23" y="34" width="2" height="8" fill="#4B0082" stroke="#2D0050" stroke-width="0.5"/>
+    <rect x="26" y="34" width="2" height="8" fill="#8B4513" stroke="#5A2D0D" stroke-width="0.5"/>
+  </g>
+  
+  <!-- Right bookshelf -->
+  <g filter="url(#softShadow)">
+    <rect x="70" y="12" width="20" height="76" fill="#4A3728" stroke="#2A1708" stroke-width="2"/>
+    <!-- Shelves -->
+    <line x1="70" y1="22" x2="90" y2="22" stroke="#2A1708" stroke-width="2"/>
+    <line x1="70" y1="32" x2="90" y2="32" stroke="#2A1708" stroke-width="2"/>
+    <line x1="70" y1="42" x2="90" y2="42" stroke="#2A1708" stroke-width="2"/>
+    <line x1="70" y1="52" x2="90" y2="52" stroke="#2A1708" stroke-width="2"/>
+    <line x1="70" y1="62" x2="90" y2="62" stroke="#2A1708" stroke-width="2"/>
+    <line x1="70" y1="72" x2="90" y2="72" stroke="#2A1708" stroke-width="2"/>
+    <!-- Books -->
+    <rect x="72" y="14" width="2" height="8" fill="#8B4513" stroke="#5A2D0D" stroke-width="0.5"/>
+    <rect x="75" y="14" width="3" height="8" fill="#00008B" stroke="#000050" stroke-width="0.5"/>
+    <rect x="79" y="14" width="2" height="8" fill="#8B0000" stroke="#5A0000" stroke-width="0.5"/>
+    <rect x="82" y="14" width="3" height="8" fill="#006400" stroke="#004000" stroke-width="0.5"/>
+    <rect x="86" y="14" width="2" height="8" fill="#4B0082" stroke="#2D0050" stroke-width="0.5"/>
+    
+    <rect x="72" y="24" width="3" height="8" fill="#8B0000" stroke="#5A0000" stroke-width="0.5"/>
+    <rect x="76" y="24" width="2" height="8" fill="#4B0082" stroke="#2D0050" stroke-width="0.5"/>
+    <rect x="79" y="24" width="3" height="8" fill="#8B4513" stroke="#5A2D0D" stroke-width="0.5"/>
+    <rect x="83" y="24" width="2" height="8" fill="#006400" stroke="#004000" stroke-width="0.5"/>
+    <rect x="86" y="24" width="2" height="8" fill="#00008B" stroke="#000050" stroke-width="0.5"/>
+    
+    <rect x="72" y="34" width="2" height="8" fill="#006400" stroke="#004000" stroke-width="0.5"/>
+    <rect x="75" y="34" width="3" height="8" fill="#00008B" stroke="#000050" stroke-width="0.5"/>
+    <rect x="79" y="34" width="2" height="8" fill="#8B4513" stroke="#5A2D0D" stroke-width="0.5"/>
+    <rect x="82" y="34" width="3" height="8" fill="#8B0000" stroke="#5A0000" stroke-width="0.5"/>
+    <rect x="86" y="34" width="2" height="8" fill="#4B0082" stroke="#2D0050" stroke-width="0.5"/>
+  </g>
+  
+  <!-- Reading chair -->
+  <g filter="url(#softShadow)">
+    <rect x="38" y="55" width="24" height="28" fill="#654321" stroke="#3A2A1A" stroke-width="1" rx="3"/>
+    <rect x="40" y="58" width="20" height="15" fill="#8B4513" stroke="#654321" stroke-width="1"/>
+    <rect x="42" y="60" width="16" height="10" fill="#A0522D" opacity="0.5"/>
+  </g>
+  
+  <!-- Reading lamp -->
+  <g filter="url(#softShadow)">
+    <rect x="50" y="48" width="4" height="10" fill="#444"/>
+    <ellipse cx="52" cy="46" rx="6" ry="4" fill="#FFD700" opacity="0.8"/>
+    <circle cx="52" cy="44" r="3" fill="#FFF8DC"/>
+  </g>
+  
+  <!-- Door North -->
+  <g filter="url(#softShadow)">
+    <rect x="36" y="-4" width="28" height="16" fill="#1A0A00"/>
+    <rect x="38" y="-2" width="24" height="14" fill="url(#doorWood)"/>
+    <line x1="50" y1="-2" x2="50" y2="12" stroke="#2A1A0A" stroke-width="0.5"/>
+    <line x1="38" y1="5" x2="62" y2="5" stroke="#2A1A0A" stroke-width="0.5"/>
+    <rect x="38" y="-2" width="24" height="14" fill="none" stroke="url(#goldTrim)" stroke-width="1.5"/>
+    <circle cx="55" cy="6" r="2.5" fill="url(#goldTrim)"/>
+    <circle cx="55" cy="6" r="1.5" fill="#B8860B"/>
+  </g>
+  
+  <!-- Door East -->
+  <g filter="url(#softShadow)">
+    <rect x="88" y="36" width="16" height="28" fill="#1A0A00"/>
+    <rect x="90" y="38" width="12" height="24" fill="url(#doorWood)"/>
+    <line x1="90" y1="50" x2="102" y2="50" stroke="#2A1A0A" stroke-width="0.5"/>
+    <line x1="96" y1="38" x2="96" y2="62" stroke="#2A1A0A" stroke-width="0.5"/>
+    <rect x="90" y="38" width="12" height="24" fill="none" stroke="url(#goldTrim)" stroke-width="1.5"/>
+    <circle cx="96" cy="55" r="2.5" fill="url(#goldTrim)"/>
+    <circle cx="96" cy="55" r="1.5" fill="#B8860B"/>
+  </g>
+  
+  <!-- Symbol I -->
+  <g filter="url(#softShadow)">
+    <circle cx="85" cy="15" r="8" fill="#3D7AB8" stroke="#2D5A98" stroke-width="1"/>
+    <circle cx="85" cy="15" r="6" fill="#5A9AD8" opacity="0.5"/>
+    <text x="85" y="19" text-anchor="middle" font-size="11" fill="#FFF" font-weight="bold" font-family="serif">I</text>
+  </g>
+</svg>

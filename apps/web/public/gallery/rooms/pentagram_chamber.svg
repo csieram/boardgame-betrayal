@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="400" height="400">
+  <defs>
+    <linearGradient id="floorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#5A5A5A"/>
+      <stop offset="100%" style="stop-color:#3A3A3A"/>
+    </linearGradient>
+    <linearGradient id="doorWood" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#4A2A0A"/>
+      <stop offset="50%" style="stop-color:#6B4B2B"/>
+      <stop offset="100%" style="stop-color:#3A1A00"/>
+    </linearGradient>
+    <linearGradient id="goldTrim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700"/>
+      <stop offset="50%" style="stop-color:#B8860B"/>
+      <stop offset="100%" style="stop-color:#FFD700"/>
+    </linearGradient>
+    <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="3" dy="3" result="offsetblur"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.5"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  
+  <rect x="8" y="8" width="84" height="84" fill="url(#floorGrad)" stroke="#1A0A00" stroke-width="2"/>
+  
+  <!-- Large pentagram -->
+  <g filter="url(#glow)">
+    <polygon points="50,18 62,50 96,50 70,70 80,98 50,78 20,98 30,70 4,50 38,50" 
+             fill="none" stroke="#8B0000" stroke-width="5" stroke-linejoin="round"/>
+    <polygon points="50,18 62,50 96,50 70,70 80,98 50,78 20,98 30,70 4,50 38,50" 
+             fill="#8B0000" opacity="0.2"/>
+  </g>
+  
+  <!-- Center circle -->
+  <circle cx="50" cy="62" r="12" fill="#8B0000" opacity="0.4" stroke="#6B0000" stroke-width="2"/>
+  
+  <!-- Candles at points -->
+  <g filter="url(#softShadow)">
+    <circle cx="50" cy="32" r="5" fill="#FF6B35" opacity="0.8" filter="url(#glow)"/>
+    <rect x="48" y="35" width="4" height="8" fill="#DDD"/>
+    
+    <circle cx="78" cy="52" r="4" fill="#FF6B35" opacity="0.7" filter="url(#glow)"/>
+    <rect x="76" y="55" width="4" height="7" fill="#DDD"/>
+    
+    <circle cx="70" cy="82" r="4" fill="#FF6B35" opacity="0.7" filter="url(#glow)"/>
+    <rect x="68" y="85" width="4" height="7" fill="#DDD"/>
+    
+    <circle cx="30" cy="82" r="4" fill="#FF6B35" opacity="0.7" filter="url(#glow)"/>
+    <rect x="28" y="85" width="4" height="7" fill="#DDD"/>
+    
+    <circle cx="22" cy="52" r="4" fill="#FF6B35" opacity="0.7" filter="url(#glow)"/>
+    <rect x="20" y="55" width="4" height="7" fill="#DDD"/>
+  </g>
+  
+  <!-- Altar -->
+  <g filter="url(#softShadow)">
+    <rect x="40" y="70" width="20" height="12" fill="#4A4A4A" stroke="#333" stroke-width="1" rx="1"/>
+    <rect x="42" y="68" width="16" height="4" fill="#5A5A5A"/>
+  </g>
+  
+  <!-- Door North -->
+  <g filter="url(#softShadow)">
+    <rect x="36" y="-4" width="28" height="16" fill="#1A0A00"/>
+    <rect x="38" y="-2" width="24" height="14" fill="url(#doorWood)"/>
+    <line x1="50" y1="-2" x2="50" y2="12" stroke="#2A1A0A" stroke-width="0.5"/>
+    <line x1="38" y1="5" x2="62" y2="5" stroke="#2A1A0A" stroke-width="0.5"/>
+    <rect x="38" y="-2" width="24" height="14" fill="none" stroke="url(#goldTrim)" stroke-width="1.5"/>
+    <circle cx="55" cy="6" r="2.5" fill="url(#goldTrim)"/>
+    <circle cx="55" cy="6" r="1.5" fill="#B8860B"/>
+  </g>
+  
+  <!-- Symbol O -->
+  <g filter="url(#softShadow)">
+    <circle cx="85" cy="15" r="8" fill="#8B4DA8" stroke="#6B2D88" stroke-width="1"/>
+    <circle cx="85" cy="15" r="6" fill="#AB6DC8" opacity="0.5"/>
+    <text x="85" y="19" text-anchor="middle" font-size="11" fill="#FFF" font-weight="bold" font-family="serif">O</text>
+  </g>
+</svg>
