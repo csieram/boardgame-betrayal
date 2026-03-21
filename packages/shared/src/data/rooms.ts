@@ -88,8 +88,8 @@ export const UPPER_ROOMS: Room[] = [
   { id: 'nursery', name: '嬰兒房', nameEn: 'Nursery', floor: 'upper', symbol: 'O', doors: ['north'], description: '嬰兒的房間', color: '#8B6B7B', icon: `${floor('#9B7B8B')}${doorN}${symO}`, isOfficial: true, gallerySvg: '/gallery/rooms/nursery.svg' },
   { id: 'walkway', name: '走道', nameEn: 'Walkway', floor: 'upper', symbol: null, doors: ['north', 'south'], description: '連接的走道', color: '#5A5A5A', icon: `${floor('#6A6A6A')}${doorN}${doorS}`, gallerySvg: '/gallery/rooms/walkway.svg', isOfficial: true },
   // 額外的 Library, Tower, Research Lab 也可以在二樓
-  { id: 'library_upper', name: '圖書室(二樓)', nameEn: 'Library', floor: 'upper', symbol: 'I', doors: ['north'], description: '二樓的圖書室', color: '#5D4E37', icon: `${floor('#6B5B4B')}${doorN}${symI}`, gallerySvg: '/gallery/rooms/library_upper.svg', isOfficial: true },
-  { id: 'tower_upper', name: '塔樓(二樓)', nameEn: 'Tower', floor: 'upper', symbol: null, doors: ['north'], description: '二樓的塔樓', color: '#556B8B', icon: `${floor('#5A6B7B')}${doorN}`, gallerySvg: '/gallery/rooms/tower_upper.svg', isOfficial: true },
+  { id: 'library_upper', name: '圖書室(二樓)', nameEn: 'Library', floor: 'upper', symbol: 'I', doors: ['north'], description: '二樓的圖書室', color: '#5D4E37', icon: `${floor('#6B5B4B')}${doorN}${symI}`, gallerySvg: '/gallery/rooms/library.svg', isOfficial: true },
+  { id: 'tower_upper', name: '塔樓(二樓)', nameEn: 'Tower', floor: 'upper', symbol: null, doors: ['north'], description: '二樓的塔樓', color: '#556B8B', icon: `${floor('#5A6B7B')}${doorN}`, gallerySvg: '/gallery/rooms/tower.svg', isOfficial: true },
 ];
 
 // ==================== MULTI-FLOOR ROOMS ====================
