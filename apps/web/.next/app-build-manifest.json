@@ -6,15 +6,15 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
-    "/gallery/rooms/page": [
+    "/gallery/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/gallery/rooms/page.js"
+      "static/chunks/app/gallery/page.js"
     ],
-    "/not-found": [
+    "/gallery/characters/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/not-found.js"
+      "static/chunks/app/gallery/characters/page.js"
     ]
   }
 }

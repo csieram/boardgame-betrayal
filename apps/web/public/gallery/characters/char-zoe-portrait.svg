@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="200" height="200">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9370DB"/><stop offset="100%" style="stop-color:#4B0082"/>
+    </linearGradient>
+    <radialGradient id="faceGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#FFE4E1"/><stop offset="100%" style="stop-color:#FFC0CB"/>
+    </radialGradient>
+    <filter id="softShadow">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+      <feOffset dx="1" dy="1"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.3"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  
+  <circle cx="50" cy="50" r="48" fill="url(#bgGrad)" stroke="#4B0082" stroke-width="2"/>
+  
+  <!-- 長髮後層 -->
+  <ellipse cx="22" cy="50" rx="10" ry="25" fill="#2F1B14" filter="url(#softShadow)"/>
+  <ellipse cx="78" cy="50" rx="10" ry="25" fill="#2F1B14" filter="url(#softShadow)"/>
+  
+  <circle cx="50" cy="50" r="28" fill="url(#faceGrad)" filter="url(#softShadow)"/>
+  
+  <!-- 瀏海 -->
+  <path d="M25,35 Q40,25 50,30 Q60,25 75,35 Q70,20 50,18 Q30,20 25,35" fill="#2F1B14"/>
+  
+  <!-- 眉毛 -->
+  <path d="M38,40 Q42,38 46,40" fill="none" stroke="#2F1B14" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M54,40 Q58,38 62,40" fill="none" stroke="#2F1B14" stroke-width="1.5" stroke-linecap="round"/>
+  
+  <!-- 眼睛 -->
+  <ellipse cx="42" cy="48" rx="5" ry="6" fill="#FFF"/>
+  <ellipse cx="58" cy="48" rx="5" ry="6" fill="#FFF"/>
+  <circle cx="43" cy="49" r="3.5" fill="#228B22"/>
+  <circle cx="57" cy="49" r="3.5" fill="#228B22"/>
+  <circle cx="44" cy="48" r="1.5" fill="#FFF"/>
+  <circle cx="56" cy="48" r="1.5" fill="#FFF"/>
+  
+  <!-- 睫毛 -->
+  <path d="M37,46 L35,44 M39,44 L38,42 M47,44 L48,42" stroke="#2F1B14" stroke-width="1"/>
+  <path d="M63,46 L65,44 M61,44 L62,42 M53,44 L52,42" stroke="#2F1B14" stroke-width="1"/>
+  
+  <!-- 腮紅 -->
+  <ellipse cx="35" cy="58" rx="5" ry="3" fill="#DDA0DD" opacity="0.5"/>
+  <ellipse cx="65" cy="58" rx="5" ry="3" fill="#DDA0DD" opacity="0.5"/>
+  
+  <!-- 鼻子 -->
+  <path d="M50,54 L49,58 L51,58" fill="none" stroke="#FFB6C1" stroke-width="1.5" stroke-linecap="round"/>
+  
+  <!-- 嘴巴 -->
+  <path d="M45,64 Q50,68 55,64" fill="none" stroke="#CD853F" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- 耳環 -->
+  <circle cx="22" cy="55" r="2" fill="#FFD700"/>
+  <circle cx="78" cy="55" r="2" fill="#FFD700"/>
+</svg>
