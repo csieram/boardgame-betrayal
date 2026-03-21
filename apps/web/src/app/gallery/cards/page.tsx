@@ -102,7 +102,7 @@ export default function CardsGalleryPage() {
           >
             <div className="w-24 h-36 mb-2 bg-gray-800 rounded flex items-center justify-center overflow-hidden">
               <img 
-                src={card.svg}
+                src={`/betrayal${card.svg}`}
                 alt={card.name}
                 className="w-full h-full object-contain"
               />

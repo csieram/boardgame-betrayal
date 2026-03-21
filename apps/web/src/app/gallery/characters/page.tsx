@@ -15,7 +15,7 @@ export default function CharactersGalleryPage() {
             <div className="flex items-center gap-4 mb-4">
               {character.portraitSvg ? (
                 <img 
-                  src={character.portraitSvg}
+                  src={`/betrayal${character.portraitSvg}`}
                   alt={character.name}
                   className="w-20 h-20 rounded-full object-cover"
                 />
