@@ -1,0 +1,9 @@
+{
+  "name": "@betrayal/game-engine",
+  "version": "1.0.0",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@betrayal/shared": "workspace:*"
+  }
+}
