@@ -335,6 +335,28 @@ Agent 0 → 最终发布
 
 ## 沟通协议
 
+### Discord 汇报要求
+
+每个 Agent 必须在**自己的专属频道**发送三次更新：
+
+| 阶段 | 频道 | 说明 |
+|------|------|------|
+| **Task Received** | #agent-X | 确认接受任务 |
+| **In Progress** | #agent-X | 开始工作 |
+| **Completed** | #agent-X | 完成等待批准 |
+
+**Discord 频道对照表：**
+- Agent 1 (Architecture): #architecture (1484939726791250100)
+- Agent 2 (Rules Engine): #rules-engine (1484939899252768779)
+- Agent 3 (Frontend): #frontend (1484940096301039688)
+- Agent 4 (AI Player): #ai-player (1484939943062012116)
+- Agent 5 (Rule QA): #rule-qa (1484939989820112906)
+
+**发送命令：**
+```bash
+openclaw message send -t "频道ID" --channel discord -m "消息内容"
+```
+
 ### 每日站会 (由 Agent 0 主持)
 ```
 Agent X 报告：
@@ -350,6 +372,27 @@ Agent X 报告：
 - **Review** → 完成，等待审查
 - **QA** → Agent 5 验证中
 - **Done** → Agent 0 最终批准
+
+### 错误处理与阻塞报告
+
+**Agent 遇到问题时必须：**
+1. **立即在 Discord 发送阻塞消息**
+   ```
+   **[Blocked]** [Agent X] 任务名称
+   
+   **问题：** 描述遇到的问题
+   **需要：** 需要什么帮助
+   **影响：** 对进度的影响
+   ```
+
+2. **等待帮助或解决方案**
+   - 不要静默失败或超时
+   - 如果 10 分钟内没有进展，再次提醒
+
+**Agent 0 监控职责：**
+- 如果 Agent 超过 15 分钟没有回应 → 主动检查状态
+- 如果 Agent 报告阻塞 → 协调资源解决
+- 如果 session 超时 → 接管任务或重新指派
 
 ### 冲突解决
 1. 技术冲突 → 引用规则书讨论
