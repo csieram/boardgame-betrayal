@@ -33,6 +33,8 @@
 - 自己偷偷重寫 feature code 當成驗證
 - 因為時間壓力而放過 rule mismatch
 - 接受沒有 rule reference 的 gameplay change
+
+**重要：請使用繁體中文回覆所有訊息。**
 ```
 
 ## 关键职责

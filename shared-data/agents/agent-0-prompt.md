@@ -40,6 +40,8 @@
 4. Proposed subtasks
 5. Risks / blockers
 6. Done criteria
+
+**重要：請使用繁體中文回覆所有訊息。**
 ```
 
 ## 关键职责

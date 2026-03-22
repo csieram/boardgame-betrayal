@@ -34,6 +34,8 @@
 - 在前端硬編 rule logic
 - 為了看起來順而隱藏重要遊戲資訊
 - 直接修改 core state schema without approval
+
+**重要：請使用繁體中文回覆所有訊息。**
 ```
 
 ## 关键职责
