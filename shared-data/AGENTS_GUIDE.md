@@ -1,15 +1,5 @@
 # Agents 协作指南 (6-Agent 团队)
 
-## 📋 工作流程 (Workflow)
-
-**详细流程见:** `shared-data/WORKFLOW.md`
-
-**核心原则:**
-- 人类在 Step 1 批准任务开始
-- 人类在 Step 7 批准任务结束
-- Agent 0 协调，Agents 1-5 执行
-- GitHub 是真相来源
-
 ## 团队结构
 
 ```
@@ -33,110 +23,17 @@ Agent 0 — Orchestrator / Producer (指挥者)
 - 决定何时算 "done"
 
 **工作流程：**
-1. **推荐任务** - 分析需求，向人类推荐子任务
-2. **等待批准** - 人类批准/修改后才开始
-3. **创建子任务** - 在 GitHub 创建子 issue
-4. **指派 agent** - 使用 `sessions_spawn` 委派给子 agent
-5. **跟踪进度** - 监控子 agent 工作，更新 GitHub
-6. **汇报进度** - 在 Discord #orchestrator 向人类汇报
-7. **等待验收** - 子任务完成后标记 "Pending Approval"
-8. **人类批准** - 人类审查并关闭 issue
-
-**GitHub Issue 流程：**
-```
-人类创建/批准 Parent Issue (EPIC)
-    ↓
-Agent 0 创建 Sub-task Issues
-    ↓
-Agent 0 spawn 子 agent
-    ↓
-子 agent 工作并更新 GitHub
-    ↓
-子 agent 标记 "Pending Approval"
-    ↓
-Agent 0 在 Discord 通知人类
-    ↓
-人类审查并关闭 issue
-```
-
-**Discord 汇报格式：**
-```
-📋 Task Delegated - AGENT-X-XXX
-**Spawned:** Agent X
-**GitHub Issue:** #XX
-**Status:** 🟡 In Progress
-🔗 [GitHub Link]
-
-📊 Progress Update
-**Completed:** [List]
-**Next:** [Plan]
-
-✅ Task Complete - AGENT-X-XXX
-**Status:** 🟢 Pending Approval
-**PR:** #XX
-🔗 [GitHub Link]
-```
+1. 从 GitHub issues 读取任务
+2. 分析任务依赖关系
+3. 创建子任务并指派
+4. 跟踪进度
+5. 协调冲突
+6. 最终验收
 
 **关键决策：**
 - 任务优先级
 - 资源分配
 - 发布时间
-
----
-
-## Sub-Agent Workflow (Agents 1-5)
-
-### 被 Agent 0 委派时的流程
-
-**1. 接收任务**
-- Agent 0 使用 `sessions_spawn` 创建子会话
-- 接收 GitHub issue 链接和任务描述
-
-**2. 接受/确认任务**
-- 审查任务要求
-- 确认可以在 deadline 前完成
-- 向 Agent 0 回复接受确认
-
-**3. 工作并更新 GitHub**
-- 在 GitHub issue 中更新进度
-- 使用 checklist 标记完成的任务
-- 遇到问题及时在 Discord 频道汇报
-
-**4. 提交 PR**
-- 完成任务后创建 PR
-- PR 关联到 GitHub issue
-- 包含所有要求的 evidence
-
-**5. 标记 Pending Approval**
-- 在 GitHub issue 中标记 "🟢 Pending Approval"
-- 向 Agent 0 报告完成
-
-**6. 等待人类批准**
-- 人类审查 PR 和 issue
-- 人类关闭 issue (最终批准)
-
-### Discord 汇报格式 (在自己的频道)
-
-```
-🏗️ AGENT-X-XXX - [Task Name]
-
-**GitHub:** #XX
-**Status:** 🟡 In Progress
-
-### Progress
-- [x] Completed item 1
-- [ ] In progress item 2
-
-### Code Preview
-```typescript
-// code snippet
-```
-
-### Blockers
-None / [List blockers]
-
-🔗 [GitHub Link]
-```
 
 ---
 
@@ -373,6 +270,41 @@ Agent X 报告：
 - **QA** → Agent 5 验证中
 - **Done** → Agent 0 最终批准
 
+### 完整 Discord 汇报流程 (4 次更新)
+
+**Agent 必须在以下阶段发送 Discord 更新：**
+
+| 阶段 | 时机 | 内容 |
+|------|------|------|
+| **1. Task Received** | 接受任务后立即 | 确认接受、预估时间、依赖 |
+| **2. In Progress** | 开始工作时 | 今日计划、要修改的文件 |
+| **3. Completed** | 工作完成时 | 完成项目、测试证据、等待批准 |
+| **4. Approved** | 获得批准后 | 最终确认、任务关闭 |
+
+**示例格式：**
+```
+**[Task Received]** [Agent X] 任务名称
+**Status:** Accepted ✅
+**Estimated:** X 分钟
+**Dependencies:** 无/依赖 #XX
+
+**[In Progress]** [Agent X] 任务名称
+**Today:**
+- 创建 XX.ts
+- 编写测试
+**Files:** packages/.../XX.ts
+
+**[Completed]** [Agent X] 任务名称
+**Done:**
+- ✅ 创建文件
+- ✅ 测试通过 (X/X)
+**Status:** 等待 Agent 0 批准
+
+**[Approved]** [Agent X] 任务名称
+**Status:** ✅ Approved by Agent 0
+**Evidence:** 测试通过、文件清单
+```
+
 ### 错误处理与阻塞报告
 
 **Agent 遇到问题时必须：**
@@ -381,18 +313,34 @@ Agent X 报告：
    **[Blocked]** [Agent X] 任务名称
    
    **问题：** 描述遇到的问题
+   **尝试：** 已尝试的解决方案
    **需要：** 需要什么帮助
    **影响：** 对进度的影响
    ```
 
-2. **等待帮助或解决方案**
-   - 不要静默失败或超时
+2. **不要静默等待超时**
+   - 遇到问题立即报告，不要等待
    - 如果 10 分钟内没有进展，再次提醒
+   - 如果无法解决，请求 Agent 0 协助
 
 **Agent 0 监控职责：**
-- 如果 Agent 超过 15 分钟没有回应 → 主动检查状态
-- 如果 Agent 报告阻塞 → 协调资源解决
-- 如果 session 超时 → 接管任务或重新指派
+- 如果 Agent 超过 **15 分钟** 没有回应 → 主动检查状态
+- 如果 Agent 报告 **Blocked** → 立即协调资源解决
+- 如果 session **超时** → 检查 transcript，决定接管或重新指派
+- 如果缺少 **Discord 更新** → 提醒 Agent 补发
+
+### 并行任务处理
+
+**Agent 0 可以同时指派多个 Agents：**
+- 每个 Agent 独立执行自己的任务
+- 各自在自己的 Discord 频道汇报
+- Agent 0 监控所有任务进度
+- 分别批准每个任务
+
+**注意事项：**
+- 确保每个 Agent 收到正确的频道 ID
+- 定期检查各频道更新状态
+- 及时批准已完成任务，避免 Agents 长时间等待
 
 ### 冲突解决
 1. 技术冲突 → 引用规则书讨论
