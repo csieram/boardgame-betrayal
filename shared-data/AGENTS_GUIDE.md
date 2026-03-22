@@ -1,5 +1,15 @@
 # Agents 协作指南 (6-Agent 团队)
 
+## 📋 工作流程 (Workflow)
+
+**详细流程见:** `shared-data/WORKFLOW.md`
+
+**核心原则:**
+- 人类在 Step 1 批准任务开始
+- 人类在 Step 7 批准任务结束
+- Agent 0 协调，Agents 1-5 执行
+- GitHub 是真相来源
+
 ## 团队结构
 
 ```
