@@ -23,17 +23,110 @@ Agent 0 — Orchestrator / Producer (指挥者)
 - 决定何时算 "done"
 
 **工作流程：**
-1. 从 GitHub issues 读取任务
-2. 分析任务依赖关系
-3. 创建子任务并指派
-4. 跟踪进度
-5. 协调冲突
-6. 最终验收
+1. **推荐任务** - 分析需求，向人类推荐子任务
+2. **等待批准** - 人类批准/修改后才开始
+3. **创建子任务** - 在 GitHub 创建子 issue
+4. **指派 agent** - 使用 `sessions_spawn` 委派给子 agent
+5. **跟踪进度** - 监控子 agent 工作，更新 GitHub
+6. **汇报进度** - 在 Discord #orchestrator 向人类汇报
+7. **等待验收** - 子任务完成后标记 "Pending Approval"
+8. **人类批准** - 人类审查并关闭 issue
+
+**GitHub Issue 流程：**
+```
+人类创建/批准 Parent Issue (EPIC)
+    ↓
+Agent 0 创建 Sub-task Issues
+    ↓
+Agent 0 spawn 子 agent
+    ↓
+子 agent 工作并更新 GitHub
+    ↓
+子 agent 标记 "Pending Approval"
+    ↓
+Agent 0 在 Discord 通知人类
+    ↓
+人类审查并关闭 issue
+```
+
+**Discord 汇报格式：**
+```
+📋 Task Delegated - AGENT-X-XXX
+**Spawned:** Agent X
+**GitHub Issue:** #XX
+**Status:** 🟡 In Progress
+🔗 [GitHub Link]
+
+📊 Progress Update
+**Completed:** [List]
+**Next:** [Plan]
+
+✅ Task Complete - AGENT-X-XXX
+**Status:** 🟢 Pending Approval
+**PR:** #XX
+🔗 [GitHub Link]
+```
 
 **关键决策：**
 - 任务优先级
 - 资源分配
 - 发布时间
+
+---
+
+## Sub-Agent Workflow (Agents 1-5)
+
+### 被 Agent 0 委派时的流程
+
+**1. 接收任务**
+- Agent 0 使用 `sessions_spawn` 创建子会话
+- 接收 GitHub issue 链接和任务描述
+
+**2. 接受/确认任务**
+- 审查任务要求
+- 确认可以在 deadline 前完成
+- 向 Agent 0 回复接受确认
+
+**3. 工作并更新 GitHub**
+- 在 GitHub issue 中更新进度
+- 使用 checklist 标记完成的任务
+- 遇到问题及时在 Discord 频道汇报
+
+**4. 提交 PR**
+- 完成任务后创建 PR
+- PR 关联到 GitHub issue
+- 包含所有要求的 evidence
+
+**5. 标记 Pending Approval**
+- 在 GitHub issue 中标记 "🟢 Pending Approval"
+- 向 Agent 0 报告完成
+
+**6. 等待人类批准**
+- 人类审查 PR 和 issue
+- 人类关闭 issue (最终批准)
+
+### Discord 汇报格式 (在自己的频道)
+
+```
+🏗️ AGENT-X-XXX - [Task Name]
+
+**GitHub:** #XX
+**Status:** 🟡 In Progress
+
+### Progress
+- [x] Completed item 1
+- [ ] In progress item 2
+
+### Code Preview
+```typescript
+// code snippet
+```
+
+### Blockers
+None / [List blockers]
+
+🔗 [GitHub Link]
+```
 
 ---
 
