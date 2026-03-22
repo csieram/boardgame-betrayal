@@ -94,12 +94,14 @@ The app is configured with `basePath: '/betrayal'` for Cloudflare Tunnel compati
 
 This project uses a 6-agent team structure:
 
-- **Agent 0:** Orchestrator / Producer
-- **Agent 1:** Core Architect / State
-- **Agent 2:** Rules Engine / Gameplay
-- **Agent 3:** Frontend / UX
-- **Agent 4:** AI Player
-- **Agent 5:** Rule QA / Test Judge
+| Agent | Role | Discord Channel | Channel ID |
+|-------|------|-----------------|------------|
+| Agent 0 | Orchestrator / Producer | #orchestrator | 1484939675935314051 |
+| Agent 1 | Core Architect / State | #agent-1 | 1484939726791250100 |
+| Agent 2 | Rules Engine / Gameplay | #agent-2 | 1484939899252768779 |
+| Agent 3 | Frontend / UX | #agent-3 | 1484940096301039688 |
+| Agent 4 | AI Player | #agent-4 | 1484939943062012116 |
+| Agent 5 | Rule QA / Test Judge | #rule-qa | 1484939989820112906 |
 
 See `shared-data/agents/` for agent configurations.
 
