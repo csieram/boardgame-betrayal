@@ -8,6 +8,8 @@ export interface Character {
   // Gallery SVG 路徑
   portraitSvg?: string;
   fullSvg?: string;
+  // 兼容舊代碼
+  avatar?: string;
   // 屬性: 初始值, 當前值
   stats: {
     speed: [number, number];      // 速度
