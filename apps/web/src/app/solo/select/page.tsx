@@ -30,7 +30,7 @@ export default function SoloCharacterSelectPage() {
       sessionStorage.setItem('solo-selected-character', JSON.stringify(character));
       
       // 導航到遊戲頁面
-      router.push('/betrayal/solo');
+      router.push('/solo');
     } catch (error) {
       console.error('Failed to start game:', error);
       setIsLoading(false);

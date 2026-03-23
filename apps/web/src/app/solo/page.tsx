@@ -39,7 +39,7 @@ export default function SoloGamePage() {
       }
     } else {
       // 如果沒有儲存的角色，導航到選擇頁面
-      router.push('/betrayal/solo/select');
+      router.push('/solo/select');
     }
   }, [router]);
 
