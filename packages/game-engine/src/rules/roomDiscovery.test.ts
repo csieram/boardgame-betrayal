@@ -119,7 +119,6 @@ const createMockRoomDeck = (): RoomDeckState => ({
   ground: [
     createMockRoom('ground-1', ['north', 'south'], 'ground', 'E'),
     createMockRoom('ground-2', ['north', 'east'], 'ground', 'I'),
-    createMockRoom('ground-3', ['north'], 'ground', 'O'),
   ],
   upper: [
     createMockRoom('upper-1', ['north', 'south'], 'upper', 'E'),
@@ -129,6 +128,11 @@ const createMockRoomDeck = (): RoomDeckState => ({
     createMockRoom('basement-1', ['north', 'south'], 'basement', 'O'),
     createMockRoom('basement-2', ['north', 'east'], 'basement', null),
   ],
+  fallbackGround: [
+    createMockRoom('ground-3', ['north'], 'ground', 'O'),
+  ],
+  fallbackUpper: [],
+  fallbackBasement: [],
   drawn: new Set(),
 });
 
@@ -698,10 +702,11 @@ describe('RoomDiscoveryManager', () => {
       const state = createMockGameState();
       const stats = RoomDiscoveryManager.getRoomDeckStats(state);
       
-      expect(stats.ground).toBe(3);
+      // 更新期望值以反映新的牌堆結構（主牌堆只有 2+ 門房間）
+      expect(stats.ground).toBe(2); // 主牌堆有 2 個房間
       expect(stats.upper).toBe(2);
       expect(stats.basement).toBe(2);
-      expect(stats.total).toBe(7);
+      expect(stats.total).toBe(6);
     });
 
     it('should correctly count remaining rooms after some are drawn', () => {
@@ -713,8 +718,9 @@ describe('RoomDiscoveryManager', () => {
       });
       const stats = RoomDiscoveryManager.getRoomDeckStats(state);
       
-      expect(stats.ground).toBe(1);
-      expect(stats.total).toBe(5);
+      // 主牌堆只有 2 個房間，都已被抽出
+      expect(stats.ground).toBe(0);
+      expect(stats.total).toBe(4);
     });
   });
 
@@ -946,7 +952,8 @@ describe('Room Discovery Integration', () => {
 
   it('should handle room with Event symbol correctly', () => {
     const currentRoom = createMockRoom('entrance', ['north'], 'ground');
-    const eventRoom = createMockRoom('event-room', ['south'], 'ground', 'E');
+    // 使用 2+ 門房間（單門房間現在在備用牌堆）
+    const eventRoom = createMockRoom('event-room', ['south', 'east'], 'ground', 'E');
     
     const state = createMockGameState({
       map: {
@@ -1249,6 +1256,9 @@ describe('Room Uniqueness - Issue #60', () => {
         ground: [alreadyPlacedRoom, availableRoom],
         upper: [],
         basement: [],
+        fallbackGround: [],
+        fallbackUpper: [],
+        fallbackBasement: [],
         drawn: new Set(),
       },
       placedRoomIds: new Set(['entrance_hall', 'stairs_from_upper', 'stairs_from_basement', 'ground-1']),
@@ -1286,6 +1296,9 @@ describe('Room Uniqueness - Issue #60', () => {
         ground: [drawnRoom, availableRoom],
         upper: [],
         basement: [],
+        fallbackGround: [],
+        fallbackUpper: [],
+        fallbackBasement: [],
         drawn: new Set(['ground-1']), // ground-1 is marked as drawn
       },
       placedRoomIds: new Set(['entrance_hall', 'stairs_from_upper', 'stairs_from_basement']),
@@ -1323,6 +1336,9 @@ describe('Room Uniqueness - Issue #60', () => {
         ground: [room1, room2],
         upper: [],
         basement: [],
+        fallbackGround: [],
+        fallbackUpper: [],
+        fallbackBasement: [],
         drawn: new Set(),
       },
       placedRoomIds: new Set([
@@ -1352,6 +1368,9 @@ describe('Room Uniqueness - Issue #60', () => {
         ],
         upper: [],
         basement: [],
+        fallbackGround: [],
+        fallbackUpper: [],
+        fallbackBasement: [],
         drawn: new Set(),
       },
       placedRoomIds: new Set([
@@ -1381,6 +1400,9 @@ describe('Room Uniqueness - Issue #60', () => {
         ],
         upper: [],
         basement: [],
+        fallbackGround: [],
+        fallbackUpper: [],
+        fallbackBasement: [],
         drawn: new Set(['ground-2']), // This room is drawn but not placed yet
       },
       placedRoomIds: new Set([
@@ -1431,6 +1453,9 @@ describe('Room Uniqueness Integration', () => {
         ground: deckRooms,
         upper: [],
         basement: [],
+        fallbackGround: [],
+        fallbackUpper: [],
+        fallbackBasement: [],
         drawn: new Set(),
       },
     });
@@ -1506,6 +1531,9 @@ describe('Room Uniqueness Integration', () => {
         basement: [
           createMockRoom('basement-1', ['east'], 'basement'),
         ],
+        fallbackGround: [],
+        fallbackUpper: [],
+        fallbackBasement: [],
         drawn: new Set(),
       },
     });

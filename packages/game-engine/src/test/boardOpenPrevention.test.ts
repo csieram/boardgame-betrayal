@@ -134,6 +134,9 @@ const createMockGameState = (overrides: Partial<GameState> = {}): GameState => {
       ground: [],
       upper: [],
       basement: [],
+      fallbackGround: [],
+      fallbackUpper: [],
+      fallbackBasement: [],
       drawn: new Set(),
     },
     haunt: {
@@ -363,7 +366,10 @@ describe('drawRoomForExploration', () => {
         ground: [deckRoom],
         upper: [],
         basement: [],
-        drawn: new Set(),
+        fallbackGround: [],
+      fallbackUpper: [],
+      fallbackBasement: [],
+      drawn: new Set(),
       },
     });
 
@@ -399,7 +405,10 @@ describe('drawRoomForExploration', () => {
         ground: [closingRoom, openRoom],
         upper: [],
         basement: [],
-        drawn: new Set(),
+        fallbackGround: [],
+      fallbackUpper: [],
+      fallbackBasement: [],
+      drawn: new Set(),
       },
     });
 
@@ -434,7 +443,10 @@ describe('drawRoomForExploration', () => {
         ground: [closingRoom],
         upper: [],
         basement: [],
-        drawn: new Set(),
+        fallbackGround: [],
+      fallbackUpper: [],
+      fallbackBasement: [],
+      drawn: new Set(),
       },
     });
 
@@ -471,7 +483,10 @@ describe('drawRoomForExploration', () => {
         ground: [],
         upper: [],
         basement: [],
-        drawn: new Set(),
+        fallbackGround: [],
+      fallbackUpper: [],
+      fallbackBasement: [],
+      drawn: new Set(),
       },
     });
 
@@ -675,7 +690,10 @@ describe('Issue #66 Acceptance Criteria', () => {
         ground: [openRoom],
         upper: [],
         basement: [],
-        drawn: new Set(),
+        fallbackGround: [],
+      fallbackUpper: [],
+      fallbackBasement: [],
+      drawn: new Set(),
       },
     });
 
@@ -714,7 +732,10 @@ describe('Issue #66 Acceptance Criteria', () => {
         ground: [closingRoom, openRoom],
         upper: [],
         basement: [],
-        drawn: new Set(),
+        fallbackGround: [],
+      fallbackUpper: [],
+      fallbackBasement: [],
+      drawn: new Set(),
       },
     });
 
@@ -744,7 +765,10 @@ describe('Issue #66 Acceptance Criteria', () => {
         ground: [closingRoom],
         upper: [],
         basement: [],
-        drawn: new Set(),
+        fallbackGround: [],
+      fallbackUpper: [],
+      fallbackBasement: [],
+      drawn: new Set(),
       },
     });
 
@@ -773,7 +797,10 @@ describe('Issue #66 Acceptance Criteria', () => {
         ground: [closingRoom],
         upper: [],
         basement: [],
-        drawn: new Set(),
+        fallbackGround: [],
+      fallbackUpper: [],
+      fallbackBasement: [],
+      drawn: new Set(),
       },
     });
 
@@ -802,7 +829,10 @@ describe('Issue #66 Acceptance Criteria', () => {
         ground: [closingRoom],
         upper: [],
         basement: [],
-        drawn: new Set(),
+        fallbackGround: [],
+      fallbackUpper: [],
+      fallbackBasement: [],
+      drawn: new Set(),
       },
     });
 

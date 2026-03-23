@@ -201,6 +201,9 @@ const createMockGameState = (overrides?: Partial<GameState>): GameState => {
     ground: [],
     upper: [],
     basement: [],
+    fallbackGround: [],
+    fallbackUpper: [],
+    fallbackBasement: [],
     drawn: new Set(),
   };
 

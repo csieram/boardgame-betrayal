@@ -109,7 +109,6 @@ const createMockRoomDeck = (): RoomDeckState => ({
   ground: [
     createMockRoom('ground-1', ['north', 'south'], 'ground', 'E'),
     createMockRoom('ground-2', ['north', 'east'], 'ground', 'I'),
-    createMockRoom('ground-3', ['north'], 'ground', 'O'),
   ],
   upper: [
     createMockRoom('upper-1', ['north', 'south'], 'upper', 'E'),
@@ -119,6 +118,11 @@ const createMockRoomDeck = (): RoomDeckState => ({
     createMockRoom('basement-1', ['north', 'south'], 'basement', 'O'),
     createMockRoom('basement-2', ['north', 'east'], 'basement', null),
   ],
+  fallbackGround: [
+    createMockRoom('ground-3', ['north'], 'ground', 'O'),
+  ],
+  fallbackUpper: [],
+  fallbackBasement: [],
   drawn: new Set(),
 });
 

@@ -48,6 +48,14 @@ export interface RoomDiscoveryResult {
   attempts?: number;
 }
 
+/** 過濾後的房間牌堆（Issue #70: Approach A） */
+export interface FilteredRoomDecks {
+  /** 主牌堆：2+ 門房間 */
+  mainDeck: Room[];
+  /** 備用牌堆：單門房間（最後手段） */
+  fallbackDeck: Room[];
+}
+
 /** 旋轉後的門位置 */
 export interface RotatedDoors {
   original: Direction[];
@@ -67,6 +75,56 @@ export interface RoomDeckStats {
 
 /** 有效的旋轉角度 */
 export const VALID_ROTATIONS: (0 | 90 | 180 | 270)[] = [0, 90, 180, 270];
+
+// ==================== 牌堆過濾函數（Issue #70: Approach A） ====================
+
+/**
+ * 創建開放式房間牌堆
+ * Issue #70: Approach A - 在遊戲初始化時過濾單門房間
+ * 
+ * 邏輯：
+ * - 主牌堆：只包含 2+ 門的房間（防止棋盤封閉）
+ * - 備用牌堆：單門房間（僅在主牌堆用盡時使用）
+ * 
+ * @param rooms 原始房間列表
+ * @returns 過濾後的牌堆（主牌堆 + 備用牌堆）
+ */
+export function createOpenRoomDeck(rooms: Room[]): FilteredRoomDecks {
+  // 分離單門房間和 2+ 門房間
+  const singleDoorRooms: Room[] = [];
+  const multiDoorRooms: Room[] = [];
+  
+  for (const room of rooms) {
+    if (room.doors.length === 1) {
+      singleDoorRooms.push(room);
+    } else {
+      multiDoorRooms.push(room);
+    }
+  }
+  
+  console.log('[createOpenRoomDeck] Total rooms:', rooms.length);
+  console.log('[createOpenRoomDeck] Multi-door rooms (2+):', multiDoorRooms.length);
+  console.log('[createOpenRoomDeck] Single-door rooms:', singleDoorRooms.length);
+  
+  return {
+    mainDeck: multiDoorRooms,
+    fallbackDeck: singleDoorRooms,
+  };
+}
+
+/**
+ * 洗牌函數（Fisher-Yates）
+ * @param array 要洗牌的陣列
+ * @returns 洗牌後的新陣列
+ */
+export function shuffleArray<T>(array: T[]): T[] {
+  const result = [...array];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
 
 /** 方向旋轉映射（順時針） */
 const DIRECTION_ROTATION_MAP: Record<Direction, Record<0 | 90 | 180 | 270, Direction>> = {
@@ -186,14 +244,17 @@ export class RoomDiscoveryManager {
    * 從對應樓層牌堆抽取房間
    * Rulebook Page 12: "Draw a room tile from the corresponding floor deck"
    * 
+   * Issue #70: Approach A - 優先從主牌堆（2+ 門）抽取，用盡時使用備用牌堆
+   * 
    * 重要：每個房間在遊戲中只能出現一次。
    * 此方法會檢查已放置的房間 ID，確保不會抽到重複的房間。
    * 
    * @param state 當前遊戲狀態
    * @param floor 樓層
+   * @param useFallback 是否允許使用備用牌堆（預設 false）
    * @returns 抽取的房間，如果牌堆為空或所有房間都已放置則返回 null
    */
-  static drawRoomFromDeck(state: GameState, floor: Floor): Room | null {
+  static drawRoomFromDeck(state: GameState, floor: Floor, useFallback: boolean = false): Room | null {
     const deck = state.roomDeck[floor];
     
     // 找到第一個未被抽取且未被放置的房間
@@ -204,11 +265,30 @@ export class RoomDiscoveryManager {
       return !isDrawn && !isPlaced;
     });
     
-    if (!availableRoom) {
-      return null;
+    if (availableRoom) {
+      return availableRoom;
+    }
+    
+    // 主牌堆已空，嘗試使用備用牌堆（Issue #70: Approach A）
+    if (useFallback) {
+      const fallbackKey = `fallback${floor.charAt(0).toUpperCase()}${floor.slice(1)}` as 'fallbackGround' | 'fallbackUpper' | 'fallbackBasement';
+      const fallbackDeck = state.roomDeck[fallbackKey];
+      
+      if (fallbackDeck && fallbackDeck.length > 0) {
+        const fallbackRoom = fallbackDeck.find((r: Room) => {
+          const isDrawn = state.roomDeck.drawn.has(r.id);
+          const isPlaced = state.placedRoomIds.has(r.id);
+          return !isDrawn && !isPlaced;
+        });
+        
+        if (fallbackRoom) {
+          console.log(`[drawRoomFromDeck] Using fallback deck for ${floor}: ${fallbackRoom.name}`);
+          return fallbackRoom;
+        }
+      }
     }
 
-    return availableRoom;
+    return null;
   }
 
   /**
@@ -659,14 +739,14 @@ export function addRandomDoor(
 
 /**
  * 為探索抽取房間
- * Issue #66: 確保新房間至少有一個未連接的門，防止棋盤封閉
+ * Issue #70: Approach A - 使用預過濾的牌堆（主牌堆只包含 2+ 門房間）
  * 
  * 邏輯流程：
- * 1. 從牌堆抽取房間
+ * 1. 從主牌堆抽取房間（2+ 門）
  * 2. 旋轉以匹配門連接
  * 3. 檢查房間是否有未連接的門
  * 4. 如果有 → 放置房間
- * 5. 如果沒有 → 丟棄，重試（最多 10 次）
+ * 5. 如果主牌堆已空 → 嘗試備用牌堆（單門房間）
  * 6. 如果達到最大嘗試次數 → 添加隨機門，放置房間
  * 
  * @param gameState 當前遊戲狀態
@@ -683,6 +763,7 @@ export function drawRoomForExploration(
 ): RoomDiscoveryResult {
   const discardedRooms: Room[] = [];
   let attempts = 0;
+  let usedFallback = false;
   
   console.log('[RoomDiscovery] Starting drawRoomForExploration, floor:', floor, 'entryDirection:', entryDirection);
   
@@ -708,13 +789,37 @@ export function drawRoomForExploration(
   while (attempts < maxAttempts) {
     attempts++;
     
-    // 1. 從牌堆抽取房間
-    const room = RoomDiscoveryManager.drawRoomFromDeck(gameState, floor);
+    // 1. 從主牌堆抽取房間（2+ 門）
+    // Issue #70: 主牌堆已預過濾，只包含 2+ 門房間
+    const room = RoomDiscoveryManager.drawRoomFromDeck(gameState, floor, false);
     
     if (!room) {
-      console.log('[RoomDiscovery] No more rooms in deck, discarded count:', discardedRooms.length);
+      console.log('[RoomDiscovery] Main deck empty, trying fallback deck...');
+      // 主牌堆已空，嘗試備用牌堆（單門房間）
+      const fallbackRoom = RoomDiscoveryManager.drawRoomFromDeck(gameState, floor, true);
+      
+      if (fallbackRoom) {
+        console.log('[RoomDiscovery] Using fallback room:', fallbackRoom.name);
+        usedFallback = true;
+        
+        // 計算旋轉角度
+        const rotation = RoomDiscoveryManager.calculateRotation(fallbackRoom, entryDirection);
+        const cardDrawRequired = RoomDiscoveryManager.getCardDrawRequirement(fallbackRoom);
+        
+        return {
+          success: true,
+          room: fallbackRoom,
+          position: newPosition,
+          rotation,
+          cardDrawRequired,
+          wasModified: false,
+          attempts,
+        };
+      }
+      
       // 牌堆已空，將丟棄的房間放回牌堆再試一次
       if (discardedRooms.length > 0) {
+        console.log('[RoomDiscovery] Recycling discarded rooms:', discardedRooms.length);
         // 重新建立牌堆狀態（移除 drawn 標記）
         const newDrawn = new Set(gameState.roomDeck.drawn);
         for (const discardedRoom of discardedRooms) {
@@ -787,8 +892,8 @@ export function drawRoomForExploration(
   let finalRoom: Room | null = discardedRooms[discardedRooms.length - 1] || null;
   
   if (!finalRoom) {
-    // 如果沒有丟棄的房間，嘗試再抽一個
-    finalRoom = RoomDiscoveryManager.drawRoomFromDeck(gameState, floor);
+    // 如果沒有丟棄的房間，嘗試再抽一個（包括備用牌堆）
+    finalRoom = RoomDiscoveryManager.drawRoomFromDeck(gameState, floor, true);
   }
   
   if (!finalRoom) {

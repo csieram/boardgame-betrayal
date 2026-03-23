@@ -234,22 +234,47 @@ function placeStartingRooms(map: GameMap, rooms: Room[]): GameMap {
 
 /**
  * 初始化房間牌堆
+ * Issue #70: Approach A - 過濾單門房間，防止棋盤封閉
  */
 function initializeRoomDeck(rng: SeededRng): RoomDeckState {
   // 過濾掉起始房間
   const excludeIds = new Set(['entrance_hall', 'stairs_from_upper', 'stairs_from_basement']);
   
-  const ground = rng.shuffle(GROUND_ROOMS.filter(r => !excludeIds.has(r.id)));
-  const upper = rng.shuffle(UPPER_ROOMS.filter(r => !excludeIds.has(r.id)));
-  const basement = rng.shuffle(BASEMENT_ROOMS.filter(r => !excludeIds.has(r.id)));
-
+  // 取得各樓層房間（排除起始房間）
+  const groundRooms = GROUND_ROOMS.filter(r => !excludeIds.has(r.id));
+  const upperRooms = UPPER_ROOMS.filter(r => !excludeIds.has(r.id));
+  const basementRooms = BASEMENT_ROOMS.filter(r => !excludeIds.has(r.id));
+  
   // 加入跨樓層房間到對應牌堆
   const multiFloor = MULTI_FLOOR_ROOMS.filter(r => !excludeIds.has(r.id));
+  const groundMultiFloor = multiFloor.filter(r => r.floor === 'ground');
+  const upperMultiFloor = multiFloor.filter(r => r.floor === 'upper');
+  const basementMultiFloor = multiFloor.filter(r => r.floor === 'basement');
+  
+  // 合併各樓層房間
+  const allGround = [...groundRooms, ...groundMultiFloor];
+  const allUpper = [...upperRooms, ...upperMultiFloor];
+  const allBasement = [...basementRooms, ...basementMultiFloor];
+  
+  // 分離單門房間和 2+ 門房間（Issue #70: Approach A）
+  const groundMain = allGround.filter(r => r.doors.length >= 2);
+  const groundFallback = allGround.filter(r => r.doors.length === 1);
+  const upperMain = allUpper.filter(r => r.doors.length >= 2);
+  const upperFallback = allUpper.filter(r => r.doors.length === 1);
+  const basementMain = allBasement.filter(r => r.doors.length >= 2);
+  const basementFallback = allBasement.filter(r => r.doors.length === 1);
+  
+  console.log('[initializeRoomDeck] Ground - Main:', groundMain.length, 'Fallback:', groundFallback.length);
+  console.log('[initializeRoomDeck] Upper - Main:', upperMain.length, 'Fallback:', upperFallback.length);
+  console.log('[initializeRoomDeck] Basement - Main:', basementMain.length, 'Fallback:', basementFallback.length);
   
   return {
-    ground: [...ground, ...multiFloor.filter(r => r.floor === 'ground')],
-    upper: [...upper, ...multiFloor.filter(r => r.floor === 'upper')],
-    basement: [...basement, ...multiFloor.filter(r => r.floor === 'basement')],
+    ground: rng.shuffle(groundMain),
+    upper: rng.shuffle(upperMain),
+    basement: rng.shuffle(basementMain),
+    fallbackGround: rng.shuffle(groundFallback),
+    fallbackUpper: rng.shuffle(upperFallback),
+    fallbackBasement: rng.shuffle(basementFallback),
     drawn: new Set(),
   };
 }
@@ -537,7 +562,12 @@ export class GameStateManager {
     const state: GameState = {
       ...parsed,
       roomDeck: {
-        ...parsed.roomDeck,
+        ground: parsed.roomDeck.ground || [],
+        upper: parsed.roomDeck.upper || [],
+        basement: parsed.roomDeck.basement || [],
+        fallbackGround: parsed.roomDeck.fallbackGround || [],
+        fallbackUpper: parsed.roomDeck.fallbackUpper || [],
+        fallbackBasement: parsed.roomDeck.fallbackBasement || [],
         drawn: new Set(parsed.roomDeck.drawn || []),
       },
       placedRoomIds: new Set(parsed.placedRoomIds || []),
@@ -936,26 +966,61 @@ export class GameStateManager {
 
   /**
    * 從房間牌堆抽一張房間
+   * Issue #70: Approach A - 優先從主牌堆（2+ 門）抽取，用盡時使用備用牌堆
+   * 
+   * @param floor 樓層
+   * @param useFallback 是否允許使用備用牌堆（預設 false）
+   * @returns 抽取的房間，如果牌堆為空則返回 null
    */
-  drawRoomFromDeck(floor: Floor): Room | null {
+  drawRoomFromDeck(floor: Floor, useFallback: boolean = false): Room | null {
     const deck = this.state.roomDeck[floor as 'ground' | 'upper' | 'basement'];
     const availableRoom = deck.find((r: Room) => !this.state.roomDeck.drawn.has(r.id));
     
-    if (!availableRoom) return null;
+    if (availableRoom) {
+      // 更新已抽出集合
+      const newDrawn = new Set(this.state.roomDeck.drawn);
+      newDrawn.add(availableRoom.id);
 
-    // 更新已抽出集合
-    const newDrawn = new Set(this.state.roomDeck.drawn);
-    newDrawn.add(availableRoom.id);
+      this.state = {
+        ...this.state,
+        roomDeck: {
+          ...this.state.roomDeck,
+          drawn: newDrawn,
+        },
+      };
 
-    this.state = {
-      ...this.state,
-      roomDeck: {
-        ...this.state.roomDeck,
-        drawn: newDrawn,
-      },
-    };
+      return availableRoom;
+    }
+    
+    // 主牌堆已空，嘗試使用備用牌堆
+    if (useFallback) {
+      const fallbackKey = `fallback${floor.charAt(0).toUpperCase()}${floor.slice(1)}` as 'fallbackGround' | 'fallbackUpper' | 'fallbackBasement';
+      const fallbackDeck = this.state.roomDeck[fallbackKey];
+      
+      if (fallbackDeck && fallbackDeck.length > 0) {
+        const fallbackRoom = fallbackDeck.find((r: Room) => !this.state.roomDeck.drawn.has(r.id));
+        
+        if (fallbackRoom) {
+          console.log(`[GameStateManager.drawRoomFromDeck] Using fallback deck for ${floor}: ${fallbackRoom.name}`);
+          
+          // 更新已抽出集合
+          const newDrawn = new Set(this.state.roomDeck.drawn);
+          newDrawn.add(fallbackRoom.id);
 
-    return availableRoom;
+          this.state = {
+            ...this.state,
+            roomDeck: {
+              ...this.state.roomDeck,
+              drawn: newDrawn,
+            },
+          };
+
+          return fallbackRoom;
+        }
+      }
+    }
+
+    return null;
   }
 
   /**
