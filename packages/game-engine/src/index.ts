@@ -48,11 +48,20 @@ export {
   drawRoomForExploration,
   getUnconnectedDoors,
   addRandomDoor,
+  // Stair System (Issue #80)
+  StairManager,
+  STAIR_ROOM_IDS,
+  STAIR_CONNECTIONS,
+  isStairRoom,
+  canUseStairs,
+  getStairConnections,
+  getStairTargetPosition,
 } from './rules/roomDiscovery';
 export type {
   RoomDiscoveryResult,
   RotatedDoors,
   RoomDeckStats,
+  StairConnection,
 } from './rules/roomDiscovery';
 
 // Tile Placement System

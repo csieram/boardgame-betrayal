@@ -24,6 +24,7 @@ import {
   DIRECTION_DELTAS,
   DiscoverAction,
   CardType,
+  StatType,
 } from '../types';
 import { Room, SymbolType, Floor as RoomFloor } from '@betrayal/shared';
 import { TurnManager } from './turn';
@@ -595,7 +596,7 @@ export class RoomDiscoveryManager {
   /**
    * 取得指定位置的 Tile
    */
-  private static getTileAt(state: GameState, position: Position3D): Tile | undefined {
+  static getTileAt(state: GameState, position: Position3D): Tile | undefined {
     const floorMap = state.map[position.floor];
     if (!floorMap) return undefined;
     return floorMap[position.y]?.[position.x];
@@ -1068,6 +1069,247 @@ export function calculateConnectionRotation(
   }
   
   return null;
+}
+
+// ==================== 樓梯連接系統 (Issue #80) ====================
+
+/**
+ * 樓梯房間 ID 定義
+ * 這些房間允許玩家在不同樓層之間移動
+ */
+export const STAIR_ROOM_IDS = {
+  /** 大樓梯：連接一樓和二樓 (Ground ↔ Upper) */
+  GRAND_STAIRCASE: 'grand_staircase',
+  /** 地下室樓梯：從地下室到一樓 (Basement → Ground) */
+  STAIRS_FROM_BASEMENT: 'stairs_from_basement',
+  /** 一樓樓梯(下)：從一樓到地下室 (Ground → Basement) */
+  STAIRS_FROM_GROUND: 'stairs_from_ground',
+  /** 二樓樓梯：從二樓到一樓 (Upper → Ground) */
+  STAIRS_FROM_UPPER: 'stairs_from_upper',
+  /** 神秘電梯：可移動到任何樓層 */
+  MYSTIC_ELEVATOR: 'mystic_elevator',
+  /** 坍塌房間：會掉到地下室 */
+  COLLAPSED_ROOM: 'collapsed_room',
+} as const;
+
+/**
+ * 樓梯連接配置
+ * 定義每個樓梯房間允許的樓層轉換
+ */
+export interface StairConnection {
+  /** 來源樓層 */
+  from: Floor;
+  /** 目標樓層 */
+  to: Floor;
+  /** 是否需要檢定 */
+  requiresCheck?: boolean;
+  /** 檢定屬性（如需要） */
+  checkStat?: StatType;
+  /** 檢定目標值（如需要） */
+  checkTarget?: number;
+  /** 描述 */
+  description: string;
+}
+
+/**
+ * 樓梯連接映射表
+ * 定義每個樓梯房間的連接規則
+ */
+export const STAIR_CONNECTIONS: Record<string, StairConnection[]> = {
+  [STAIR_ROOM_IDS.GRAND_STAIRCASE]: [
+    { from: 'ground', to: 'upper', description: '大樓梯通往二樓' },
+    { from: 'upper', to: 'ground', description: '大樓梯通往一樓' },
+  ],
+  [STAIR_ROOM_IDS.STAIRS_FROM_BASEMENT]: [
+    { from: 'basement', to: 'ground', description: '樓梯通往一樓' },
+  ],
+  [STAIR_ROOM_IDS.STAIRS_FROM_GROUND]: [
+    { from: 'ground', to: 'basement', description: '樓梯通往地下室' },
+  ],
+  [STAIR_ROOM_IDS.STAIRS_FROM_UPPER]: [
+    { from: 'upper', to: 'ground', description: '樓梯通往一樓' },
+  ],
+  [STAIR_ROOM_IDS.MYSTIC_ELEVATOR]: [
+    { from: 'ground', to: 'upper', description: '電梯通往二樓' },
+    { from: 'ground', to: 'basement', description: '電梯通往地下室' },
+    { from: 'upper', to: 'ground', description: '電梯通往一樓' },
+    { from: 'upper', to: 'basement', description: '電梯通往地下室' },
+    { from: 'basement', to: 'ground', description: '電梯通往一樓' },
+    { from: 'basement', to: 'upper', description: '電梯通往二樓' },
+  ],
+  [STAIR_ROOM_IDS.COLLAPSED_ROOM]: [
+    { from: 'upper', to: 'basement', description: '地板坍塌，你掉到了地下室', requiresCheck: true, checkStat: 'speed', checkTarget: 4 },
+  ],
+};
+
+/**
+ * 檢查房間是否為樓梯房間
+ * 
+ * @param roomId 房間 ID
+ * @returns 是否為樓梯房間
+ */
+export function isStairRoom(roomId: string): boolean {
+  return Object.values(STAIR_ROOM_IDS).includes(roomId as any);
+}
+
+/**
+ * 獲取樓梯房間的可用連接
+ * 
+ * @param roomId 房間 ID
+ * @param currentFloor 當前樓層
+ * @returns 可用的樓層連接列表
+ */
+export function getStairConnections(roomId: string, currentFloor: Floor): StairConnection[] {
+  const connections = STAIR_CONNECTIONS[roomId];
+  if (!connections) return [];
+  
+  return connections.filter(conn => conn.from === currentFloor);
+}
+
+/**
+ * 檢查玩家是否可以使用樓梯
+ * 
+ * @param roomId 房間 ID
+ * @param currentFloor 當前樓層
+ * @returns 是否可以使用樓梯
+ */
+export function canUseStairs(roomId: string, currentFloor: Floor): boolean {
+  const connections = getStairConnections(roomId, currentFloor);
+  return connections.length > 0;
+}
+
+/**
+ * 獲取樓梯轉換後的目標位置
+ * 
+ * 當玩家使用樓梯時，需要知道在目標樓層的哪個位置出現。
+ * 根據規則書，樓梯房間應該在相對應的位置。
+ * 
+ * @param roomId 樓梯房間 ID
+ * @param currentPosition 當前位置
+ * @param targetFloor 目標樓層
+ * @returns 目標位置，如果無法轉換則返回 null
+ */
+export function getStairTargetPosition(
+  roomId: string,
+  currentPosition: Position3D,
+  targetFloor: Floor
+): Position3D | null {
+  // 檢查是否可以使用樓梯
+  if (!canUseStairs(roomId, currentPosition.floor)) {
+    return null;
+  }
+  
+  const connections = getStairConnections(roomId, currentPosition.floor);
+  const connection = connections.find(conn => conn.to === targetFloor);
+  
+  if (!connection) {
+    return null;
+  }
+  
+  // 根據樓梯類型決定目標位置
+  switch (roomId) {
+    case STAIR_ROOM_IDS.GRAND_STAIRCASE:
+      // 大樓梯在一樓和二樓的位置是對應的
+      // 一樓的 Grand Staircase 在 (7,7) 附近，二樓的 Stairs from Upper 在 (7,5)
+      if (targetFloor === 'upper') {
+        return { x: 7, y: 5, floor: 'upper' };
+      } else {
+        return { x: 7, y: 7, floor: 'ground' };
+      }
+      
+    case STAIR_ROOM_IDS.STAIRS_FROM_UPPER:
+      // 從二樓到一樓，前往大樓梯
+      return { x: 7, y: 7, floor: 'ground' };
+      
+    case STAIR_ROOM_IDS.STAIRS_FROM_BASEMENT:
+      // 從地下室到一樓
+      // 地下室樓梯在 (7,7)，一樓對應位置應該是 stairs_from_ground
+      return { x: 7, y: 7, floor: 'ground' };
+      
+    case STAIR_ROOM_IDS.STAIRS_FROM_GROUND:
+      // 從一樓到地下室
+      return { x: 7, y: 7, floor: 'basement' };
+      
+    case STAIR_ROOM_IDS.MYSTIC_ELEVATOR:
+      // 神秘電梯：保持在相同 X,Y 位置，只改變樓層
+      return { ...currentPosition, floor: targetFloor };
+      
+    case STAIR_ROOM_IDS.COLLAPSED_ROOM:
+      // 坍塌房間：掉到地下室的隨機位置或特定位置
+      return { x: currentPosition.x, y: currentPosition.y, floor: 'basement' };
+      
+    default:
+      // 默認：保持在相同 X,Y 位置
+      return { ...currentPosition, floor: targetFloor };
+  }
+}
+
+/**
+ * 樓梯管理器
+ * 處理多樓層之間的移動邏輯
+ */
+export class StairManager {
+  /**
+   * 檢查玩家當前是否可以使用樓梯
+   * 
+   * @param gameState 遊戲狀態
+   * @param playerId 玩家 ID
+   * @returns 是否可以使用樓梯
+   */
+  static canPlayerUseStairs(gameState: GameState, playerId: string): boolean {
+    const player = gameState.players.find(p => p.id === playerId);
+    if (!player) return false;
+    
+    const currentTile = RoomDiscoveryManager.getTileAt(gameState, player.position);
+    if (!currentTile || !currentTile.room) return false;
+    
+    return canUseStairs(currentTile.room.id, player.position.floor);
+  }
+  
+  /**
+   * 獲取玩家當前可用的樓梯選項
+   * 
+   * @param gameState 遊戲狀態
+   * @param playerId 玩家 ID
+   * @returns 可用的樓梯連接列表
+   */
+  static getAvailableStairOptions(gameState: GameState, playerId: string): StairConnection[] {
+    const player = gameState.players.find(p => p.id === playerId);
+    if (!player) return [];
+    
+    const currentTile = RoomDiscoveryManager.getTileAt(gameState, player.position);
+    if (!currentTile || !currentTile.room) return [];
+    
+    return getStairConnections(currentTile.room.id, player.position.floor);
+  }
+  
+  /**
+   * 執行樓梯移動
+   * 
+   * @param gameState 遊戲狀態
+   * @param playerId 玩家 ID
+   * @param targetFloor 目標樓層
+   * @returns 新的位置，如果無法移動則返回 null
+   */
+  static useStairs(
+    gameState: GameState,
+    playerId: string,
+    targetFloor: Floor
+  ): Position3D | null {
+    const player = gameState.players.find(p => p.id === playerId);
+    if (!player) return null;
+    
+    const currentTile = RoomDiscoveryManager.getTileAt(gameState, player.position);
+    if (!currentTile || !currentTile.room) return null;
+    
+    const newPosition = getStairTargetPosition(
+      currentTile.room.id,
+      player.position,
+      targetFloor
+    );
+    
+    return newPosition;
+  }
 }
 
 // ==================== 預設匯出 ====================
