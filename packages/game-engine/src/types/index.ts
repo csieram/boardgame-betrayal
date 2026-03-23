@@ -224,18 +224,12 @@ export interface CardDeckState {
 
 /** 房間牌堆狀態（依樓層分類） */
 export interface RoomDeckState {
-  /** 地面層主牌堆（2+ 門房間） */
+  /** 地面層牌堆 */
   ground: Room[];
-  /** 上層主牌堆（2+ 門房間） */
+  /** 上層牌堆 */
   upper: Room[];
-  /** 地下室主牌堆（2+ 門房間） */
+  /** 地下室牌堆 */
   basement: Room[];
-  /** 地面層備用牌堆（單門房間） */
-  fallbackGround: Room[];
-  /** 上層備用牌堆（單門房間） */
-  fallbackUpper: Room[];
-  /** 地下室備用牌堆（單門房間） */
-  fallbackBasement: Room[];
   /** 已抽出的房間 ID */
   drawn: Set<string>;
 }

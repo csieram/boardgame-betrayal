@@ -48,12 +48,10 @@ export interface RoomDiscoveryResult {
   attempts?: number;
 }
 
-/** 過濾後的房間牌堆（Issue #70: Approach A） */
-export interface FilteredRoomDecks {
-  /** 主牌堆：2+ 門房間 */
-  mainDeck: Room[];
-  /** 備用牌堆：單門房間（最後手段） */
-  fallbackDeck: Room[];
+/** 房間旋轉嘗試結果 */
+export interface RotationAttemptResult {
+  rotation: 0 | 90 | 180 | 270;
+  wouldCloseBoard: boolean;
 }
 
 /** 旋轉後的門位置 */
@@ -76,40 +74,100 @@ export interface RoomDeckStats {
 /** 有效的旋轉角度 */
 export const VALID_ROTATIONS: (0 | 90 | 180 | 270)[] = [0, 90, 180, 270];
 
-// ==================== 牌堆過濾函數（Issue #70: Approach A） ====================
+// ==================== 旋轉驗證函數（Issue #72） ====================
 
 /**
- * 創建開放式房間牌堆
- * Issue #70: Approach A - 在遊戲初始化時過濾單門房間
+ * 檢查特定旋轉是否會封閉棋盤
+ * Issue #72: 嘗試所有 4 個旋轉角度，檢查每個角度是否會封閉棋盤
  * 
- * 邏輯：
- * - 主牌堆：只包含 2+ 門的房間（防止棋盤封閉）
- * - 備用牌堆：單門房間（僅在主牌堆用盡時使用）
- * 
- * @param rooms 原始房間列表
- * @returns 過濾後的牌堆（主牌堆 + 備用牌堆）
+ * @param gameState 當前遊戲狀態
+ * @param position 位置
+ * @param room 房間
+ * @param rotation 旋轉角度
+ * @returns 是否會封閉棋盤
  */
-export function createOpenRoomDeck(rooms: Room[]): FilteredRoomDecks {
-  // 分離單門房間和 2+ 門房間
-  const singleDoorRooms: Room[] = [];
-  const multiDoorRooms: Room[] = [];
+export function wouldCloseBoardWithRotation(
+  gameState: GameState,
+  position: { x: number; y: number },
+  room: Room,
+  rotation: 0 | 90 | 180 | 270
+): boolean {
+  // 旋轉房間的門
+  const rotatedDoors = RoomDiscoveryManager.rotateDoors(room.doors, rotation);
   
-  for (const room of rooms) {
-    if (room.doors.length === 1) {
-      singleDoorRooms.push(room);
-    } else {
-      multiDoorRooms.push(room);
+  // 檢查每個門方向
+  for (const door of rotatedDoors) {
+    const delta = DIRECTION_DELTAS[door];
+    const neighborPos: Position3D = {
+      x: position.x + delta.x,
+      y: position.y + delta.y,
+      floor: gameState.turn.currentPlayerId 
+        ? gameState.players.find(p => p.id === gameState.turn.currentPlayerId)?.position.floor || 'ground'
+        : 'ground',
+    };
+    
+    // 檢查鄰居位置
+    const floorMap = gameState.map[neighborPos.floor];
+    if (!floorMap) {
+      // 位置超出邊界，這個門無法連接
+      continue;
+    }
+    
+    const neighborTile = floorMap[neighborPos.y]?.[neighborPos.x];
+    
+    // 如果鄰居位置沒有房間，這個門提供了探索路徑
+    if (!neighborTile || !neighborTile.room || !neighborTile.discovered) {
+      return false; // 至少有一個未連接的門，不會封閉
     }
   }
   
-  console.log('[createOpenRoomDeck] Total rooms:', rooms.length);
-  console.log('[createOpenRoomDeck] Multi-door rooms (2+):', multiDoorRooms.length);
-  console.log('[createOpenRoomDeck] Single-door rooms:', singleDoorRooms.length);
+  // 所有門都連接到現有房間，這會封閉棋盤
+  return true;
+}
+
+/**
+ * 尋找第一個不會封閉棋盤的有效旋轉角度
+ * Issue #72: 嘗試所有 4 個旋轉角度
+ * 
+ * @param room 房間
+ * @param gameState 當前遊戲狀態
+ * @param position 位置
+ * @param entryDirection 進入方向（用於驗證門連接）
+ * @returns 有效的旋轉角度和房間，如果所有旋轉都會封閉則返回 null
+ */
+export function findValidRotation(
+  room: Room,
+  gameState: GameState,
+  position: { x: number; y: number },
+  entryDirection: Direction
+): { room: Room; rotation: 0 | 90 | 180 | 270 } | null {
+  const requiredDoor = OPPOSITE_DOOR[entryDirection];
   
-  return {
-    mainDeck: multiDoorRooms,
-    fallbackDeck: singleDoorRooms,
-  };
+  console.log(`[findValidRotation] Room: ${room.name}, doors: ${room.doors}, entry: ${entryDirection}, required: ${requiredDoor}`);
+  
+  for (const rotation of VALID_ROTATIONS) {
+    // 旋轉房間的門
+    const rotatedDoors = RoomDiscoveryManager.rotateDoors(room.doors, rotation);
+    console.log(`[findValidRotation] Trying rotation ${rotation}, rotated doors: ${rotatedDoors}`);
+    
+    // 檢查旋轉後是否有門可以連接到進入方向
+    if (!rotatedDoors.includes(requiredDoor)) {
+      console.log(`[findValidRotation] Rotation ${rotation} rejected: no door matching entry direction`);
+      continue;
+    }
+    
+    // 檢查此旋轉是否會封閉棋盤
+    const wouldClose = wouldCloseBoardWithRotation(gameState, position, room, rotation);
+    console.log(`[findValidRotation] Rotation ${rotation} would close board: ${wouldClose}`);
+    
+    if (!wouldClose) {
+      console.log(`[findValidRotation] Found valid rotation: ${rotation}`);
+      return { room, rotation };
+    }
+  }
+  
+  console.log(`[findValidRotation] All rotations would close board for room: ${room.name}`);
+  return null;
 }
 
 /**
@@ -244,17 +302,16 @@ export class RoomDiscoveryManager {
    * 從對應樓層牌堆抽取房間
    * Rulebook Page 12: "Draw a room tile from the corresponding floor deck"
    * 
-   * Issue #70: Approach A - 優先從主牌堆（2+ 門）抽取，用盡時使用備用牌堆
+   * Issue #72: 所有房間都在主牌堆，包含單門房間
    * 
    * 重要：每個房間在遊戲中只能出現一次。
    * 此方法會檢查已放置的房間 ID，確保不會抽到重複的房間。
    * 
    * @param state 當前遊戲狀態
    * @param floor 樓層
-   * @param useFallback 是否允許使用備用牌堆（預設 false）
    * @returns 抽取的房間，如果牌堆為空或所有房間都已放置則返回 null
    */
-  static drawRoomFromDeck(state: GameState, floor: Floor, useFallback: boolean = false): Room | null {
+  static drawRoomFromDeck(state: GameState, floor: Floor): Room | null {
     const deck = state.roomDeck[floor];
     
     // 找到第一個未被抽取且未被放置的房間
@@ -267,25 +324,6 @@ export class RoomDiscoveryManager {
     
     if (availableRoom) {
       return availableRoom;
-    }
-    
-    // 主牌堆已空，嘗試使用備用牌堆（Issue #70: Approach A）
-    if (useFallback) {
-      const fallbackKey = `fallback${floor.charAt(0).toUpperCase()}${floor.slice(1)}` as 'fallbackGround' | 'fallbackUpper' | 'fallbackBasement';
-      const fallbackDeck = state.roomDeck[fallbackKey];
-      
-      if (fallbackDeck && fallbackDeck.length > 0) {
-        const fallbackRoom = fallbackDeck.find((r: Room) => {
-          const isDrawn = state.roomDeck.drawn.has(r.id);
-          const isPlaced = state.placedRoomIds.has(r.id);
-          return !isDrawn && !isPlaced;
-        });
-        
-        if (fallbackRoom) {
-          console.log(`[drawRoomFromDeck] Using fallback deck for ${floor}: ${fallbackRoom.name}`);
-          return fallbackRoom;
-        }
-      }
     }
 
     return null;
@@ -739,15 +777,18 @@ export function addRandomDoor(
 
 /**
  * 為探索抽取房間
- * Issue #70: Approach A - 使用預過濾的牌堆（主牌堆只包含 2+ 門房間）
+ * Issue #72: 正確的房間抽取邏輯
  * 
  * 邏輯流程：
- * 1. 從主牌堆抽取房間（2+ 門）
- * 2. 旋轉以匹配門連接
- * 3. 檢查房間是否有未連接的門
- * 4. 如果有 → 放置房間
- * 5. 如果主牌堆已空 → 嘗試備用牌堆（單門房間）
- * 6. 如果達到最大嘗試次數 → 添加隨機門，放置房間
+ * 1. 從牌堆抽取房間
+ * 2. 嘗試所有 4 個旋轉角度（0°, 90°, 180°, 270°）
+ * 3. 對每個旋轉角度：
+ *    - 檢查是否會封閉棋盤
+ *    - 不會封閉 → 放置房間 ✓
+ *    - 會封閉 → 嘗試下一個旋轉
+ * 4. 所有旋轉都會封閉 → 將房間放回牌堆，抽取下一個
+ * 5. 重複最多 10 次
+ * 6. 10 次都失敗 → 添加一個門，放置房間
  * 
  * @param gameState 當前遊戲狀態
  * @param floor 樓層
@@ -763,11 +804,10 @@ export function drawRoomForExploration(
 ): RoomDiscoveryResult {
   const discardedRooms: Room[] = [];
   let attempts = 0;
-  let usedFallback = false;
   
   console.log('[RoomDiscovery] Starting drawRoomForExploration, floor:', floor, 'entryDirection:', entryDirection);
   
-  // 獲取當前玩家位置（用於檢查未連接門）
+  // 獲取當前玩家位置
   const currentPlayer = gameState.players.find(p => p.id === gameState.turn.currentPlayerId);
   const playerPosition = currentPlayer?.position;
   
@@ -789,33 +829,11 @@ export function drawRoomForExploration(
   while (attempts < maxAttempts) {
     attempts++;
     
-    // 1. 從主牌堆抽取房間（2+ 門）
-    // Issue #70: 主牌堆已預過濾，只包含 2+ 門房間
-    const room = RoomDiscoveryManager.drawRoomFromDeck(gameState, floor, false);
+    // 1. 從牌堆抽取房間
+    const room = RoomDiscoveryManager.drawRoomFromDeck(gameState, floor);
     
     if (!room) {
-      console.log('[RoomDiscovery] Main deck empty, trying fallback deck...');
-      // 主牌堆已空，嘗試備用牌堆（單門房間）
-      const fallbackRoom = RoomDiscoveryManager.drawRoomFromDeck(gameState, floor, true);
-      
-      if (fallbackRoom) {
-        console.log('[RoomDiscovery] Using fallback room:', fallbackRoom.name);
-        usedFallback = true;
-        
-        // 計算旋轉角度
-        const rotation = RoomDiscoveryManager.calculateRotation(fallbackRoom, entryDirection);
-        const cardDrawRequired = RoomDiscoveryManager.getCardDrawRequirement(fallbackRoom);
-        
-        return {
-          success: true,
-          room: fallbackRoom,
-          position: newPosition,
-          rotation,
-          cardDrawRequired,
-          wasModified: false,
-          attempts,
-        };
-      }
+      console.log('[RoomDiscovery] Deck empty, trying to recycle discarded rooms...');
       
       // 牌堆已空，將丟棄的房間放回牌堆再試一次
       if (discardedRooms.length > 0) {
@@ -843,20 +861,17 @@ export function drawRoomForExploration(
       };
     }
     
-    console.log('[RoomDiscovery] Attempt', attempts, '- Room drawn:', room.name, 'doors:', room.doors);
+    console.log(`[RoomDiscovery] Attempt ${attempts} - Room drawn: ${room.name}, doors: ${room.doors}`);
     
-    // 2. 計算旋轉角度以匹配門連接
-    const rotation = RoomDiscoveryManager.calculateRotation(room, entryDirection);
-    console.log('[RoomDiscovery] Calculated rotation:', rotation);
+    // 2. 嘗試所有 4 個旋轉角度
+    const validRotation = findValidRotation(room, gameState, newPosition, entryDirection);
     
-    // 3. 檢查房間是否有未連接的門
-    const unconnectedDoors = getUnconnectedDoors(gameState, newPosition, room, rotation);
-    console.log('[RoomDiscovery] Unconnected doors:', unconnectedDoors);
-    
-    if (unconnectedDoors.length > 0) {
-      // 4. 有房間有未連接的門，可以放置
+    if (validRotation) {
+      // 找到不會封閉棋盤的旋轉角度
+      const { rotation } = validRotation;
       const cardDrawRequired = RoomDiscoveryManager.getCardDrawRequirement(room);
-      console.log('[RoomDiscovery] Success! Room has unconnected doors, placing room');
+      
+      console.log(`[RoomDiscovery] Success! Found valid rotation ${rotation} for room: ${room.name}`);
       
       return {
         success: true,
@@ -869,8 +884,8 @@ export function drawRoomForExploration(
       };
     }
     
-    // 5. 房間會封閉棋盤，丟棄並重試
-    console.log('[RoomDiscovery] Room would close board, discarding and retrying');
+    // 3. 所有旋轉都會封閉棋盤，將房間放回牌堆（標記為已抽取但不放置）
+    console.log(`[RoomDiscovery] All rotations would close board for room: ${room.name}, returning to deck`);
     discardedRooms.push(room);
     
     // 標記為已抽取（這樣下次不會抽到同一個）
@@ -885,15 +900,15 @@ export function drawRoomForExploration(
     };
   }
   
-  // 6. 達到最大嘗試次數，添加隨機門
+  // 4. 達到最大嘗試次數，添加隨機門
   console.log('[RoomDiscovery] Max attempts reached, adding random door to prevent closure');
   
   // 先嘗試使用最後一個丟棄的房間
   let finalRoom: Room | null = discardedRooms[discardedRooms.length - 1] || null;
   
   if (!finalRoom) {
-    // 如果沒有丟棄的房間，嘗試再抽一個（包括備用牌堆）
-    finalRoom = RoomDiscoveryManager.drawRoomFromDeck(gameState, floor, true);
+    // 如果沒有丟棄的房間，嘗試再抽一個
+    finalRoom = RoomDiscoveryManager.drawRoomFromDeck(gameState, floor);
   }
   
   if (!finalRoom) {

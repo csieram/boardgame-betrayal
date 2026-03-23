@@ -25,7 +25,7 @@ import { Room } from '@betrayal/shared';
 import { RoomDiscoveryManager, VALID_ROTATIONS } from './roomDiscovery';
 
 // Re-export from roomDiscovery for convenience
-export { getUnconnectedDoors, addRandomDoor, drawRoomForExploration } from './roomDiscovery';
+export { getUnconnectedDoors, addRandomDoor, drawRoomForExploration, findValidRotation, wouldCloseBoardWithRotation } from './roomDiscovery';
 
 // ==================== 類型定義 ====================
 

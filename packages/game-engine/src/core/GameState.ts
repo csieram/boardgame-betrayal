@@ -234,7 +234,7 @@ function placeStartingRooms(map: GameMap, rooms: Room[]): GameMap {
 
 /**
  * 初始化房間牌堆
- * Issue #70: Approach A - 過濾單門房間，防止棋盤封閉
+ * Issue #72: 所有房間都在主牌堆，單門房間也包含在內
  */
 function initializeRoomDeck(rng: SeededRng): RoomDeckState {
   // 過濾掉起始房間
@@ -251,30 +251,19 @@ function initializeRoomDeck(rng: SeededRng): RoomDeckState {
   const upperMultiFloor = multiFloor.filter(r => r.floor === 'upper');
   const basementMultiFloor = multiFloor.filter(r => r.floor === 'basement');
   
-  // 合併各樓層房間
+  // 合併各樓層房間（包含單門和 2+ 門房間）
   const allGround = [...groundRooms, ...groundMultiFloor];
   const allUpper = [...upperRooms, ...upperMultiFloor];
   const allBasement = [...basementRooms, ...basementMultiFloor];
   
-  // 分離單門房間和 2+ 門房間（Issue #70: Approach A）
-  const groundMain = allGround.filter(r => r.doors.length >= 2);
-  const groundFallback = allGround.filter(r => r.doors.length === 1);
-  const upperMain = allUpper.filter(r => r.doors.length >= 2);
-  const upperFallback = allUpper.filter(r => r.doors.length === 1);
-  const basementMain = allBasement.filter(r => r.doors.length >= 2);
-  const basementFallback = allBasement.filter(r => r.doors.length === 1);
-  
-  console.log('[initializeRoomDeck] Ground - Main:', groundMain.length, 'Fallback:', groundFallback.length);
-  console.log('[initializeRoomDeck] Upper - Main:', upperMain.length, 'Fallback:', upperFallback.length);
-  console.log('[initializeRoomDeck] Basement - Main:', basementMain.length, 'Fallback:', basementFallback.length);
+  console.log('[initializeRoomDeck] Ground:', allGround.length, '(including single-door rooms)');
+  console.log('[initializeRoomDeck] Upper:', allUpper.length, '(including single-door rooms)');
+  console.log('[initializeRoomDeck] Basement:', allBasement.length, '(including single-door rooms)');
   
   return {
-    ground: rng.shuffle(groundMain),
-    upper: rng.shuffle(upperMain),
-    basement: rng.shuffle(basementMain),
-    fallbackGround: rng.shuffle(groundFallback),
-    fallbackUpper: rng.shuffle(upperFallback),
-    fallbackBasement: rng.shuffle(basementFallback),
+    ground: rng.shuffle(allGround),
+    upper: rng.shuffle(allUpper),
+    basement: rng.shuffle(allBasement),
     drawn: new Set(),
   };
 }
@@ -565,9 +554,6 @@ export class GameStateManager {
         ground: parsed.roomDeck.ground || [],
         upper: parsed.roomDeck.upper || [],
         basement: parsed.roomDeck.basement || [],
-        fallbackGround: parsed.roomDeck.fallbackGround || [],
-        fallbackUpper: parsed.roomDeck.fallbackUpper || [],
-        fallbackBasement: parsed.roomDeck.fallbackBasement || [],
         drawn: new Set(parsed.roomDeck.drawn || []),
       },
       placedRoomIds: new Set(parsed.placedRoomIds || []),
@@ -966,13 +952,12 @@ export class GameStateManager {
 
   /**
    * 從房間牌堆抽一張房間
-   * Issue #70: Approach A - 優先從主牌堆（2+ 門）抽取，用盡時使用備用牌堆
+   * Issue #72: 所有房間都在主牌堆
    * 
    * @param floor 樓層
-   * @param useFallback 是否允許使用備用牌堆（預設 false）
    * @returns 抽取的房間，如果牌堆為空則返回 null
    */
-  drawRoomFromDeck(floor: Floor, useFallback: boolean = false): Room | null {
+  drawRoomFromDeck(floor: Floor): Room | null {
     const deck = this.state.roomDeck[floor as 'ground' | 'upper' | 'basement'];
     const availableRoom = deck.find((r: Room) => !this.state.roomDeck.drawn.has(r.id));
     
@@ -990,34 +975,6 @@ export class GameStateManager {
       };
 
       return availableRoom;
-    }
-    
-    // 主牌堆已空，嘗試使用備用牌堆
-    if (useFallback) {
-      const fallbackKey = `fallback${floor.charAt(0).toUpperCase()}${floor.slice(1)}` as 'fallbackGround' | 'fallbackUpper' | 'fallbackBasement';
-      const fallbackDeck = this.state.roomDeck[fallbackKey];
-      
-      if (fallbackDeck && fallbackDeck.length > 0) {
-        const fallbackRoom = fallbackDeck.find((r: Room) => !this.state.roomDeck.drawn.has(r.id));
-        
-        if (fallbackRoom) {
-          console.log(`[GameStateManager.drawRoomFromDeck] Using fallback deck for ${floor}: ${fallbackRoom.name}`);
-          
-          // 更新已抽出集合
-          const newDrawn = new Set(this.state.roomDeck.drawn);
-          newDrawn.add(fallbackRoom.id);
-
-          this.state = {
-            ...this.state,
-            roomDeck: {
-              ...this.state.roomDeck,
-              drawn: newDrawn,
-            },
-          };
-
-          return fallbackRoom;
-        }
-      }
     }
 
     return null;
