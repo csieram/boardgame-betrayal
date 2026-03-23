@@ -11,6 +11,7 @@ import {
   getValidExploreDirections,
   rotateRoomForConnection,
   OPPOSITE_DOOR,
+  SeededRng,
 } from '@betrayal/game-engine';
 
 // 地圖大小
@@ -26,12 +27,13 @@ interface SoloGameState {
     basement: Room[];
     drawn: Set<string>;
   };
+  seed: string;
 }
 
 /**
  * 建立空的遊戲狀態
  */
-function createInitialGameState(): SoloGameState {
+function createInitialGameState(seed: string): SoloGameState {
   return {
     placedRoomIds: new Set(['entrance_hall']),
     roomDecks: {
@@ -40,6 +42,7 @@ function createInitialGameState(): SoloGameState {
       basement: [],
       drawn: new Set(),
     },
+    seed,
   };
 }
 
@@ -86,7 +89,7 @@ export default function SoloGamePage() {
   const [selectedRoom, setSelectedRoom] = useState<{ room: Room; x: number; y: number } | null>(null);
   const [reachablePositions, setReachablePositions] = useState<{ x: number; y: number }[]>([]);
   const [validExploreDirections, setValidExploreDirections] = useState<Direction[]>([]);
-  const [gameState, setGameState] = useState<SoloGameState>(createInitialGameState());
+  const [gameState, setGameState] = useState<SoloGameState>(() => createInitialGameState(Date.now().toString()));
 
   // 從 sessionStorage 讀取選擇的角色
   useEffect(() => {
@@ -110,7 +113,11 @@ export default function SoloGamePage() {
     setPlayer(character);
     setMoves(character.stats.speed[0]);
     setPhase('play');
-    
+
+    // 生成隨機 seed
+    const seed = Date.now().toString();
+    console.log('Game start seed:', seed);
+
     // 初始化地圖，放置入口大廳
     const initialMap = createEmptyMap();
     initialMap[MAP_CENTER][MAP_CENTER] = {
@@ -131,20 +138,33 @@ export default function SoloGamePage() {
       },
       rotation: 0,
     };
-    
+
     setMap(initialMap);
     setLog([`選擇了 ${character.name}`, '從入口大廳開始', '回合 1']);
     setIsLoading(false);
-    
-    // 初始化牌堆
+
+    // 初始化牌堆（使用 RNG 洗牌）
     import('@betrayal/shared').then(({ ROOMS }) => {
-      const newGameState = createInitialGameState();
-      newGameState.roomDecks.ground = ROOMS.filter(r => r.floor === 'ground' && r.id !== 'entrance_hall');
-      newGameState.roomDecks.upper = ROOMS.filter(r => r.floor === 'upper');
-      newGameState.roomDecks.basement = ROOMS.filter(r => r.floor === 'basement');
+      const rng = new SeededRng(seed);
+      const newGameState = createInitialGameState(seed);
+
+      // 過濾並洗牌各樓層牌堆
+      const groundRooms = ROOMS.filter(r => r.floor === 'ground' && r.id !== 'entrance_hall');
+      const upperRooms = ROOMS.filter(r => r.floor === 'upper');
+      const basementRooms = ROOMS.filter(r => r.floor === 'basement');
+
+      newGameState.roomDecks.ground = rng.shuffle(groundRooms);
+      newGameState.roomDecks.upper = rng.shuffle(upperRooms);
+      newGameState.roomDecks.basement = rng.shuffle(basementRooms);
+
+      // 記錄前 5 個房間 ID 用於除錯
+      console.log('First 5 ground room IDs:', newGameState.roomDecks.ground.slice(0, 5).map(r => r.id));
+      console.log('First 5 upper room IDs:', newGameState.roomDecks.upper.slice(0, 5).map(r => r.id));
+      console.log('First 5 basement room IDs:', newGameState.roomDecks.basement.slice(0, 5).map(r => r.id));
+
       setGameState(newGameState);
     });
-    
+
     // 計算可達位置
     updateReachablePositions(initialMap, { x: MAP_CENTER, y: MAP_CENTER }, character.stats.speed[0]);
   };
