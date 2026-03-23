@@ -326,7 +326,7 @@ export class TilePlacementValidator {
   /**
    * 取得指定位置的 Tile
    */
-  private static getTileAt(state: GameState, position: Position3D): Tile | undefined {
+  static getTileAt(state: GameState, position: Position3D): Tile | undefined {
     const floorMap = state.map[position.floor];
     if (!floorMap) return undefined;
     return floorMap[position.y]?.[position.x];
@@ -335,7 +335,7 @@ export class TilePlacementValidator {
   /**
    * 檢查位置是否有效
    */
-  private static isValidPosition(state: GameState, position: Position3D): boolean {
+  static isValidPosition(state: GameState, position: Position3D): boolean {
     const floorMap = state.map[position.floor];
     if (!floorMap) return false;
     return position.y >= 0 && position.y < floorMap.length &&
@@ -598,12 +598,12 @@ export function validateRotatedPlacement(
   };
 
   // 檢查位置是否有效
-  if (!TilePlacementValidator['isValidPosition'](state, position)) {
+  if (!TilePlacementValidator.isValidPosition(state, position)) {
     return { valid: false, error: 'Invalid position' };
   }
 
   // 檢查位置是否已被佔用
-  const existingTile = TilePlacementValidator['getTileAt'](state, position);
+  const existingTile = TilePlacementValidator.getTileAt(state, position);
   if (existingTile && existingTile.room) {
     return { valid: false, error: 'Position already occupied' };
   }
