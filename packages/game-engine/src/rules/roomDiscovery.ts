@@ -572,35 +572,89 @@ export function getUnconnectedDoors(
  * 添加隨機門到房間
  * Issue #66: 當房間會封閉棋盤時，添加一個隨機方向的門
  * 
+ * 重要：這個函數會優先選擇可以通向未探索區域的方向，確保棋盤保持開放
+ * 
  * @param room 原始房間
  * @param gameState 當前遊戲狀態
  * @param position 房間位置
+ * @param rotation 房間旋轉角度（預設 0）
  * @returns 添加門後的新房間
  */
 export function addRandomDoor(
   room: Room,
   gameState: GameState,
-  position: { x: number; y: number }
+  position: { x: number; y: number },
+  rotation: 0 | 90 | 180 | 270 = 0
 ): Room {
   const allDirections: Direction[] = ['north', 'south', 'east', 'west'];
   
-  // 找出房間還沒有的門方向
-  const missingDirections = allDirections.filter(dir => !room.doors.includes(dir));
+  console.log('[addRandomDoor] Input room:', room.name, 'doors:', room.doors, 'rotation:', rotation);
+  
+  // 計算旋轉後的門方向（原始房間座標系 -> 地圖座標系）
+  const rotatedDoors = RoomDiscoveryManager.rotateDoors(room.doors, rotation);
+  console.log('[addRandomDoor] Rotated doors:', rotatedDoors);
+  
+  // 找出在地圖座標系中，房間還沒有的門方向
+  const missingDirections = allDirections.filter(dir => !rotatedDoors.includes(dir));
+  console.log('[addRandomDoor] Missing directions:', missingDirections);
   
   if (missingDirections.length === 0) {
     // 房間已經有四個門，無法再添加
+    console.log('[addRandomDoor] Room already has 4 doors, cannot add more');
     return room;
   }
   
-  // 隨機選擇一個缺失的方向
-  const randomIndex = Math.floor(Math.random() * missingDirections.length);
-  const newDoor = missingDirections[randomIndex];
+  // 優先選擇可以通向未探索區域的方向
+  const candidateDirections = missingDirections.filter(dir => {
+    const delta = DIRECTION_DELTAS[dir];
+    const neighborPos: Position3D = {
+      x: position.x + delta.x,
+      y: position.y + delta.y,
+      floor: gameState.turn.currentPlayerId 
+        ? gameState.players.find(p => p.id === gameState.turn.currentPlayerId)?.position.floor || 'ground'
+        : 'ground',
+    };
+    
+    // 檢查鄰居位置是否在地圖範圍內
+    const floorMap = gameState.map[neighborPos.floor];
+    if (!floorMap) return false;
+    if (neighborPos.y < 0 || neighborPos.y >= floorMap.length) return false;
+    if (neighborPos.x < 0 || neighborPos.x >= floorMap[0].length) return false;
+    
+    // 檢查鄰居位置是否未探索（這是我們想要的）
+    const neighborTile = floorMap[neighborPos.y]?.[neighborPos.x];
+    return !neighborTile || !neighborTile.room || !neighborTile.discovered;
+  });
   
-  // 創建新房間副本，添加新門
-  return {
-    ...room,
-    doors: [...room.doors, newDoor],
+  console.log('[addRandomDoor] Candidate directions (unexplored neighbors):', candidateDirections);
+  
+  // 選擇方向：優先選擇可以通向未探索區域的方向，否則隨機選擇
+  const directionsToChoose = candidateDirections.length > 0 ? candidateDirections : missingDirections;
+  const randomIndex = Math.floor(Math.random() * directionsToChoose.length);
+  const newDoorInMapCoords = directionsToChoose[randomIndex];
+  
+  // 將地圖座標系的方向轉換回原始房間座標系
+  // 需要反向旋轉
+  const reverseRotationMap: Record<0 | 90 | 180 | 270, Record<Direction, Direction>> = {
+    0: { north: 'north', south: 'south', east: 'east', west: 'west' },
+    90: { north: 'west', south: 'east', east: 'north', west: 'south' },
+    180: { north: 'south', south: 'north', east: 'west', west: 'east' },
+    270: { north: 'east', south: 'west', east: 'south', west: 'north' },
   };
+  
+  const newDoorInRoomCoords = reverseRotationMap[rotation][newDoorInMapCoords];
+  
+  console.log('[addRandomDoor] Adding door:', newDoorInMapCoords, '(map coords) ->', newDoorInRoomCoords, '(room coords)');
+  
+  // 創建新房間副本，添加新門（在原始房間座標系中）
+  const modifiedRoom = {
+    ...room,
+    doors: [...room.doors, newDoorInRoomCoords],
+  };
+  
+  console.log('[addRandomDoor] Output room doors:', modifiedRoom.doors);
+  
+  return modifiedRoom;
 }
 
 /**
@@ -745,12 +799,26 @@ export function drawRoomForExploration(
     };
   }
   
-  // 添加隨機門
-  const modifiedRoom = addRandomDoor(finalRoom, gameState, newPosition);
+  // 計算旋轉角度（在添加門之前，基於原始房間）
+  const rotation = RoomDiscoveryManager.calculateRotation(finalRoom, entryDirection);
+  console.log('[RoomDiscovery] Calculated rotation for final room:', rotation);
+  
+  // 添加隨機門（傳入旋轉角度，確保門添加在正確的位置）
+  const modifiedRoom = addRandomDoor(finalRoom, gameState, newPosition, rotation);
   console.log('[RoomDiscovery] Modified room doors:', modifiedRoom.doors);
   
-  const rotation = RoomDiscoveryManager.calculateRotation(modifiedRoom, entryDirection);
+  // 驗證修改後的房間確實有未連接的門
+  const unconnectedAfterModification = getUnconnectedDoors(gameState, newPosition, modifiedRoom, rotation);
+  console.log('[RoomDiscovery] Unconnected doors after modification:', unconnectedAfterModification);
+  
+  if (unconnectedAfterModification.length === 0) {
+    console.warn('[RoomDiscovery] WARNING: Modified room still has no unconnected doors!');
+  }
+  
   const cardDrawRequired = RoomDiscoveryManager.getCardDrawRequirement(modifiedRoom);
+  
+  console.log('[drawRoomForExploration] wasModified: true');
+  console.log('[drawRoomForExploration] Final doors:', modifiedRoom.doors);
   
   return {
     success: true,

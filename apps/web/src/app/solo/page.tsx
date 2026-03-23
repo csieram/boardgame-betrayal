@@ -316,13 +316,16 @@ export default function SoloGamePage() {
       
       const { room, rotation, wasModified } = drawResult;
       
+      console.log('[moveToPosition] Room from drawResult:', room.name, 'doors:', room.doors, 'wasModified:', wasModified);
+      console.log('[moveToPosition] Rotation:', rotation);
+      
       // 應用旋轉到房間
       const rotatedRoom = {
         ...room,
         rotation: rotation as 0 | 90 | 180 | 270,
       };
       
-      // 旋轉門方向
+      // 旋轉門方向（從房間座標系轉換到地圖座標系）
       const rotationMap: Record<number, Record<Direction, Direction>> = {
         0: { north: 'north', south: 'south', east: 'east', west: 'west' },
         90: { north: 'east', south: 'west', east: 'south', west: 'north' },
@@ -331,13 +334,18 @@ export default function SoloGamePage() {
       };
       
       const rotatedDoors = room.doors.map((door: Direction) => rotationMap[rotation][door]);
+      console.log('[moveToPosition] Rotated doors:', rotatedDoors);
+      
       const placedRoom = {
         ...rotatedRoom,
         doors: rotatedDoors,
       };
       
+      console.log('[moveToPosition] Final placedRoom doors:', placedRoom.doors);
+      
       if (wasModified) {
         console.log('[RoomDiscovery] Room was modified to prevent board closure:', room.name);
+        console.log('[RoomDiscovery] Original doors would have been:', room.doors.filter((d: Direction) => !placedRoom.doors.includes(rotationMap[rotation][d])));
       }
 
       // 更新遊戲狀態
