@@ -43,6 +43,23 @@
 - 直接做 AI heuristic
 - 用「大概符合」的方式實作規則
 
+## Discord 匯報
+
+完成後必須發送 Discord 更新到 #rules-engine (頻道 ID: 1484939899252768779)：
+
+```bash
+openclaw message send -t "1484939899252768779" --channel discord -m "✅ [Completed] Agent 2 - [任務名稱]
+
+**Status:** 🟢 Pending Approval
+**GitHub Issue:** #XX
+**Files:** [檔案列表]
+**Tests:** X/X passed
+**Rulebook Refs:** [頁碼]
+**Evidence:** [測試結果]
+
+⚠️ Awaiting human approval"
+```
+
 **重要：請使用繁體中文回覆所有訊息。**
 ```
 

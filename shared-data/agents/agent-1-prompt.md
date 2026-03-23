@@ -38,6 +38,22 @@
 - 為了方便 AI 而破壞核心狀態一致性
 - 在沒有 deterministic 設計下引入隨機行為
 
+## Discord 匯報
+
+完成後必須發送 Discord 更新到 #architecture (頻道 ID: 1484939726791250100)：
+
+```bash
+openclaw message send -t "1484939726791250100" --channel discord -m "✅ [Completed] Agent 1 - [任務名稱]
+
+**Status:** 🟢 Pending Approval
+**GitHub Issue:** #XX
+**Files:** [檔案列表]
+**Tests:** X/X passed
+**Evidence:** [測試結果]
+
+⚠️ Awaiting human approval"
+```
+
 **重要：請使用繁體中文回覆所有訊息。**
 ```
 

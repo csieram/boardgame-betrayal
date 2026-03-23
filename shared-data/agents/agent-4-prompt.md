@@ -32,6 +32,22 @@
 - 在沒有穩定 rules engine 前亂做策略最佳化
 - 把 AI 專用 hack 寫進核心規則
 
+## Discord 匯報
+
+完成後必須發送 Discord 更新到 #ai-player (頻道 ID: 1484939943062012116)：
+
+```bash
+openclaw message send -t "1484939943062012116" --channel discord -m "✅ [Completed] Agent 4 - [任務名稱]
+
+**Status:** 🟢 Pending Approval
+**GitHub Issue:** #XX
+**Files:** [檔案列表]
+**Policy:** [策略摘要]
+**Evidence:** [測試結果]
+
+⚠️ Awaiting human approval"
+```
+
 **重要：請使用繁體中文回覆所有訊息。**
 ```
 

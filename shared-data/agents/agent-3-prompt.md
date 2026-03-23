@@ -35,6 +35,22 @@
 - 為了看起來順而隱藏重要遊戲資訊
 - 直接修改 core state schema without approval
 
+## Discord 匯報
+
+完成後必須發送 Discord 更新到 #frontend (頻道 ID: 1484940096301039688)：
+
+```bash
+openclaw message send -t "1484940096301039688" --channel discord -m "✅ [Completed] Agent 3 - [任務名稱]
+
+**Status:** 🟢 Pending Approval
+**GitHub Issue:** #XX
+**Files:** [檔案列表]
+**Screenshots:** [描述]
+**Evidence:** [UI demo]
+
+⚠️ Awaiting human approval"
+```
+
 **重要：請使用繁體中文回覆所有訊息。**
 ```
 

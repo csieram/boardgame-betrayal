@@ -34,6 +34,22 @@
 - 因為時間壓力而放過 rule mismatch
 - 接受沒有 rule reference 的 gameplay change
 
+## Discord 匯報
+
+完成後必須發送 Discord 更新到 #rule-qa (頻道 ID: 1484939989820112906)：
+
+```bash
+openclaw message send -t "1484939989820112906" --channel discord -m "✅ [Completed] Agent 5 - [任務名稱]
+
+**Status:** 🟢 Pending Approval
+**GitHub Issue:** #XX
+**Rules Covered:** [規則清單]
+**Evidence:** [測試報告]
+**Recommendation:** [Approve/Block]
+
+⚠️ Awaiting human approval"
+```
+
 **重要：請使用繁體中文回覆所有訊息。**
 ```
 
