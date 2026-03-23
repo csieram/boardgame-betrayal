@@ -630,11 +630,14 @@ export function drawRoomForExploration(
   const discardedRooms: Room[] = [];
   let attempts = 0;
   
+  console.log('[RoomDiscovery] Starting drawRoomForExploration, floor:', floor, 'entryDirection:', entryDirection);
+  
   // 獲取當前玩家位置（用於檢查未連接門）
   const currentPlayer = gameState.players.find(p => p.id === gameState.turn.currentPlayerId);
   const playerPosition = currentPlayer?.position;
   
   if (!playerPosition) {
+    console.log('[RoomDiscovery] Error: Current player not found');
     return { success: false, error: 'Current player not found' };
   }
   
@@ -646,6 +649,8 @@ export function drawRoomForExploration(
     floor: playerPosition.floor,
   };
   
+  console.log('[RoomDiscovery] New position:', newPosition);
+  
   while (attempts < maxAttempts) {
     attempts++;
     
@@ -653,6 +658,7 @@ export function drawRoomForExploration(
     const room = RoomDiscoveryManager.drawRoomFromDeck(gameState, floor);
     
     if (!room) {
+      console.log('[RoomDiscovery] No more rooms in deck, discarded count:', discardedRooms.length);
       // 牌堆已空，將丟棄的房間放回牌堆再試一次
       if (discardedRooms.length > 0) {
         // 重新建立牌堆狀態（移除 drawn 標記）
@@ -678,15 +684,20 @@ export function drawRoomForExploration(
       };
     }
     
+    console.log('[RoomDiscovery] Attempt', attempts, '- Room drawn:', room.name, 'doors:', room.doors);
+    
     // 2. 計算旋轉角度以匹配門連接
     const rotation = RoomDiscoveryManager.calculateRotation(room, entryDirection);
+    console.log('[RoomDiscovery] Calculated rotation:', rotation);
     
     // 3. 檢查房間是否有未連接的門
     const unconnectedDoors = getUnconnectedDoors(gameState, newPosition, room, rotation);
+    console.log('[RoomDiscovery] Unconnected doors:', unconnectedDoors);
     
     if (unconnectedDoors.length > 0) {
       // 4. 有房間有未連接的門，可以放置
       const cardDrawRequired = RoomDiscoveryManager.getCardDrawRequirement(room);
+      console.log('[RoomDiscovery] Success! Room has unconnected doors, placing room');
       
       return {
         success: true,
@@ -700,6 +711,7 @@ export function drawRoomForExploration(
     }
     
     // 5. 房間會封閉棋盤，丟棄並重試
+    console.log('[RoomDiscovery] Room would close board, discarding and retrying');
     discardedRooms.push(room);
     
     // 標記為已抽取（這樣下次不會抽到同一個）
@@ -715,6 +727,8 @@ export function drawRoomForExploration(
   }
   
   // 6. 達到最大嘗試次數，添加隨機門
+  console.log('[RoomDiscovery] Max attempts reached, adding random door to prevent closure');
+  
   // 先嘗試使用最後一個丟棄的房間
   let finalRoom: Room | null = discardedRooms[discardedRooms.length - 1] || null;
   
@@ -733,6 +747,8 @@ export function drawRoomForExploration(
   
   // 添加隨機門
   const modifiedRoom = addRandomDoor(finalRoom, gameState, newPosition);
+  console.log('[RoomDiscovery] Modified room doors:', modifiedRoom.doors);
+  
   const rotation = RoomDiscoveryManager.calculateRotation(modifiedRoom, entryDirection);
   const cardDrawRequired = RoomDiscoveryManager.getCardDrawRequirement(modifiedRoom);
   

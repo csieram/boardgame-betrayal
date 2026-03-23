@@ -45,6 +45,9 @@ export {
   OPPOSITE_DOOR,
   rotateRoomForConnection,
   rotateDoors,
+  drawRoomForExploration,
+  getUnconnectedDoors,
+  addRandomDoor,
 } from './rules/roomDiscovery';
 export type {
   RoomDiscoveryResult,

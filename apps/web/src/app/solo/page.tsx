@@ -10,6 +10,7 @@ import {
   RoomDiscoveryManager,
   getValidExploreDirections,
   rotateRoomForConnection,
+  drawRoomForExploration,
   OPPOSITE_DOOR,
   SeededRng,
 } from '@betrayal/game-engine';
@@ -223,22 +224,68 @@ export default function SoloGamePage() {
     setValidExploreDirections(validExploreDirs);
   };
 
-  // 從牌堆抽取房間（使用 RoomDiscoveryManager 的邏輯）
-  const drawRoomFromDeck = (floor: Floor): Room | null => {
-    const deck = gameState.roomDecks[floor];
+  // 從牌堆抽取房間（使用 drawRoomForExploration 確保棋盤不會封閉）
+  const drawRoomFromDeck = (floor: Floor, entryDirection: Direction): { room: Room; rotation: number; wasModified: boolean } | null => {
+    console.log('[RoomDiscovery] Drawing room for exploration, floor:', floor, 'entryDirection:', entryDirection);
     
-    // 找到第一個未被抽取且未被放置的房間
-    const availableRoom = deck.find((r: Room) => {
-      const isDrawn = gameState.roomDecks.drawn.has(r.id);
-      const isPlaced = gameState.placedRoomIds.has(r.id);
-      return !isDrawn && !isPlaced;
-    });
+    // 構建符合 drawRoomForExploration 需要的 gameState 格式
+    const explorationGameState = {
+      map: {
+        ground: map.map(row => row.map(tile => ({
+          ...tile,
+          floor: currentFloor,
+        }))),
+        upper: [],
+        basement: [],
+        placedRoomCount: gameState.placedRoomIds.size,
+      },
+      roomDeck: {
+        ground: gameState.roomDecks.ground,
+        upper: gameState.roomDecks.upper,
+        basement: gameState.roomDecks.basement,
+        drawn: gameState.roomDecks.drawn,
+      },
+      placedRoomIds: gameState.placedRoomIds,
+      players: [{
+        id: 'solo-player',
+        position: {
+          x: position.x,
+          y: position.y,
+          floor: currentFloor,
+        },
+      }],
+      turn: {
+        currentPlayerId: 'solo-player',
+        movesRemaining: moves,
+        hasDiscoveredRoom: discovered,
+        hasEnded: false,
+      },
+    };
     
-    if (!availableRoom) {
+    // 使用 drawRoomForExploration 確保棋盤不會封閉
+    const result = drawRoomForExploration(explorationGameState as any, floor, entryDirection, 10);
+    
+    console.log('[RoomDiscovery] Result:', result);
+    
+    if (!result.success || !result.room) {
+      console.log('[RoomDiscovery] Failed to draw room:', result.error);
       return null;
     }
-
-    return availableRoom;
+    
+    // 更新 gameState 中的 drawn 標記
+    if (result.attempts && result.attempts > 1) {
+      console.log('[RoomDiscovery] Room drawn after', result.attempts, 'attempts');
+    }
+    
+    if (result.wasModified) {
+      console.log('[RoomDiscovery] Room was modified to prevent board closure');
+    }
+    
+    return {
+      room: result.room,
+      rotation: result.rotation || 0,
+      wasModified: result.wasModified || false,
+    };
   };
 
   // 移動到指定位置
@@ -259,17 +306,39 @@ export default function SoloGamePage() {
       else if (deltaY === 1) entryDirection = 'south';
       else if (deltaY === -1) entryDirection = 'north';
 
-      // 從牌堆抽取房間（確保唯一性）
-      const room = drawRoomFromDeck(currentFloor);
+      // 從牌堆抽取房間（使用 drawRoomForExploration 確保棋盤不會封閉）
+      const drawResult = drawRoomFromDeck(currentFloor, entryDirection);
       
-      if (!room) {
+      if (!drawResult) {
         setLog(prev => [...prev, '沒有更多房間可以發現！']);
         return;
       }
-
-      // 使用規則引擎的 rotateRoomForConnection 旋轉房間以匹配門連接
-      const rotated = rotateRoomForConnection(room, entryDirection);
-      const placedRoom = rotated.room;
+      
+      const { room, rotation, wasModified } = drawResult;
+      
+      // 應用旋轉到房間
+      const rotatedRoom = {
+        ...room,
+        rotation: rotation as 0 | 90 | 180 | 270,
+      };
+      
+      // 旋轉門方向
+      const rotationMap: Record<number, Record<Direction, Direction>> = {
+        0: { north: 'north', south: 'south', east: 'east', west: 'west' },
+        90: { north: 'east', south: 'west', east: 'south', west: 'north' },
+        180: { north: 'south', south: 'north', east: 'west', west: 'east' },
+        270: { north: 'west', south: 'east', east: 'north', west: 'south' },
+      };
+      
+      const rotatedDoors = room.doors.map((door: Direction) => rotationMap[rotation][door]);
+      const placedRoom = {
+        ...rotatedRoom,
+        doors: rotatedDoors,
+      };
+      
+      if (wasModified) {
+        console.log('[RoomDiscovery] Room was modified to prevent board closure:', room.name);
+      }
 
       // 更新遊戲狀態
       const newMap = [...map];
