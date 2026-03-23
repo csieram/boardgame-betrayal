@@ -24,137 +24,139 @@ export interface Character {
   };
 }
 
+// Betrayal 3rd Edition - 6位角色（德文版官方數值）
+// 數值來源: https://hexagamers.com/wp-content/uploads/2017/04/Betrayal-at-House-on-the-Hill-Character-Cards.jpg
 export const CHARACTERS: Character[] = [
   {
-    id: 'missy',
-    name: '米西·杜波依斯',
-    nameEn: 'Missy Dubois',
-    age: 9,
-    description: '一個看似天真無邪的小女孩，但眼神中藏著不屬於這個年齡的智慧。',
-    color: '#FF69B4',
-    portraitSvg: '/gallery/characters/char-missy-portrait.svg',
-    fullSvg: '/gallery/characters/char-missy-full.svg',
+    id: 'persephone',
+    name: '珀瑟芬妮·福奇',
+    nameEn: 'Persephone Fauci',
+    age: 28,
+    description: '一位冷靜沉著的科學家，總是用邏輯分析眼前的一切。',
+    color: '#4169E1', // 藍色
+    portraitSvg: '/gallery/characters/char-persephone-portrait.svg',
+    fullSvg: '/gallery/characters/char-persephone-full.svg',
     stats: {
-      speed: [3, 3],
-      might: [2, 2],
+      speed: [5, 5],
+      might: [3, 3],
+      sanity: [4, 4],
+      knowledge: [5, 5],
+    },
+    statTrack: {
+      speed: [0, 2, 3, 4, 5, 6, 7, 8],    // 2,3,4,5*,6,7,7,8
+      might: [0, 2, 3, 3, 4, 5, 6, 7],    // 2,3,3,4*,5,6,6,7
+      sanity: [0, 1, 2, 3, 4, 5, 6, 7],   // 1,2,3,4*,5,5,6,7
+      knowledge: [0, 3, 4, 5, 5, 5, 6, 7], // 3,4,5,5*,5,6,6,7
+    },
+  },
+  {
+    id: 'josef',
+    name: '約瑟夫·比利-鮑勃·胡珀',
+    nameEn: 'Josef Billy-Bob Hooper',
+    age: 45,
+    description: '來自南方的農夫，有著樸實的外表和堅強的意志。',
+    color: '#DC143C', // 紅色
+    portraitSvg: '/gallery/characters/char-josef-portrait.svg',
+    fullSvg: '/gallery/characters/char-josef-full.svg',
+    stats: {
+      speed: [4, 4],
+      might: [4, 4],
+      sanity: [5, 5],
+      knowledge: [3, 3],
+    },
+    statTrack: {
+      speed: [0, 2, 3, 3, 4, 5, 6, 7],    // 2,3,3,4*,5,6,7,7
+      might: [0, 3, 4, 4, 5, 6, 6, 8],    // 3,4,4,5*,6,6,7,8
+      sanity: [0, 3, 4, 5, 5, 6, 6, 8],   // 3,4,5,5*,6,6,7,8
+      knowledge: [0, 2, 3, 3, 4, 5, 5, 6], // 2,3,3,4*,5,5,6,6
+    },
+  },
+  {
+    id: 'ace',
+    name: '艾斯·瓊斯',
+    nameEn: 'Ace Jones',
+    age: 32,
+    description: '特技飛行員，喜歡冒險和刺激，從不拒絕挑戰。',
+    color: '#228B22', // 綠色
+    portraitSvg: '/gallery/characters/char-ace-portrait.svg',
+    fullSvg: '/gallery/characters/char-ace-full.svg',
+    stats: {
+      speed: [5, 5],
+      might: [3, 3],
       sanity: [4, 4],
       knowledge: [3, 3],
     },
     statTrack: {
-      speed: [0, 3, 4, 5, 6, 6, 7, 7],
-      might: [0, 2, 3, 3, 3, 4, 5, 6],
-      sanity: [0, 4, 5, 5, 5, 6, 7, 8],
-      knowledge: [0, 3, 4, 4, 4, 5, 6, 6],
+      speed: [0, 3, 4, 4, 5, 6, 7, 8],    // 3,4,4,5*,6,7,7,8
+      might: [0, 2, 3, 3, 4, 5, 5, 7],    // 2,3,3,4*,5,5,6,7
+      sanity: [0, 3, 3, 4, 5, 6, 6, 8],   // 3,3,4,5*,6,6,7,8
+      knowledge: [0, 2, 3, 3, 4, 5, 6, 7], // 2,3,3,4*,5,6,6,7
     },
   },
   {
-    id: 'zoe',
-    name: '柔伊·卡斯特羅',
-    nameEn: 'Zoe Castro',
-    age: 21,
-    description: '大學生，主修超自然現象研究，對這棟房子有種奇怪的熟悉感。',
-    color: '#9370DB',
-    portraitSvg: '/gallery/characters/char-zoe-portrait.svg',
-    fullSvg: '/gallery/characters/char-zoe.svg',
+    id: 'rochelle',
+    name: '羅謝爾·門羅',
+    nameEn: 'Rochelle Monroe',
+    age: 38,
+    description: '知名的靈異調查員，專門揭穿偽科學和超自然騙局。',
+    color: '#9932CC', // 紫色
+    portraitSvg: '/gallery/characters/char-rochelle-portrait.svg',
+    fullSvg: '/gallery/characters/char-rochelle-full.svg',
     stats: {
       speed: [4, 4],
-      might: [2, 2],
-      sanity: [3, 3],
-      knowledge: [5, 5],
-    },
-    statTrack: {
-      speed: [0, 4, 4, 4, 5, 6, 7, 8],
-      might: [0, 2, 2, 3, 3, 4, 4, 5],
-      sanity: [0, 3, 4, 5, 5, 6, 6, 7],
-      knowledge: [0, 5, 5, 5, 5, 6, 7, 8],
-    },
-  },
-  {
-    id: 'brandon',
-    name: '布蘭登·凱恩',
-    nameEn: 'Brandon Kane',
-    age: 35,
-    description: '前軍人，體格強壯，但這棟房子裡的東西讓他開始懷疑自己的勇氣。',
-    color: '#4682B4',
-    portraitSvg: '/gallery/characters/char-brandon.svg',
-    fullSvg: '/gallery/characters/full-brandon.svg',
-    stats: {
-      speed: [3, 3],
-      might: [5, 5],
-      sanity: [2, 2],
-      knowledge: [2, 2],
-    },
-    statTrack: {
-      speed: [0, 3, 3, 4, 5, 6, 7, 8],
-      might: [0, 5, 5, 6, 6, 7, 8, 8],
-      sanity: [0, 2, 3, 3, 4, 5, 5, 6],
-      knowledge: [0, 2, 3, 3, 4, 4, 5, 6],
-    },
-  },
-  {
-    id: 'vivian',
-    name: '薇薇安·羅培茲',
-    nameEn: 'Vivian Lopez',
-    age: 42,
-    description: '靈媒，聲稱能與死者溝通。這棟房子的靈魂特別...吵雜。',
-    color: '#DC143C',
-    portraitSvg: '/gallery/characters/char-vivian.svg',
-    fullSvg: '/gallery/characters/full-vivian.svg',
-    stats: {
-      speed: [3, 3],
-      might: [2, 2],
+      might: [3, 3],
       sanity: [5, 5],
       knowledge: [4, 4],
     },
     statTrack: {
-      speed: [0, 3, 4, 4, 4, 5, 6, 6],
-      might: [0, 2, 2, 3, 3, 3, 4, 5],
-      sanity: [0, 5, 5, 6, 6, 7, 8, 8],
-      knowledge: [0, 4, 4, 5, 5, 6, 6, 7],
+      speed: [0, 2, 3, 4, 4, 5, 6, 6],    // 2,3,4,4*,5,6,6,6
+      might: [0, 2, 3, 3, 4, 4, 5, 6],    // 2,3,3,4*,4,5,6,6
+      sanity: [0, 3, 4, 5, 6, 6, 6, 8],   // 3,4,5,6*,6,6,7,8
+      knowledge: [0, 2, 3, 3, 4, 5, 6, 8], // 2,3,3,4*,5,6,7,8
     },
   },
   {
-    id: 'peter',
-    name: '彼得·艾金森',
-    nameEn: 'Peter Akimoto',
-    age: 58,
-    description: '退休警探，相信邏輯與證據。但這棟房子裡，邏輯似乎不管用。',
-    color: '#8B4513',
-    portraitSvg: '/gallery/characters/char-peter.svg',
-    fullSvg: '/gallery/characters/full-peter.svg',
+    id: 'anita',
+    name: '安妮塔·赫南德茲',
+    nameEn: 'Anita Hernandez',
+    age: 26,
+    description: '年輕的考古學家，對古代文明和神秘學有深入研究。',
+    color: '#FFD700', // 黃色
+    portraitSvg: '/gallery/characters/char-anita-portrait.svg',
+    fullSvg: '/gallery/characters/char-anita-full.svg',
     stats: {
-      speed: [3, 3],
+      speed: [5, 5],
       might: [3, 3],
       sanity: [4, 4],
       knowledge: [4, 4],
     },
     statTrack: {
-      speed: [0, 3, 3, 3, 4, 5, 6, 7],
-      might: [0, 3, 3, 4, 5, 5, 6, 7],
-      sanity: [0, 4, 4, 5, 5, 6, 6, 7],
-      knowledge: [0, 4, 5, 5, 5, 6, 7, 7],
+      speed: [0, 3, 4, 5, 6, 6, 6, 7],    // 3,4,5,6*,6,6,7,7
+      might: [0, 2, 3, 3, 4, 5, 5, 6],    // 2,3,3,4*,5,5,6,6
+      sanity: [0, 3, 4, 4, 4, 5, 6, 7],   // 3,4,4,4*,5,6,7,7
+      knowledge: [0, 2, 3, 3, 4, 5, 6, 7], // 2,3,3,4*,5,6,6,7
     },
   },
   {
-    id: 'madame',
-    name: '薩拉·貝利夫人',
-    nameEn: 'Madame Zostra',
-    age: 67,
-    description: '神秘的算命師，她的塔羅牌早就預言了這場噩夢。',
-    color: '#4B0082',
-    portraitSvg: '/gallery/characters/char-madame.svg',
-    fullSvg: '/gallery/characters/full-madame.svg',
+    id: 'dan',
+    name: '丹·阮醫生',
+    nameEn: 'Dan Nguyen, M.D.',
+    age: 52,
+    description: '經驗豐富的醫生，在危急時刻總能保持冷靜。',
+    color: '#F5F5F5', // 白色
+    portraitSvg: '/gallery/characters/char-dan-portrait.svg',
+    fullSvg: '/gallery/characters/char-dan-full.svg',
     stats: {
-      speed: [2, 2],
-      might: [2, 2],
-      sanity: [5, 5],
+      speed: [4, 4],
+      might: [3, 3],
+      sanity: [4, 4],
       knowledge: [5, 5],
     },
     statTrack: {
-      speed: [0, 2, 3, 3, 4, 5, 5, 6],
-      might: [0, 2, 3, 3, 4, 4, 5, 5],
-      sanity: [0, 5, 5, 6, 6, 7, 8, 8],
-      knowledge: [0, 5, 5, 5, 6, 6, 7, 8],
+      speed: [0, 2, 3, 3, 4, 5, 5, 7],    // 2,3,3,4*,5,5,6,7
+      might: [0, 2, 3, 3, 4, 5, 6, 7],    // 2,3,3,4*,5,6,6,7
+      sanity: [0, 2, 3, 4, 5, 5, 6, 7],   // 2,3,4,5*,5,6,7,7
+      knowledge: [0, 3, 4, 5, 5, 6, 7, 8], // 3,4,5,5*,6,7,7,8
     },
   },
 ];
