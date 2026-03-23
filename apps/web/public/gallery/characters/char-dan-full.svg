@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 200" width="300" height="400">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F5F5F5"/>
+      <stop offset="100%" style="stop-color:#C0C0C0"/>
+    </linearGradient>
+    <filter id="softShadow">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+      <feOffset dx="1" dy="1"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.3"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  
+  <!-- 背景 -->
+  <rect x="5" y="5" width="140" height="190" rx="12" fill="url(#bgGrad)" stroke="#A9A9A9" stroke-width="3"/>
+  <rect x="12" y="12" width="126" height="176" rx="8" fill="#FFF"/>
+  
+  <!-- 頭髮 -->
+  <ellipse cx="35" cy="50" rx="14" ry="22" fill="#4A4A4A" filter="url(#softShadow)"/>
+  <ellipse cx="115" cy="50" rx="14" ry="22" fill="#4A4A4A" filter="url(#softShadow)"/>
+  
+  <!-- 身體/醫生袍 -->
+  <path d="M40,100 L110,100 L120,170 L30,170 Z" fill="#FFF" stroke="#E0E0E0" stroke-width="2" filter="url(#softShadow)"/>
+  <path d="M75,100 L75,170" stroke="#E0E0E0" stroke-width="1"/>
+  <!-- 領帶 -->
+  <path d="M65,100 L85,100 L75,130 Z" fill="#DC143C"/>
+  <!-- 聽診器 -->
+  <path d="M55,105 Q75,125 95,105" fill="none" stroke="#4682B4" stroke-width="3"/>
+  <circle cx="55" cy="105" r="4" fill="#4682B4"/>
+  <circle cx="95" cy="105" r="4" fill="#4682B4"/>
+  <line x1="75" y1="125" x2="75" y2="150" stroke="#4682B4" stroke-width="2"/>
+  <circle cx="75" cy="155" r="5" fill="#4682B4"/>
+  
+  <!-- 手臂 -->
+  <ellipse cx="28" cy="130" rx="12" ry="28" fill="#FFF" transform="rotate(-15 28 130)"/>
+  <ellipse cx="122" cy="130" rx="12" ry="28" fill="#FFF" transform="rotate(15 122 130)"/>
+  
+  <!-- 脖子 -->
+  <rect x="65" y="85" width="20" height="18" fill="#FFE4C4"/>
+  
+  <!-- 頭 -->
+  <circle cx="75" cy="62" r="32" fill="#FFE4C4" filter="url(#softShadow)"/>
+  
+  <!-- 瀏海 -->
+  <path d="M35,48 Q55,35 75,40 Q95,35 115,48 Q108,28 75,25 Q42,28 35,48" fill="#4A4A4A"/>
+  
+  <!-- 眉毛 -->
+  <path d="M60,52 Q65,50 70,52" fill="none" stroke="#4A4A4A" stroke-width="2" stroke-linecap="round"/>
+  <path d="M80,52 Q85,50 90,52" fill="none" stroke="#4A4A4A" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- 眼睛 -->
+  <ellipse cx="65" cy="64" rx="6" ry="6" fill="#FFF"/>
+  <ellipse cx="85" cy="64" rx="6" ry="6" fill="#FFF"/>
+  <circle cx="66" cy="65" r="3.5" fill="#4682B4"/>
+  <circle cx="84" cy="65" r="3.5" fill="#4682B4"/>
+  <circle cx="67" cy="64" r="1.2" fill="#FFF"/>
+  <circle cx="83" cy="64" r="1.2" fill="#FFF"/>
+  
+  <!-- 眼鏡 -->
+  <circle cx="65" cy="64" r="9" fill="none" stroke="#333" stroke-width="1.5"/>
+  <circle cx="85" cy="64" r="9" fill="none" stroke="#333" stroke-width="1.5"/>
+  <line x1="74" y1="64" x2="76" y2="64" stroke="#333" stroke-width="1.5"/>
+  
+  <!-- 鼻子 -->
+  <circle cx="75" cy="75" r="2" fill="#DEB887"/>
+  
+  <!-- 嘴巴 -->
+  <path d="M70,88 Q75,92 80,88" fill="none" stroke="#CD853F" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- 名字 -->
+  <text x="75" y="188" text-anchor="middle" font-size="11" font-weight="bold" fill="#4A4A4A">Dan Nguyen, M.D.</text>
+</svg>

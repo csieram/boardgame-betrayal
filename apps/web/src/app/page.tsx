@@ -8,24 +8,24 @@ export default function LobbyPage() {
           🏚️ Betrayal at House on the Hill
         </h1>
         <p className="text-xl text-gray-400 mb-2">山中小屋的背叛</p>
-        <p className="text-gray-500 mb-8">选择游戏模式</p>
+        <p className="text-gray-500 mb-8">選擇遊戲模式</p>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <a href="/betrayal/solo">
+          <a href="/solo/select">
             <Button variant="primary" size="lg" className="w-full">
-              🎮 单人游戏
+              🎮 單人遊戲
             </Button>
           </a>
           
-          <a href="/betrayal/multi">
+          <a href="/multi">
             <Button variant="secondary" size="lg" className="w-full">
-              👥 多人游戏
+              👥 多人遊戲
             </Button>
           </a>
           
-          <a href="/betrayal/gallery">
+          <a href="/gallery">
             <Button variant="primary" size="lg" className="w-full bg-purple-700 hover:bg-purple-600">
-              🖼️ 素材画廊
+              🖼️ 素材畫廊
             </Button>
           </a>
         </div>

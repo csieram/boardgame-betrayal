@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 125" width="200" height="250">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4169E1"/>
+      <stop offset="100%" style="stop-color:#1E3A8A"/>
+    </linearGradient>
+    <radialGradient id="faceGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#FFE4E1"/>
+      <stop offset="100%" style="stop-color:#FFC0CB"/>
+    </radialGradient>
+    <filter id="softShadow">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+      <feOffset dx="1" dy="1"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.3"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  
+  <!-- 背景 -->
+  <rect x="2" y="2" width="96" height="121" rx="8" fill="url(#bgGrad)" stroke="#1E3A8A" stroke-width="2"/>
+  
+  <!-- 頭髮後層 -->
+  <ellipse cx="25" cy="45" rx="14" ry="18" fill="#2F1B14" filter="url(#softShadow)"/>
+  <ellipse cx="75" cy="45" rx="14" ry="18" fill="#2F1B14" filter="url(#softShadow)"/>
+  
+  <!-- 脖子 -->
+  <rect x="44" y="70" width="12" height="15" fill="#FFE4E1"/>
+  
+  <!-- 實驗室外套領子 -->
+  <path d="M35,80 L50,95 L65,80 L65,110 L35,110 Z" fill="#FFF" stroke="#E0E0E0" stroke-width="1"/>
+  <path d="M50,95 L50,110" stroke="#E0E0E0" stroke-width="1"/>
+  
+  <!-- 頭 -->
+  <circle cx="50" cy="48" r="28" fill="url(#faceGrad)" filter="url(#softShadow)"/>
+  
+  <!-- 瀏海 -->
+  <path d="M22,38 Q35,25 50,30 Q65,25 78,38 Q72,20 50,18 Q28,20 22,38" fill="#2F1B14"/>
+  
+  <!-- 眉毛 -->
+  <path d="M38,42 Q42,40 46,42" fill="none" stroke="#2F1B14" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M54,42 Q58,40 62,42" fill="none" stroke="#2F1B14" stroke-width="1.5" stroke-linecap="round"/>
+  
+  <!-- 眼睛 -->
+  <ellipse cx="42" cy="50" rx="5" ry="6" fill="#FFF"/>
+  <ellipse cx="58" cy="50" rx="5" ry="6" fill="#FFF"/>
+  <circle cx="43" cy="51" r="3.5" fill="#4169E1"/>
+  <circle cx="57" cy="51" r="3.5" fill="#4169E1"/>
+  <circle cx="44" cy="50" r="1.5" fill="#FFF"/>
+  <circle cx="56" cy="50" r="1.5" fill="#FFF"/>
+  
+  <!-- 眼鏡 -->
+  <circle cx="42" cy="50" r="8" fill="none" stroke="#333" stroke-width="1.5"/>
+  <circle cx="58" cy="50" r="8" fill="none" stroke="#333" stroke-width="1.5"/>
+  <line x1="50" y1="50" x2="50" y2="50" stroke="#333" stroke-width="1.5"/>
+  <line x1="34" y1="48" x2="20" y2="45" stroke="#333" stroke-width="1"/>
+  <line x1="66" y1="48" x2="80" y2="45" stroke="#333" stroke-width="1"/>
+  
+  <!-- 鼻子 -->
+  <circle cx="50" cy="58" r="1.5" fill="#FFB6C1"/>
+  
+  <!-- 嘴巴 -->
+  <path d="M44,68 Q50,72 56,68" fill="none" stroke="#CD853F" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- 名字 -->
+  <text x="50" y="118" text-anchor="middle" font-size="8" font-weight="bold" fill="#FFF">Persephone</text>
+</svg>

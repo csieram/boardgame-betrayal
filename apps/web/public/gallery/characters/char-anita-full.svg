@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 200" width="300" height="400">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700"/>
+      <stop offset="100%" style="stop-color:#DAA520"/>
+    </linearGradient>
+    <filter id="softShadow">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+      <feOffset dx="1" dy="1"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.3"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  
+  <!-- 背景 -->
+  <rect x="5" y="5" width="140" height="190" rx="12" fill="url(#bgGrad)" stroke="#DAA520" stroke-width="3"/>
+  <rect x="12" y="12" width="126" height="176" rx="8" fill="#FFFACD"/>
+  
+  <!-- 頭髮 -->
+  <ellipse cx="35" cy="52" rx="14" ry="24" fill="#8B4513" filter="url(#softShadow)"/>
+  <ellipse cx="115" cy="52" rx="14" ry="24" fill="#8B4513" filter="url(#softShadow)"/>
+  
+  <!-- 身體/探險服 -->
+  <path d="M40,100 L110,100 L120,170 L30,170 Z" fill="#F4A460" stroke="#8B4513" stroke-width="2" filter="url(#softShadow)"/>
+  <path d="M75,100 L75,170" stroke="#8B4513" stroke-width="1"/>
+  <!-- 口袋 -->
+  <rect x="48" y="120" width="15" height="18" fill="#DEB887" stroke="#8B4513" stroke-width="1"/>
+  <rect x="87" y="120" width="15" height="18" fill="#DEB887" stroke="#8B4513" stroke-width="1"/>
+  
+  <!-- 手臂 -->
+  <ellipse cx="28" cy="130" rx="12" ry="28" fill="#F4A460" transform="rotate(-15 28 130)"/>
+  <ellipse cx="122" cy="130" rx="12" ry="28" fill="#F4A460" transform="rotate(15 122 130)"/>
+  
+  <!-- 刷子 -->
+  <line x1="120" y1="90" x2="110" y2="140" stroke="#8B4513" stroke-width="3"/>
+  <ellipse cx="118" cy="88" rx="6" ry="4" fill="#DEB887"/>
+  
+  <!-- 脖子 -->
+  <rect x="65" y="85" width="20" height="18" fill="#FFE4C4"/>
+  
+  <!-- 頭 -->
+  <circle cx="75" cy="62" r="32" fill="#FFE4C4" filter="url(#softShadow)"/>
+  
+  <!-- 瀏海 -->
+  <path d="M35,48 Q55,35 75,40 Q95,35 115,48 Q108,28 75,25 Q42,28 35,48" fill="#8B4513"/>
+  
+  <!-- 探險帽 -->
+  <ellipse cx="75" cy="32" rx="32" ry="8" fill="#F4A460" stroke="#8B4513" stroke-width="2"/>
+  <path d="M45,32 Q75,12 105,32" fill="#F4A460" stroke="#8B4513" stroke-width="2"/>
+  
+  <!-- 眉毛 -->
+  <path d="M60,52 Q65,50 70,52" fill="none" stroke="#8B4513" stroke-width="2" stroke-linecap="round"/>
+  <path d="M80,52 Q85,50 90,52" fill="none" stroke="#8B4513" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- 眼睛 -->
+  <ellipse cx="65" cy="64" rx="6" ry="7" fill="#FFF"/>
+  <ellipse cx="85" cy="64" rx="6" ry="7" fill="#FFF"/>
+  <circle cx="66" cy="65" r="4" fill="#8B4513"/>
+  <circle cx="84" cy="65" r="4" fill="#8B4513"/>
+  <circle cx="67" cy="64" r="1.5" fill="#FFF"/>
+  <circle cx="83" cy="64" r="1.5" fill="#FFF"/>
+  
+  <!-- 鼻子 -->
+  <circle cx="75" cy="75" r="2" fill="#DEB887"/>
+  
+  <!-- 微笑 -->
+  <path d="M68,88 Q75,95 82,88" fill="none" stroke="#CD853F" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- 名字 -->
+  <text x="75" y="188" text-anchor="middle" font-size="11" font-weight="bold" fill="#8B4513">Anita Hernandez</text>
+</svg>

@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 200" width="300" height="400">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9932CC"/>
+      <stop offset="100%" style="stop-color:#4B0082"/>
+    </linearGradient>
+    <filter id="softShadow">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+      <feOffset dx="1" dy="1"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.3"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  
+  <!-- 背景 -->
+  <rect x="5" y="5" width="140" height="190" rx="12" fill="url(#bgGrad)" stroke="#4B0082" stroke-width="3"/>
+  <rect x="12" y="12" width="126" height="176" rx="8" fill="#E6E6FA"/>
+  
+  <!-- 頭髮 -->
+  <ellipse cx="35" cy="52" rx="14" ry="26" fill="#1C1C1C" filter="url(#softShadow)"/>
+  <ellipse cx="115" cy="52" rx="14" ry="26" fill="#1C1C1C" filter="url(#softShadow)"/>
+  
+  <!-- 身體/高領毛衣+外套 -->
+  <path d="M40,100 L110,100 L120,170 L30,170 Z" fill="#2F1B14" stroke="#1C1C1C" stroke-width="2" filter="url(#softShadow)"/>
+  <path d="M75,100 L75,170" stroke="#1C1C1C" stroke-width="1"/>
+  <!-- 毛衣領子 -->
+  <path d="M55,100 Q75,120 95,100" fill="none" stroke="#4B0082" stroke-width="8" stroke-linecap="round"/>
+  
+  <!-- 手臂 -->
+  <ellipse cx="28" cy="130" rx="12" ry="28" fill="#2F1B14" transform="rotate(-15 28 130)"/>
+  <ellipse cx="122" cy="130" rx="12" ry="28" fill="#2F1B14" transform="rotate(15 122 130)"/>
+  
+  <!-- 靈異探測器 -->
+  <rect x="110" y="115" width="15" height="20" rx="3" fill="#333" stroke="#666" stroke-width="1"/>
+  <circle cx="117" cy="122" r="4" fill="#0F0"/>
+  <line x1="117" y1="128" x2="117" y2="135" stroke="#666" stroke-width="1"/>
+  
+  <!-- 脖子 -->
+  <rect x="65" y="85" width="20" height="18" fill="#FFE4E1"/>
+  
+  <!-- 頭 -->
+  <circle cx="75" cy="62" r="32" fill="#FFE4E1" filter="url(#softShadow)"/>
+  
+  <!-- 瀏海 -->
+  <path d="M35,48 Q55,35 75,40 Q95,35 115,48 Q108,28 75,25 Q42,28 35,48" fill="#1C1C1C"/>
+  
+  <!-- 眉毛 -->
+  <path d="M60,52 Q65,50 70,52" fill="none" stroke="#1C1C1C" stroke-width="2" stroke-linecap="round"/>
+  <path d="M80,52 Q85,50 90,52" fill="none" stroke="#1C1C1C" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- 眼睛 -->
+  <ellipse cx="65" cy="64" rx="6" ry="7" fill="#FFF"/>
+  <ellipse cx="85" cy="64" rx="6" ry="7" fill="#FFF"/>
+  <circle cx="66" cy="65" r="4" fill="#9932CC"/>
+  <circle cx="84" cy="65" r="4" fill="#9932CC"/>
+  <circle cx="67" cy="64" r="1.5" fill="#FFF"/>
+  <circle cx="83" cy="64" r="1.5" fill="#FFF"/>
+  
+  <!-- 神秘眼罩效果 -->
+  <ellipse cx="85" cy="64" rx="7" ry="7" fill="#4B0082" opacity="0.2"/>
+  
+  <!-- 鼻子 -->
+  <circle cx="75" cy="75" r="2" fill="#FFB6C1"/>
+  
+  <!-- 嘴巴 -->
+  <path d="M70,88 Q75,92 80,88" fill="none" stroke="#CD853F" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- 耳環 -->
+  <circle cx="32" cy="60" r="2.5" fill="#FFD700"/>
+  <circle cx="118" cy="60" r="2.5" fill="#FFD700"/>
+  
+  <!-- 名字 -->
+  <text x="75" y="188" text-anchor="middle" font-size="11" font-weight="bold" fill="#4B0082">Rochelle Monroe</text>
+</svg>

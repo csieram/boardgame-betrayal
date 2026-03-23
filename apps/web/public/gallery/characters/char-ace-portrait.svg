@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 125" width="200" height="250">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#228B22"/>
+      <stop offset="100%" style="stop-color:#006400"/>
+    </linearGradient>
+    <radialGradient id="faceGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#FFE4C4"/>
+      <stop offset="100%" style="stop-color:#DEB887"/>
+    </radialGradient>
+    <filter id="softShadow">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+      <feOffset dx="1" dy="1"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.3"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  
+  <!-- 背景 -->
+  <rect x="2" y="2" width="96" height="121" rx="8" fill="url(#bgGrad)" stroke="#006400" stroke-width="2"/>
+  
+  <!-- 頭髮 -->
+  <ellipse cx="22" cy="45" rx="10" ry="18" fill="#4A3728" filter="url(#softShadow)"/>
+  <ellipse cx="78" cy="45" rx="10" ry="18" fill="#4A3728" filter="url(#softShadow)"/>
+  
+  <!-- 脖子 -->
+  <rect x="44" y="70" width="12" height="15" fill="#FFE4C4"/>
+  
+  <!-- 飛行夾克 -->
+  <path d="M35,80 L50,95 L65,80 L65,110 L35,110 Z" fill="#8B4513" stroke="#654321" stroke-width="1"/>
+  <path d="M50,95 L50,110" stroke="#654321" stroke-width="1"/>
+  <rect x="40" y="85" width="8" height="12" fill="#D2691E"/>
+  
+  <!-- 頭 -->
+  <circle cx="50" cy="48" r="28" fill="url(#faceGrad)" filter="url(#softShadow)"/>
+  
+  <!-- 飛行帽 -->
+  <path d="M22,48 Q50,15 78,48" fill="#8B4513" stroke="#654321" stroke-width="2"/>
+  <ellipse cx="22" cy="48" rx="6" ry="10" fill="#8B4513" stroke="#654321" stroke-width="1"/>
+  <ellipse cx="78" cy="48" rx="6" ry="10" fill="#8B4513" stroke="#654321" stroke-width="1"/>
+  
+  <!-- 眉毛 -->
+  <path d="M38,40 Q42,38 46,40" fill="none" stroke="#4A3728" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M54,40 Q58,38 62,40" fill="none" stroke="#4A3728" stroke-width="1.5" stroke-linecap="round"/>
+  
+  <!-- 眼睛 -->
+  <ellipse cx="42" cy="50" rx="5" ry="5" fill="#FFF"/>
+  <ellipse cx="58" cy="50" rx="5" ry="5" fill="#FFF"/>
+  <circle cx="43" cy="51" r="3" fill="#228B22"/>
+  <circle cx="57" cy="51" r="3" fill="#228B22"/>
+  <circle cx="44" cy="50" r="1" fill="#FFF"/>
+  <circle cx="56" cy="50" r="1" fill="#FFF"/>
+  
+  <!-- 墨鏡 -->
+  <ellipse cx="42" cy="50" rx="7" ry="5" fill="#000" opacity="0.8"/>
+  <ellipse cx="58" cy="50" rx="7" ry="5" fill="#000" opacity="0.8"/>
+  <line x1="49" y1="50" x2="51" y2="50" stroke="#000" stroke-width="1"/>
+  
+  <!-- 鼻子 -->
+  <circle cx="50" cy="58" r="1.5" fill="#DEB887"/>
+  
+  <!-- 微笑 -->
+  <path d="M44,66 Q50,72 56,66" fill="none" stroke="#CD853F" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- 名字 -->
+  <text x="50" y="118" text-anchor="middle" font-size="9" font-weight="bold" fill="#FFF">Ace</text>
+</svg>

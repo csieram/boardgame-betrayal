@@ -15,44 +15,44 @@ export default function CardsGalleryPage() {
   const [filter, setFilter] = useState<'all' | 'event' | 'item' | 'omen'>('all');
 
   useEffect(() => {
-    // 加载卡牌列表
+    // 載入卡牌列表
     const cardFiles = [
       // 事件卡
-      { id: 'event-bloodwall', name: '血墙', type: 'event' as const },
+      { id: 'event-bloodwall', name: '血牆', type: 'event' as const },
       { id: 'event-chill', name: '寒意', type: 'event' as const },
       { id: 'event-creature', name: '生物', type: 'event' as const },
-      { id: 'event-door', name: '门', type: 'event' as const },
-      { id: 'event-footprints', name: '脚印', type: 'event' as const },
-      { id: 'event-hallucination', name: '幻觉', type: 'event' as const },
-      { id: 'event-memory', name: '记忆', type: 'event' as const },
-      { id: 'event-shadow', name: '阴影', type: 'event' as const },
-      { id: 'event-shaking', name: '摇晃', type: 'event' as const },
-      { id: 'event-space', name: '空间', type: 'event' as const },
-      { id: 'event-time', name: '时间', type: 'event' as const },
-      { id: 'event-voices', name: '声音', type: 'event' as const },
+      { id: 'event-door', name: '門', type: 'event' as const },
+      { id: 'event-footprints', name: '腳印', type: 'event' as const },
+      { id: 'event-hallucination', name: '幻覺', type: 'event' as const },
+      { id: 'event-memory', name: '記憶', type: 'event' as const },
+      { id: 'event-shadow', name: '陰影', type: 'event' as const },
+      { id: 'event-shaking', name: '搖晃', type: 'event' as const },
+      { id: 'event-space', name: '空間', type: 'event' as const },
+      { id: 'event-time', name: '時間', type: 'event' as const },
+      { id: 'event-voices', name: '聲音', type: 'event' as const },
       // 物品卡
-      { id: 'item-camera', name: '相机', type: 'item' as const },
-      { id: 'item-candle', name: '蜡烛', type: 'item' as const },
-      { id: 'item-compass', name: '指南针', type: 'item' as const },
+      { id: 'item-camera', name: '相機', type: 'item' as const },
+      { id: 'item-candle', name: '蠟燭', type: 'item' as const },
+      { id: 'item-compass', name: '指南針', type: 'item' as const },
       { id: 'item-cross', name: '十字架', type: 'item' as const },
       { id: 'item-food', name: '食物', type: 'item' as const },
-      { id: 'item-holywater', name: '圣水', type: 'item' as const },
-      { id: 'item-key', name: '钥匙', type: 'item' as const },
+      { id: 'item-holywater', name: '聖水', type: 'item' as const },
+      { id: 'item-key', name: '鑰匙', type: 'item' as const },
       { id: 'item-matches', name: '火柴', type: 'item' as const },
-      // 预兆卡
-      { id: 'omen-book', name: '书', type: 'omen' as const },
+      // 預兆卡
+      { id: 'omen-book', name: '書', type: 'omen' as const },
       { id: 'omen-crystal', name: '水晶', type: 'omen' as const },
       { id: 'omen-dagger', name: '匕首', type: 'omen' as const },
       { id: 'omen-dog', name: '狗', type: 'omen' as const },
-      { id: 'omen-ghostcandle', name: '鬼烛', type: 'omen' as const },
+      { id: 'omen-ghostcandle', name: '鬼燭', type: 'omen' as const },
       { id: 'omen-portrait', name: '肖像', type: 'omen' as const },
       { id: 'omen-ring', name: '戒指', type: 'omen' as const },
-      { id: 'omen-talisman', name: '护身符', type: 'omen' as const },
+      { id: 'omen-talisman', name: '護身符', type: 'omen' as const },
     ];
 
     setCards(cardFiles.map(c => ({
       ...c,
-      svg: `/gallery/cards/${c.id}.svg`
+      svg: `/gallery-assets/cards/${c.id}.svg`
     })));
   }, []);
 
@@ -69,15 +69,15 @@ export default function CardsGalleryPage() {
   const typeNames = {
     event: '事件',
     item: '物品',
-    omen: '预兆',
+    omen: '預兆',
   };
 
   return (
     <main className="min-h-screen p-6">
-      <h1 className="text-4xl font-bold mb-4 text-center">卡牌图鉴</h1>
-      <p className="text-gray-400 text-center mb-4">共 {cards.length} 张卡牌</p>
+      <h1 className="text-4xl font-bold mb-4 text-center">卡牌圖鑑</h1>
+      <p className="text-gray-400 text-center mb-4">共 {cards.length} 張卡牌</p>
       
-      {/* 过滤器 */}
+      {/* 過濾器 */}
       <div className="flex justify-center gap-2 mb-8">
         {(['all', 'event', 'item', 'omen'] as const).map((type) => (
           <button
@@ -114,8 +114,8 @@ export default function CardsGalleryPage() {
       </div>
       
       <div className="text-center mt-8">
-        <a href="/betrayal/gallery">
-          <Button variant="secondary">← 返回画廊</Button>
+        <a href="/gallery">
+          <Button variant="secondary">← 返回畫廊</Button>
         </a>
       </div>
     </main>
