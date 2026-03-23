@@ -11,19 +11,19 @@ export default function LobbyPage() {
         <p className="text-gray-500 mb-8">選擇遊戲模式</p>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <a href="/solo/select">
+          <a href="/betrayal/solo/select">
             <Button variant="primary" size="lg" className="w-full">
               🎮 單人遊戲
             </Button>
           </a>
           
-          <a href="/multi">
+          <a href="/betrayal/multi">
             <Button variant="secondary" size="lg" className="w-full">
               👥 多人遊戲
             </Button>
           </a>
           
-          <a href="/gallery">
+          <a href="/betrayal/gallery">
             <Button variant="primary" size="lg" className="w-full bg-purple-700 hover:bg-purple-600">
               🖼️ 素材畫廊
             </Button>

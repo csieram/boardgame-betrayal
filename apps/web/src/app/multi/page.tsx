@@ -7,7 +7,7 @@ export default function MultiPage() {
       <p className="text-gray-400 mb-8">多人游戏模式开发中...</p>
       
       <div className="text-center">
-        <a href="/">
+        <a href="/betrayal/">
           <Button variant="secondary">← 返回大厅</Button>
         </a>
       </div>

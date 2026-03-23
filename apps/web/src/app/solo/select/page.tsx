@@ -30,7 +30,7 @@ export default function SoloCharacterSelectPage() {
       sessionStorage.setItem('solo-selected-character', JSON.stringify(character));
       
       // 導航到遊戲頁面
-      router.push('/solo');
+      router.push('/betrayal/solo');
     } catch (error) {
       console.error('Failed to start game:', error);
       setIsLoading(false);
@@ -41,7 +41,7 @@ export default function SoloCharacterSelectPage() {
     <main className="min-h-screen bg-gray-900 text-white py-8">
       {/* 返回按鈕 */}
       <div className="max-w-7xl mx-auto px-4 mb-6">
-        <a href="/">
+        <a href="/betrayal/">
           <Button variant="secondary" size="sm">
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />

@@ -39,7 +39,7 @@ export default function SoloGamePage() {
       }
     } else {
       // 如果沒有儲存的角色，導航到選擇頁面
-      router.push('/solo/select');
+      router.push('/betrayal/solo/select');
     }
   }, [router]);
 
@@ -107,7 +107,7 @@ export default function SoloGamePage() {
       <main className="min-h-screen bg-gray-900 text-white p-6">
         <div className="text-center">
           <p className="text-gray-400 mb-4">正在導航到角色選擇...</p>
-          <a href="/solo/select">
+          <a href="/betrayal/solo/select">
             <Button>前往角色選擇</Button>
           </a>
         </div>
@@ -122,7 +122,7 @@ export default function SoloGamePage() {
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">單人遊戲 - 回合 {turn}</h1>
-          <a href="/solo/select">
+          <a href="/betrayal/solo/select">
             <Button variant="secondary" size="sm">重新選擇角色</Button>
           </a>
         </div>
@@ -239,7 +239,7 @@ export default function SoloGamePage() {
 
         {/* 底部返回按鈕 */}
         <div className="text-center mt-6">
-          <a href="/">
+          <a href="/betrayal/">
             <Button variant="secondary">← 返回大廳</Button>
           </a>
         </div>

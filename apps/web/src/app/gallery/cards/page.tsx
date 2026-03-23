@@ -114,7 +114,7 @@ export default function CardsGalleryPage() {
       </div>
       
       <div className="text-center mt-8">
-        <a href="/gallery">
+        <a href="/betrayal/gallery">
           <Button variant="secondary">← 返回畫廊</Button>
         </a>
       </div>
