@@ -15,16 +15,13 @@ Agent 0 — Orchestrator / Producer (指揮者)
     └── Agent 5 — Rule QA / Test Judge (規則驗證)
 ```
 
-## Discord 頻道對照表
+## Discord 頻道
 
-| Agent | 頻道名稱 | 頻道 ID |
-|-------|----------|---------|
-| Agent 1 (Architecture) | #architecture | 1484939726791250100 |
-| Agent 2 (Rules Engine) | #rules-engine | 1484939899252768779 |
-| Agent 3 (Frontend) | #frontend | 1484940096301039688 |
-| Agent 4 (AI Player) | #ai-player | 1484939943062012116 |
-| Agent 5 (Rule QA) | #rule-qa | 1484939989820112906 |
-| Agent 0 (Orchestrator) | #orchestrator | 1484939675935314051 |
+| 頻道 | 用途 |
+|------|------|
+| #orchestrator | Agent 0 向 Human 報告的唯一頻道 |
+
+**注意：** Sub-agents (Agent 1-5) **不會**在 Discord 發送訊息。它們完成後在 session result 中回報，由 Agent 0 統一在 #orchestrator 報告。
 
 ## 工作流程 (需要 Human 批准)
 
@@ -46,17 +43,16 @@ Agent 0 — Orchestrator / Producer (指揮者)
 
 ### Step 4: Track Progress
 - 透過以下方式監控 sub-agent 工作:
-  - Discord #agent-X 頻道的更新
+  - 檢查 sub-agent session 狀態
   - GitHub issues 狀態
 - 如果 agent 15 分鐘沒有回應 → 主動檢查狀態
 - 如果 agent 報告阻塞 → 協調解決
-- 在 Discord #orchestrator 發布更新給 human
+- **Agent 0 只在 #orchestrator 向 human 報告**
 
 ### Step 5: Coordinate Completion
 - 當 sub-agent 標記 "🟢 Pending Approval"
 - 驗證所有驗收標準已滿足
-- 驗證 Discord 更新完整
-- 在 Discord 通知 human
+- **Agent 0 在 #orchestrator 通知 human**
 - **等待 human 批准並關閉 issue**
 
 ### Step 6: Report to Human
@@ -97,27 +93,21 @@ Agent 0 — Orchestrator / Producer (指揮者)
 ## Agent 監控與錯誤處理
 
 ### Agent 0 監控職責
-- **15 分鐘無回應** → 主動發送消息詢問狀態
+- **15 分鐘無回應** → 主動檢查 sub-agent 狀態
 - **Agent 報告阻塞** → 立即協調資源解決
 - **Session 超時** → 檢查 transcript，決定接管或重新指派
-- **Discord 更新缺失** → 提醒 Agent 補發
-- **任務完成等待批准** → 及時審查並批准，避免 Agents 長時間等待
+- **任務完成等待批准** → 及時在 #orchestrator 報告給 human
 
-### Agent 必須遵守
-- 遇到問題立即在 Discord 發送 **[Blocked]** 消息
-- 不要靜默失敗或等待超時
-- **四次 Discord 更新**必須完整發送:
-  1. Task Received
-  2. In Progress
-  3. Completed
-  4. Approved
-- 獲得批准後發送最終 **[Approved]** 確認消息
+### Sub-agent 回報方式
+- Sub-agents **不會**在 Discord 發送訊息
+- 完成後在 session result 中回報
+- Agent 0 收到通知後統一在 #orchestrator 報告
 
 ## 並行任務處理
 
 **可以同時指派多個 Agents 執行不同任務:**
 - 每個 Agent 獨立工作，互不阻塞
-- 各自在專屬 Discord 頻道匯報進度
+- 完成後由 Agent 0 統一在 #orchestrator 報告
 
 ## 關鍵規則
 
