@@ -23,10 +23,6 @@ interface GameBoardProps {
   reachablePositions?: { x: number; y: number }[];
   /** 是否顯示所有樓層 */
   showAllFloors?: boolean;
-  /** 有效的探索方向 */
-  validExploreDirections?: Direction[];
-  /** 探索方向點擊回調 */
-  onExploreDirection?: (direction: Direction) => void;
 }
 
 /**
@@ -53,8 +49,6 @@ export function GameBoard({
   onFloorChange,
   reachablePositions = [],
   showAllFloors = true,
-  validExploreDirections = [],
-  onExploreDirection,
 }: GameBoardProps) {
   const [selectedRoom, setSelectedRoom] = useState<{ room: Room; x: number; y: number } | null>(null);
   const [activeFloor, setActiveFloor] = useState<Floor>(currentFloor);
@@ -116,7 +110,7 @@ export function GameBoard({
     return playerPosition.x === x && playerPosition.y === y;
   };
 
-  // 處理房間點擊
+  // 處理房間點擊 - 直接移動到相鄰房間
   const handleRoomClick = (room: Room, x: number, y: number) => {
     setSelectedRoom({ room, x, y });
     onRoomClick?.(room, x, y);
@@ -167,7 +161,7 @@ export function GameBoard({
         {/* 房間網格 */}
         <div className="overflow-x-auto pb-4">
           <div 
-            className="inline-grid gap-2 p-4 bg-gray-900/50 rounded-xl"
+            className="inline-grid gap-1 sm:gap-2 p-2 sm:p-4 bg-gray-900/50 rounded-xl"
             style={{
               gridTemplateColumns: `repeat(${mapBounds.maxX - mapBounds.minX + 1}, minmax(0, 1fr))`,
             }}
@@ -201,9 +195,6 @@ export function GameBoard({
                   );
                 }
 
-                // 檢查當前位置是否是玩家位置（用於顯示探索方向）
-                const isPlayerPosition = hasPlayerAt(x, y) && floor === activeFloor;
-                
                 return (
                   <RoomTile
                     key={`${x}-${y}`}
@@ -217,8 +208,6 @@ export function GameBoard({
                     size="md"
                     showDoors={true}
                     isHighlighted={selectedRoom?.x === x && selectedRoom?.y === y}
-                    validExploreDirections={isPlayerPosition ? validExploreDirections : []}
-                    onExploreDirection={isPlayerPosition ? onExploreDirection : undefined}
                   />
                 );
               });

@@ -170,7 +170,7 @@ export default function SoloGamePage() {
     updateReachablePositions(initialMap, { x: MAP_CENTER, y: MAP_CENTER }, character.stats.speed[0]);
   };
 
-  // 計算可達位置和有效探索方向
+  // 計算可達位置
   const updateReachablePositions = (currentMap: Tile[][], pos: { x: number; y: number }, remainingMoves: number) => {
     if (remainingMoves <= 0 || discovered) {
       setReachablePositions([]);
@@ -517,7 +517,7 @@ export default function SoloGamePage() {
               </div>
               
               {/* GameBoard 組件 */}
-              <div className="h-[500px] overflow-hidden">
+              <div className="h-[400px] sm:h-[450px] md:h-[500px] overflow-hidden">
                 <GameBoard
                   map={map}
                   currentFloor={currentFloor}
@@ -527,45 +527,43 @@ export default function SoloGamePage() {
                   onFloorChange={setCurrentFloor}
                   reachablePositions={reachablePositions}
                   showAllFloors={false}
-                  validExploreDirections={validExploreDirections}
-                  onExploreDirection={moveDirection}
                 />
               </div>
             </div>
 
             {/* 移動控制 */}
-            <div className="mt-4 bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+            <div className="mt-4 bg-gray-800/50 rounded-xl p-3 sm:p-4 border border-gray-700">
               <h3 className="text-sm font-bold text-gray-400 mb-3 text-center">移動控制</h3>
               <div className="flex justify-center">
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   <div />
-                  <DirectionButton 
-                    direction="north" 
+                  <DirectionButton
+                    direction="north"
                     onClick={() => moveDirection('north')}
                     disabled={discovered || moves <= 0 || !validExploreDirections.includes('north')}
                   />
                   <div />
-                  <DirectionButton 
-                    direction="west" 
+                  <DirectionButton
+                    direction="west"
                     onClick={() => moveDirection('west')}
                     disabled={discovered || moves <= 0 || !validExploreDirections.includes('west')}
                   />
-                  <Button 
-                    onClick={endTurn} 
+                  <Button
+                    onClick={endTurn}
                     variant="secondary"
                     size="sm"
-                    className="h-12"
+                    className="h-10 sm:h-12 text-xs sm:text-sm"
                   >
                     結束回合
                   </Button>
-                  <DirectionButton 
-                    direction="east" 
+                  <DirectionButton
+                    direction="east"
                     onClick={() => moveDirection('east')}
                     disabled={discovered || moves <= 0 || !validExploreDirections.includes('east')}
                   />
                   <div />
-                  <DirectionButton 
-                    direction="south" 
+                  <DirectionButton
+                    direction="south"
                     onClick={() => moveDirection('south')}
                     disabled={discovered || moves <= 0 || !validExploreDirections.includes('south')}
                   />
@@ -701,14 +699,22 @@ function DirectionButton({ direction, onClick, disabled }: DirectionButtonProps)
     west: '西',
   };
 
+  // 箭頭圖標
+  const arrows: Record<Direction, string> = {
+    north: '↑',
+    south: '↓',
+    east: '→',
+    west: '←',
+  };
+
   return (
-    <Button 
+    <Button
       onClick={onClick}
       disabled={disabled}
       size="sm"
-      className="h-12 w-12 flex items-center justify-center"
+      className="h-10 w-10 sm:h-12 sm:w-12 flex items-center justify-center text-base sm:text-lg font-bold"
     >
-      {labels[direction]}
+      {arrows[direction]}
     </Button>
   );
 }
