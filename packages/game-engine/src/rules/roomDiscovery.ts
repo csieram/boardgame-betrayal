@@ -42,6 +42,10 @@ export interface RoomDiscoveryResult {
     type: CardType;
     requiresHauntCheck: boolean;
   } | null;
+  /** 是否經過修改（如添加門）以確保棋盤保持開放 */
+  wasModified?: boolean;
+  /** 嘗試次數（用於調試和日誌） */
+  attempts?: number;
 }
 
 /** 旋轉後的門位置 */
@@ -152,24 +156,29 @@ export class RoomDiscoveryManager {
       return { success: false, error: 'Position already has a room' };
     }
 
-    // 從牌堆抽取房間
-    const room = this.drawRoomFromDeck(state, newPosition.floor);
-    if (!room) {
-      return { success: false, error: 'No more rooms available for this floor' };
+    // 使用 drawRoomForExploration 抽取房間（確保棋盤不會封閉）
+    const explorationResult = drawRoomForExploration(
+      state,
+      newPosition.floor,
+      direction,
+      10 // 最大嘗試次數
+    );
+
+    if (!explorationResult.success) {
+      return {
+        success: false,
+        error: explorationResult.error || 'Failed to draw room',
+      };
     }
-
-    // 計算旋轉角度以匹配門位置
-    const rotation = this.calculateRotation(room, direction);
-
-    // 確定是否需要抽卡
-    const cardDrawRequired = this.getCardDrawRequirement(room);
 
     return {
       success: true,
-      room,
-      position: newPosition,
-      rotation,
-      cardDrawRequired,
+      room: explorationResult.room,
+      position: explorationResult.position,
+      rotation: explorationResult.rotation,
+      cardDrawRequired: explorationResult.cardDrawRequired,
+      wasModified: explorationResult.wasModified,
+      attempts: explorationResult.attempts,
     };
   }
 
@@ -505,6 +514,236 @@ export function rotateRoomForConnection(
   return {
     room: rotatedRoom,
     rotation,
+  };
+}
+
+/**
+ * 獲取未連接的門
+ * Issue #66: 檢查房間在指定位置和旋轉後，還有哪些門未與相鄰房間連接
+ * 
+ * @param gameState 當前遊戲狀態
+ * @param position 房間位置
+ * @param room 房間
+ * @param rotation 旋轉角度
+ * @returns 未連接的門方向列表
+ */
+export function getUnconnectedDoors(
+  gameState: GameState,
+  position: { x: number; y: number },
+  room: Room,
+  rotation: number
+): Direction[] {
+  // 旋轉房間的門
+  const normalizedRotation = ((rotation % 360) + 360) % 360 as 0 | 90 | 180 | 270;
+  const rotatedDoors = RoomDiscoveryManager.rotateDoors(room.doors, normalizedRotation);
+  
+  const unconnected: Direction[] = [];
+  
+  for (const door of rotatedDoors) {
+    const delta = DIRECTION_DELTAS[door];
+    const neighborPos: Position3D = {
+      x: position.x + delta.x,
+      y: position.y + delta.y,
+      floor: gameState.turn.currentPlayerId 
+        ? gameState.players.find(p => p.id === gameState.turn.currentPlayerId)?.position.floor || 'ground'
+        : 'ground',
+    };
+    
+    // 檢查鄰居位置
+    const floorMap = gameState.map[neighborPos.floor];
+    if (!floorMap) {
+      // 如果位置超出邊界，也算未連接
+      unconnected.push(door);
+      continue;
+    }
+    
+    const neighborTile = floorMap[neighborPos.y]?.[neighborPos.x];
+    
+    // 如果鄰居位置沒有房間，這個門就是未連接的
+    if (!neighborTile || !neighborTile.room || !neighborTile.discovered) {
+      unconnected.push(door);
+    }
+  }
+  
+  return unconnected;
+}
+
+/**
+ * 添加隨機門到房間
+ * Issue #66: 當房間會封閉棋盤時，添加一個隨機方向的門
+ * 
+ * @param room 原始房間
+ * @param gameState 當前遊戲狀態
+ * @param position 房間位置
+ * @returns 添加門後的新房間
+ */
+export function addRandomDoor(
+  room: Room,
+  gameState: GameState,
+  position: { x: number; y: number }
+): Room {
+  const allDirections: Direction[] = ['north', 'south', 'east', 'west'];
+  
+  // 找出房間還沒有的門方向
+  const missingDirections = allDirections.filter(dir => !room.doors.includes(dir));
+  
+  if (missingDirections.length === 0) {
+    // 房間已經有四個門，無法再添加
+    return room;
+  }
+  
+  // 隨機選擇一個缺失的方向
+  const randomIndex = Math.floor(Math.random() * missingDirections.length);
+  const newDoor = missingDirections[randomIndex];
+  
+  // 創建新房間副本，添加新門
+  return {
+    ...room,
+    doors: [...room.doors, newDoor],
+  };
+}
+
+/**
+ * 為探索抽取房間
+ * Issue #66: 確保新房間至少有一個未連接的門，防止棋盤封閉
+ * 
+ * 邏輯流程：
+ * 1. 從牌堆抽取房間
+ * 2. 旋轉以匹配門連接
+ * 3. 檢查房間是否有未連接的門
+ * 4. 如果有 → 放置房間
+ * 5. 如果沒有 → 丟棄，重試（最多 10 次）
+ * 6. 如果達到最大嘗試次數 → 添加隨機門，放置房間
+ * 
+ * @param gameState 當前遊戲狀態
+ * @param floor 樓層
+ * @param entryDirection 進入方向
+ * @param maxAttempts 最大嘗試次數（預設 10）
+ * @returns 房間發現結果
+ */
+export function drawRoomForExploration(
+  gameState: GameState,
+  floor: Floor,
+  entryDirection: Direction,
+  maxAttempts: number = 10
+): RoomDiscoveryResult {
+  const discardedRooms: Room[] = [];
+  let attempts = 0;
+  
+  // 獲取當前玩家位置（用於檢查未連接門）
+  const currentPlayer = gameState.players.find(p => p.id === gameState.turn.currentPlayerId);
+  const playerPosition = currentPlayer?.position;
+  
+  if (!playerPosition) {
+    return { success: false, error: 'Current player not found' };
+  }
+  
+  // 計算新房間位置
+  const delta = DIRECTION_DELTAS[entryDirection];
+  const newPosition: Position3D = {
+    x: playerPosition.x + delta.x,
+    y: playerPosition.y + delta.y,
+    floor: playerPosition.floor,
+  };
+  
+  while (attempts < maxAttempts) {
+    attempts++;
+    
+    // 1. 從牌堆抽取房間
+    const room = RoomDiscoveryManager.drawRoomFromDeck(gameState, floor);
+    
+    if (!room) {
+      // 牌堆已空，將丟棄的房間放回牌堆再試一次
+      if (discardedRooms.length > 0) {
+        // 重新建立牌堆狀態（移除 drawn 標記）
+        const newDrawn = new Set(gameState.roomDeck.drawn);
+        for (const discardedRoom of discardedRooms) {
+          newDrawn.delete(discardedRoom.id);
+        }
+        gameState = {
+          ...gameState,
+          roomDeck: {
+            ...gameState.roomDeck,
+            drawn: newDrawn,
+          },
+        };
+        discardedRooms.length = 0; // 清空丟棄列表
+        continue;
+      }
+      
+      return { 
+        success: false, 
+        error: 'No more rooms available for this floor',
+        attempts,
+      };
+    }
+    
+    // 2. 計算旋轉角度以匹配門連接
+    const rotation = RoomDiscoveryManager.calculateRotation(room, entryDirection);
+    
+    // 3. 檢查房間是否有未連接的門
+    const unconnectedDoors = getUnconnectedDoors(gameState, newPosition, room, rotation);
+    
+    if (unconnectedDoors.length > 0) {
+      // 4. 有房間有未連接的門，可以放置
+      const cardDrawRequired = RoomDiscoveryManager.getCardDrawRequirement(room);
+      
+      return {
+        success: true,
+        room,
+        position: newPosition,
+        rotation,
+        cardDrawRequired,
+        wasModified: false,
+        attempts,
+      };
+    }
+    
+    // 5. 房間會封閉棋盤，丟棄並重試
+    discardedRooms.push(room);
+    
+    // 標記為已抽取（這樣下次不會抽到同一個）
+    const newDrawn = new Set(gameState.roomDeck.drawn);
+    newDrawn.add(room.id);
+    gameState = {
+      ...gameState,
+      roomDeck: {
+        ...gameState.roomDeck,
+        drawn: newDrawn,
+      },
+    };
+  }
+  
+  // 6. 達到最大嘗試次數，添加隨機門
+  // 先嘗試使用最後一個丟棄的房間
+  let finalRoom: Room | null = discardedRooms[discardedRooms.length - 1] || null;
+  
+  if (!finalRoom) {
+    // 如果沒有丟棄的房間，嘗試再抽一個
+    finalRoom = RoomDiscoveryManager.drawRoomFromDeck(gameState, floor);
+  }
+  
+  if (!finalRoom) {
+    return { 
+      success: false, 
+      error: 'Unable to find a suitable room after maximum attempts',
+      attempts,
+    };
+  }
+  
+  // 添加隨機門
+  const modifiedRoom = addRandomDoor(finalRoom, gameState, newPosition);
+  const rotation = RoomDiscoveryManager.calculateRotation(modifiedRoom, entryDirection);
+  const cardDrawRequired = RoomDiscoveryManager.getCardDrawRequirement(modifiedRoom);
+  
+  return {
+    success: true,
+    room: modifiedRoom,
+    position: newPosition,
+    rotation,
+    cardDrawRequired,
+    wasModified: true, // 標記為已修改
+    attempts,
   };
 }
 

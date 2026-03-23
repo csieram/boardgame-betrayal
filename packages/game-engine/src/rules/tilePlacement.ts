@@ -24,6 +24,9 @@ import {
 import { Room } from '@betrayal/shared';
 import { RoomDiscoveryManager, VALID_ROTATIONS } from './roomDiscovery';
 
+// Re-export from roomDiscovery for convenience
+export { getUnconnectedDoors, addRandomDoor, drawRoomForExploration } from './roomDiscovery';
+
 // ==================== 類型定義 ====================
 
 /** 板塊放置驗證結果 */
@@ -569,6 +572,168 @@ export class TilePlacementManager {
 
 // 導入 CardType
 import { CardType } from '../types';
+
+// ==================== 相鄰板塊檢查輔助函數 ====================
+
+/**
+ * 獲取指定位置周圍已發現的相鄰板塊
+ * Issue #66: 用於檢查房間周圍的環境
+ * 
+ * @param state 當前遊戲狀態
+ * @param position 中心位置
+ * @returns 相鄰板塊信息列表
+ */
+export function getAdjacentTiles(
+  state: GameState,
+  position: Position3D
+): Array<{
+  direction: Direction;
+  position: Position3D;
+  tile: Tile | undefined;
+  hasRoom: boolean;
+  hasConnectingDoor: boolean;
+}> {
+  const directions: Direction[] = ['north', 'south', 'east', 'west'];
+  
+  return directions.map(dir => {
+    const delta = DIRECTION_DELTAS[dir];
+    const neighborPos: Position3D = {
+      x: position.x + delta.x,
+      y: position.y + delta.y,
+      floor: position.floor,
+    };
+    
+    const tile = TilePlacementValidator.getTileAt(state, neighborPos);
+    const hasRoom = tile !== undefined && tile.room !== null && tile.discovered;
+    
+    // 檢查相鄰房間是否有門連接到這個方向
+    let hasConnectingDoor = false;
+    if (tile && tile.room) {
+      const oppositeDir = OPPOSITE_DIRECTION[dir];
+      hasConnectingDoor = tile.room.doors.includes(oppositeDir);
+    }
+    
+    return {
+      direction: dir,
+      position: neighborPos,
+      tile,
+      hasRoom,
+      hasConnectingDoor,
+    };
+  });
+}
+
+/**
+ * 獲取指定位置周圍的空位置（未放置房間的位置）
+ * Issue #66: 用於檢查房間周圍還有多少空間可以探索
+ * 
+ * @param state 當前遊戲狀態
+ * @param position 中心位置
+ * @returns 空位置的方向列表
+ */
+export function getEmptyAdjacentDirections(
+  state: GameState,
+  position: Position3D
+): Direction[] {
+  const adjacentTiles = getAdjacentTiles(state, position);
+  
+  return adjacentTiles
+    .filter(adj => !adj.hasRoom)
+    .map(adj => adj.direction);
+}
+
+/**
+ * 檢查位置是否會封閉棋盤
+ * Issue #66: 檢查如果在此位置放置房間，是否會導致無法繼續探索
+ * 
+ * @param state 當前遊戲狀態
+ * @param position 位置
+ * @param room 房間
+ * @param rotation 旋轉角度
+ * @returns 是否會封閉棋盤
+ */
+export function wouldCloseBoard(
+  state: GameState,
+  position: Position3D,
+  room: Room,
+  rotation: 0 | 90 | 180 | 270
+): boolean {
+  // 獲取旋轉後的門
+  const rotatedDoors = RoomDiscoveryManager.rotateDoors(room.doors, rotation);
+  
+  // 檢查每個門方向
+  for (const door of rotatedDoors) {
+    const delta = DIRECTION_DELTAS[door];
+    const neighborPos: Position3D = {
+      x: position.x + delta.x,
+      y: position.y + delta.y,
+      floor: position.floor,
+    };
+    
+    // 檢查鄰居位置
+    const floorMap = state.map[neighborPos.floor];
+    if (!floorMap) {
+      // 位置超出邊界，這個門無法連接
+      continue;
+    }
+    
+    const neighborTile = floorMap[neighborPos.y]?.[neighborPos.x];
+    
+    // 如果鄰居位置沒有房間，這個門提供了探索路徑
+    if (!neighborTile || !neighborTile.room || !neighborTile.discovered) {
+      return false; // 至少有一個未連接的門，不會封閉
+    }
+  }
+  
+  // 所有門都連接到現有房間，這會封閉棋盤
+  return true;
+}
+
+/**
+ * 計算房間的開放程度
+ * Issue #66: 計算房間有多少門可以通往未探索區域
+ * 
+ * @param state 當前遊戲狀態
+ * @param position 位置
+ * @param room 房間
+ * @param rotation 旋轉角度
+ * @returns 開放程度（0-4，表示未連接的門數量）
+ */
+export function calculateOpenness(
+  state: GameState,
+  position: Position3D,
+  room: Room,
+  rotation: 0 | 90 | 180 | 270
+): number {
+  // 獲取旋轉後的門
+  const rotatedDoors = RoomDiscoveryManager.rotateDoors(room.doors, rotation);
+  let openDoors = 0;
+  
+  for (const door of rotatedDoors) {
+    const delta = DIRECTION_DELTAS[door];
+    const neighborPos: Position3D = {
+      x: position.x + delta.x,
+      y: position.y + delta.y,
+      floor: position.floor,
+    };
+    
+    // 檢查鄰居位置
+    const floorMap = state.map[neighborPos.floor];
+    if (!floorMap) {
+      // 位置超出邊界，不算開放
+      continue;
+    }
+    
+    const neighborTile = floorMap[neighborPos.y]?.[neighborPos.x];
+    
+    // 如果鄰居位置沒有房間，這個門是開放的
+    if (!neighborTile || !neighborTile.room || !neighborTile.discovered) {
+      openDoors++;
+    }
+  }
+  
+  return openDoors;
+}
 
 // ==================== 旋轉驗證 ====================
 
