@@ -6,10 +6,42 @@ import { Character, CHARACTERS, Room, Floor, Tile, Direction } from '@betrayal/s
 import { Button } from '@betrayal/ui';
 import { GameBoard } from '@/components/game/GameBoard';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  RoomDiscoveryManager,
+  getValidExploreDirections,
+  rotateRoomForConnection,
+  OPPOSITE_DOOR,
+} from '@betrayal/game-engine';
 
 // 地圖大小
 const MAP_SIZE = 15;
 const MAP_CENTER = 7;
+
+/** 單人模式遊戲狀態 */
+interface SoloGameState {
+  placedRoomIds: Set<string>;
+  roomDecks: {
+    ground: Room[];
+    upper: Room[];
+    basement: Room[];
+    drawn: Set<string>;
+  };
+}
+
+/**
+ * 建立空的遊戲狀態
+ */
+function createInitialGameState(): SoloGameState {
+  return {
+    placedRoomIds: new Set(['entrance_hall']),
+    roomDecks: {
+      ground: [],
+      upper: [],
+      basement: [],
+      drawn: new Set(),
+    },
+  };
+}
 
 /**
  * 建立空的地圖
@@ -54,6 +86,7 @@ export default function SoloGamePage() {
   const [selectedRoom, setSelectedRoom] = useState<{ room: Room; x: number; y: number } | null>(null);
   const [reachablePositions, setReachablePositions] = useState<{ x: number; y: number }[]>([]);
   const [validExploreDirections, setValidExploreDirections] = useState<Direction[]>([]);
+  const [gameState, setGameState] = useState<SoloGameState>(createInitialGameState());
 
   // 從 sessionStorage 讀取選擇的角色
   useEffect(() => {
@@ -96,11 +129,21 @@ export default function SoloGamePage() {
         isOfficial: true,
         gallerySvg: '/gallery-assets/rooms/entrance_hall.svg',
       },
+      rotation: 0,
     };
     
     setMap(initialMap);
     setLog([`選擇了 ${character.name}`, '從入口大廳開始', '回合 1']);
     setIsLoading(false);
+    
+    // 初始化牌堆
+    import('@betrayal/shared').then(({ ROOMS }) => {
+      const newGameState = createInitialGameState();
+      newGameState.roomDecks.ground = ROOMS.filter(r => r.floor === 'ground' && r.id !== 'entrance_hall');
+      newGameState.roomDecks.upper = ROOMS.filter(r => r.floor === 'upper');
+      newGameState.roomDecks.basement = ROOMS.filter(r => r.floor === 'basement');
+      setGameState(newGameState);
+    });
     
     // 計算可達位置
     updateReachablePositions(initialMap, { x: MAP_CENTER, y: MAP_CENTER }, character.stats.speed[0]);
@@ -115,47 +158,67 @@ export default function SoloGamePage() {
     }
 
     const reachable: { x: number; y: number }[] = [];
-    const validDirections: Direction[] = [];
     const currentTile = currentMap[pos.y][pos.x];
     const currentRoom = currentTile.room;
 
-    const directionMap: Record<string, { x: number; y: number; dir: Direction }> = {
-      north: { x: 0, y: -1, dir: 'north' },
-      south: { x: 0, y: 1, dir: 'south' },
-      east: { x: 1, y: 0, dir: 'east' },
-      west: { x: -1, y: 0, dir: 'west' },
+    if (!currentRoom) {
+      setReachablePositions([]);
+      setValidExploreDirections([]);
+      return;
+    }
+
+    // 使用規則引擎的 getValidExploreDirections 獲取有效探索方向
+    const validDirections = getValidExploreDirections(currentRoom);
+    const validExploreDirs: Direction[] = [];
+
+    const directionMap: Record<Direction, { x: number; y: number }> = {
+      north: { x: 0, y: -1 },
+      south: { x: 0, y: 1 },
+      east: { x: 1, y: 0 },
+      west: { x: -1, y: 0 },
     };
 
-    // 檢查每個方向
-    for (const [dirName, delta] of Object.entries(directionMap)) {
+    // 檢查每個有效方向
+    for (const direction of validDirections) {
+      const delta = directionMap[direction];
       const newX = pos.x + delta.x;
       const newY = pos.y + delta.y;
       
       if (newX >= 0 && newX < MAP_SIZE && newY >= 0 && newY < MAP_SIZE) {
         const tile = currentMap[newY][newX];
-        const direction = delta.dir;
         
-        // 檢查當前房間是否有門朝向這個方向
-        const hasDoor = currentRoom?.doors.includes(direction);
-        
-        // 如果位置未探索且當前房間有門，顯示為可探索
-        if (!tile.discovered && hasDoor) {
+        // 如果位置未探索，顯示為可探索
+        if (!tile.discovered) {
           reachable.push({ x: newX, y: newY });
-          validDirections.push(direction);
+          validExploreDirs.push(direction);
         }
         // 如果位置已探索，也可以移動過去
-        else if (tile.discovered) {
+        else {
           reachable.push({ x: newX, y: newY });
-          // 只有當前房間有門時，這個方向才是有效的探索方向
-          if (hasDoor) {
-            validDirections.push(direction);
-          }
         }
       }
     }
 
     setReachablePositions(reachable);
-    setValidExploreDirections(validDirections);
+    setValidExploreDirections(validExploreDirs);
+  };
+
+  // 從牌堆抽取房間（使用 RoomDiscoveryManager 的邏輯）
+  const drawRoomFromDeck = (floor: Floor): Room | null => {
+    const deck = gameState.roomDecks[floor];
+    
+    // 找到第一個未被抽取且未被放置的房間
+    const availableRoom = deck.find((r: Room) => {
+      const isDrawn = gameState.roomDecks.drawn.has(r.id);
+      const isPlaced = gameState.placedRoomIds.has(r.id);
+      return !isDrawn && !isPlaced;
+    });
+    
+    if (!availableRoom) {
+      return null;
+    }
+
+    return availableRoom;
   };
 
   // 移動到指定位置
@@ -166,33 +229,69 @@ export default function SoloGamePage() {
     
     // 如果目標位置未探索，發現新房間
     if (!tile.discovered) {
-      // 隨機選擇一個房間（這裡簡化處理，實際應該從牌堆抽取）
-      import('@betrayal/shared').then(({ ROOMS }) => {
-        const groundRooms = ROOMS.filter(r => r.floor === currentFloor && r.id !== 'entrance_hall');
-        const randomRoom = groundRooms[Math.floor(Math.random() * groundRooms.length)];
+      // 計算進入方向
+      const deltaX = x - position.x;
+      const deltaY = y - position.y;
+      let entryDirection: Direction = 'north';
+      
+      if (deltaX === 1) entryDirection = 'east';
+      else if (deltaX === -1) entryDirection = 'west';
+      else if (deltaY === 1) entryDirection = 'south';
+      else if (deltaY === -1) entryDirection = 'north';
+
+      // 從牌堆抽取房間（確保唯一性）
+      const room = drawRoomFromDeck(currentFloor);
+      
+      if (!room) {
+        setLog(prev => [...prev, '沒有更多房間可以發現！']);
+        return;
+      }
+
+      // 使用規則引擎的 rotateRoomForConnection 旋轉房間以匹配門連接
+      const rotated = rotateRoomForConnection(room, entryDirection);
+      const placedRoom = rotated.room;
+
+      // 更新遊戲狀態
+      const newMap = [...map];
+      newMap[y][x] = {
+        ...newMap[y][x],
+        discovered: true,
+        room: placedRoom,
+        rotation: placedRoom.rotation,
+      };
+      
+      // 更新已放置房間 ID 和已抽取集合
+      setGameState(prev => {
+        const newDrawn = new Set(prev.roomDecks.drawn);
+        newDrawn.add(room.id);
         
-        const newMap = [...map];
-        newMap[y][x] = {
-          ...newMap[y][x],
-          discovered: true,
-          room: randomRoom,
+        const newPlacedIds = new Set(prev.placedRoomIds);
+        newPlacedIds.add(room.id);
+        
+        return {
+          ...prev,
+          placedRoomIds: newPlacedIds,
+          roomDecks: {
+            ...prev.roomDecks,
+            drawn: newDrawn,
+          },
         };
-        
-        setMap(newMap);
-        setPosition({ x, y });
-        setDiscovered(true);
-        setLog(prev => [...prev, `發現新房間: ${randomRoom.name}`, '回合結束']);
-        setReachablePositions([]);
-        
-        // 延遲後開始新回合
-        setTimeout(() => {
-          setTurn(t => t + 1);
-          setMoves(player.stats.speed[0]);
-          setDiscovered(false);
-          setLog(prev => [...prev, `回合 ${turn + 1}`]);
-          updateReachablePositions(newMap, { x, y }, player.stats.speed[0]);
-        }, 1500);
       });
+      
+      setMap(newMap);
+      setPosition({ x, y });
+      setDiscovered(true);
+      setLog(prev => [...prev, `發現新房間: ${placedRoom.name}（旋轉 ${placedRoom.rotation}°）`, '回合結束']);
+      setReachablePositions([]);
+      
+      // 延遲後開始新回合
+      setTimeout(() => {
+        setTurn(t => t + 1);
+        setMoves(player.stats.speed[0]);
+        setDiscovered(false);
+        setLog(prev => [...prev, `回合 ${turn + 1}`]);
+        updateReachablePositions(newMap, { x, y }, player.stats.speed[0]);
+      }, 1500);
     } else {
       // 移動到已探索的房間
       setPosition({ x, y });
@@ -203,7 +302,7 @@ export default function SoloGamePage() {
         return newMoves;
       });
     }
-  }, [map, player, moves, discovered, turn, currentFloor]);
+  }, [map, player, moves, discovered, turn, currentFloor, position, gameState]);
 
   // 處理房間點擊
   const handleRoomClick = (room: Room, x: number, y: number) => {
@@ -346,13 +445,13 @@ export default function SoloGamePage() {
                   <DirectionButton 
                     direction="north" 
                     onClick={() => moveDirection('north')}
-                    disabled={discovered || moves <= 0}
+                    disabled={discovered || moves <= 0 || !validExploreDirections.includes('north')}
                   />
                   <div />
                   <DirectionButton 
                     direction="west" 
                     onClick={() => moveDirection('west')}
-                    disabled={discovered || moves <= 0}
+                    disabled={discovered || moves <= 0 || !validExploreDirections.includes('west')}
                   />
                   <Button 
                     onClick={endTurn} 
@@ -365,13 +464,13 @@ export default function SoloGamePage() {
                   <DirectionButton 
                     direction="east" 
                     onClick={() => moveDirection('east')}
-                    disabled={discovered || moves <= 0}
+                    disabled={discovered || moves <= 0 || !validExploreDirections.includes('east')}
                   />
                   <div />
                   <DirectionButton 
                     direction="south" 
                     onClick={() => moveDirection('south')}
-                    disabled={discovered || moves <= 0}
+                    disabled={discovered || moves <= 0 || !validExploreDirections.includes('south')}
                   />
                   <div />
                 </div>
@@ -467,6 +566,9 @@ export default function SoloGamePage() {
                   <div>
                     <p className="font-medium">{selectedRoom.room.name}</p>
                     <p className="text-sm text-gray-400">{selectedRoom.room.description}</p>
+                    {(selectedRoom.room as Room & { rotation?: number }).rotation !== undefined && (
+                      <p className="text-xs text-gray-500">旋轉: {(selectedRoom.room as Room & { rotation?: number }).rotation}°</p>
+                    )}
                   </div>
                 </div>
               </motion.div>

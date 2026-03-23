@@ -277,7 +277,7 @@ export class TilePlacementValidator {
             if (existingIndex >= 0) {
               // 更新現有條目，添加新的旋轉角度
               const existing = placements[existingIndex];
-              const combinedRotations = [...new Set([...existing.validRotations, ...validRotations])];
+              const combinedRotations = Array.from(new Set([...existing.validRotations, ...validRotations]));
               placements[existingIndex] = {
                 ...existing,
                 validRotations: combinedRotations as (0 | 90 | 180 | 270)[],
