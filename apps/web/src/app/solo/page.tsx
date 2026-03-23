@@ -53,6 +53,7 @@ export default function SoloGamePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRoom, setSelectedRoom] = useState<{ room: Room; x: number; y: number } | null>(null);
   const [reachablePositions, setReachablePositions] = useState<{ x: number; y: number }[]>([]);
+  const [validExploreDirections, setValidExploreDirections] = useState<Direction[]>([]);
 
   // 從 sessionStorage 讀取選擇的角色
   useEffect(() => {
@@ -105,39 +106,56 @@ export default function SoloGamePage() {
     updateReachablePositions(initialMap, { x: MAP_CENTER, y: MAP_CENTER }, character.stats.speed[0]);
   };
 
-  // 計算可達位置
+  // 計算可達位置和有效探索方向
   const updateReachablePositions = (currentMap: Tile[][], pos: { x: number; y: number }, remainingMoves: number) => {
     if (remainingMoves <= 0 || discovered) {
       setReachablePositions([]);
+      setValidExploreDirections([]);
       return;
     }
 
     const reachable: { x: number; y: number }[] = [];
-    const directions = [
-      { x: 0, y: -1 }, // north
-      { x: 0, y: 1 },  // south
-      { x: 1, y: 0 },  // east
-      { x: -1, y: 0 }, // west
-    ];
+    const validDirections: Direction[] = [];
+    const currentTile = currentMap[pos.y][pos.x];
+    const currentRoom = currentTile.room;
 
-    for (const dir of directions) {
-      const newX = pos.x + dir.x;
-      const newY = pos.y + dir.y;
+    const directionMap: Record<string, { x: number; y: number; dir: Direction }> = {
+      north: { x: 0, y: -1, dir: 'north' },
+      south: { x: 0, y: 1, dir: 'south' },
+      east: { x: 1, y: 0, dir: 'east' },
+      west: { x: -1, y: 0, dir: 'west' },
+    };
+
+    // 檢查每個方向
+    for (const [dirName, delta] of Object.entries(directionMap)) {
+      const newX = pos.x + delta.x;
+      const newY = pos.y + delta.y;
       
       if (newX >= 0 && newX < MAP_SIZE && newY >= 0 && newY < MAP_SIZE) {
         const tile = currentMap[newY][newX];
-        // 如果位置未探索，顯示為可探索
-        if (!tile.discovered) {
+        const direction = delta.dir;
+        
+        // 檢查當前房間是否有門朝向這個方向
+        const hasDoor = currentRoom?.doors.includes(direction);
+        
+        // 如果位置未探索且當前房間有門，顯示為可探索
+        if (!tile.discovered && hasDoor) {
           reachable.push({ x: newX, y: newY });
+          validDirections.push(direction);
         }
         // 如果位置已探索，也可以移動過去
         else if (tile.discovered) {
           reachable.push({ x: newX, y: newY });
+          // 只有當前房間有門時，這個方向才是有效的探索方向
+          if (hasDoor) {
+            validDirections.push(direction);
+          }
         }
       }
     }
 
     setReachablePositions(reachable);
+    setValidExploreDirections(validDirections);
   };
 
   // 移動到指定位置
@@ -313,6 +331,8 @@ export default function SoloGamePage() {
                   onFloorChange={setCurrentFloor}
                   reachablePositions={reachablePositions}
                   showAllFloors={false}
+                  validExploreDirections={validExploreDirections}
+                  onExploreDirection={moveDirection}
                 />
               </div>
             </div>
@@ -437,7 +457,7 @@ export default function SoloGamePage() {
               >
                 <h3 className="text-lg font-bold mb-2">房間資訊</h3>
                 <div className="flex items-center gap-3">
-                  {selectedRoom.room.gallerySvg && (
+                  {selectedRoom.room?.gallerySvg && (
                     <img 
                       src={`/betrayal${selectedRoom.room.gallerySvg}`}
                       alt={selectedRoom.room.name}

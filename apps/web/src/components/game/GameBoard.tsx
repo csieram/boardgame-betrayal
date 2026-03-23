@@ -23,6 +23,10 @@ interface GameBoardProps {
   reachablePositions?: { x: number; y: number }[];
   /** 是否顯示所有樓層 */
   showAllFloors?: boolean;
+  /** 有效的探索方向 */
+  validExploreDirections?: Direction[];
+  /** 探索方向點擊回調 */
+  onExploreDirection?: (direction: Direction) => void;
 }
 
 /**
@@ -49,6 +53,8 @@ export function GameBoard({
   onFloorChange,
   reachablePositions = [],
   showAllFloors = true,
+  validExploreDirections = [],
+  onExploreDirection,
 }: GameBoardProps) {
   const [selectedRoom, setSelectedRoom] = useState<{ room: Room; x: number; y: number } | null>(null);
   const [activeFloor, setActiveFloor] = useState<Floor>(currentFloor);
@@ -190,11 +196,14 @@ export function GameBoard({
                       key={`${x}-${y}`}
                       size="md"
                       isReachable={reachable || (adjacentExplored && floor === activeFloor)}
-                      onClick={reachable ? () => onRoomClick?.(tile?.room!, x, y) : undefined}
+                      onClick={reachable && tile?.room ? () => onRoomClick?.(tile.room!, x, y) : undefined}
                     />
                   );
                 }
 
+                // 檢查當前位置是否是玩家位置（用於顯示探索方向）
+                const isPlayerPosition = hasPlayerAt(x, y) && floor === activeFloor;
+                
                 return (
                   <RoomTile
                     key={`${x}-${y}`}
@@ -202,12 +211,14 @@ export function GameBoard({
                     isExplored={true}
                     isReachable={reachable}
                     rotation={tile.rotation}
-                    onClick={() => handleRoomClick(tile.room!, x, y)}
+                    onClick={() => tile.room && handleRoomClick(tile.room, x, y)}
                     players={hasPlayer ? [playerCharacter] : []}
                     currentPlayerIndex={0}
                     size="md"
                     showDoors={true}
                     isHighlighted={selectedRoom?.x === x && selectedRoom?.y === y}
+                    validExploreDirections={isPlayerPosition ? validExploreDirections : []}
+                    onExploreDirection={isPlayerPosition ? onExploreDirection : undefined}
                   />
                 );
               });
@@ -403,7 +414,7 @@ export function MiniGameBoard({
           room={tile.room}
           isExplored={true}
           rotation={tile.rotation}
-          onClick={() => onRoomClick?.(tile.room!, x, y)}
+          onClick={() => tile.room && onRoomClick?.(tile.room, x, y)}
           players={playerPosition.x === x && playerPosition.y === y ? [playerCharacter] : []}
           size="sm"
         />

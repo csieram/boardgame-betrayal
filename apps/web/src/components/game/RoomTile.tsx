@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Room, SymbolType } from '@betrayal/shared';
+import { Room, SymbolType, Direction } from '@betrayal/shared';
 import { PlayerTokenGroup } from './PlayerToken';
 import { Character } from '@betrayal/shared';
 
@@ -27,6 +27,10 @@ interface RoomTileProps {
   showDoors?: boolean;
   /** 是否高亮 */
   isHighlighted?: boolean;
+  /** 有效的探索方向 */
+  validExploreDirections?: Direction[];
+  /** 探索方向點擊回調 */
+  onExploreDirection?: (direction: Direction) => void;
 }
 
 /**
@@ -53,6 +57,8 @@ export function RoomTile({
   size = 'md',
   showDoors = true,
   isHighlighted = false,
+  validExploreDirections = [],
+  onExploreDirection,
 }: RoomTileProps) {
   const [svgContent, setSvgContent] = useState<string>('');
   const [isLoaded, setIsLoaded] = useState(false);
@@ -165,21 +171,55 @@ export function RoomTile({
         </svg>
       </div>
 
-      {/* 門指示器 */}
+      {/* 門指示器 - 改進樣式 */}
       {showDoors && room.doors && (
         <>
           {room.doors.includes('north') && (
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-1.5 bg-amber-800 rounded-b-sm" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-2 bg-gradient-to-b from-amber-600 to-amber-800 rounded-b-md shadow-md border-b border-amber-900/50" />
           )}
           {room.doors.includes('south') && (
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-1.5 bg-amber-800 rounded-t-sm" />
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-2 bg-gradient-to-t from-amber-600 to-amber-800 rounded-t-md shadow-md border-t border-amber-900/50" />
           )}
           {room.doors.includes('east') && (
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-4 bg-amber-800 rounded-l-sm" />
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-6 bg-gradient-to-l from-amber-600 to-amber-800 rounded-l-md shadow-md border-l border-amber-900/50" />
           )}
           {room.doors.includes('west') && (
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-4 bg-amber-800 rounded-r-sm" />
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-6 bg-gradient-to-r from-amber-600 to-amber-800 rounded-r-md shadow-md border-r border-amber-900/50" />
           )}
+        </>
+      )}
+
+      {/* 探索方向指示器 */}
+      {validExploreDirections.length > 0 && onExploreDirection && (
+        <>
+          {/* 北 */}
+          <ExploreDirectionIndicator
+            direction="north"
+            isValid={validExploreDirections.includes('north')}
+            onClick={() => onExploreDirection('north')}
+            size={size}
+          />
+          {/* 南 */}
+          <ExploreDirectionIndicator
+            direction="south"
+            isValid={validExploreDirections.includes('south')}
+            onClick={() => onExploreDirection('south')}
+            size={size}
+          />
+          {/* 東 */}
+          <ExploreDirectionIndicator
+            direction="east"
+            isValid={validExploreDirections.includes('east')}
+            onClick={() => onExploreDirection('east')}
+            size={size}
+          />
+          {/* 西 */}
+          <ExploreDirectionIndicator
+            direction="west"
+            isValid={validExploreDirections.includes('west')}
+            onClick={() => onExploreDirection('west')}
+            size={size}
+          />
         </>
       )}
 
@@ -272,6 +312,82 @@ export function EmptyRoomTile({
         />
       )}
     </motion.div>
+  );
+}
+
+/**
+ * 探索方向指示器組件
+ */
+interface ExploreDirectionIndicatorProps {
+  direction: Direction;
+  isValid: boolean;
+  onClick: () => void;
+  size?: 'sm' | 'md' | 'lg';
+}
+
+function ExploreDirectionIndicator({
+  direction,
+  isValid,
+  onClick,
+  size = 'md',
+}: ExploreDirectionIndicatorProps) {
+  // 位置樣式
+  const positionClasses: Record<Direction, string> = {
+    north: 'top-0 left-1/2 -translate-x-1/2 -translate-y-full mt-1',
+    south: 'bottom-0 left-1/2 -translate-x-1/2 translate-y-full mb-1',
+    east: 'right-0 top-1/2 translate-x-full -translate-y-1/2 mr-1',
+    west: 'left-0 top-1/2 -translate-x-full -translate-y-1/2 ml-1',
+  };
+
+  // 箭頭圖標
+  const arrowIcons: Record<Direction, string> = {
+    north: '↑',
+    south: '↓',
+    east: '→',
+    west: '←',
+  };
+
+  // 尺寸樣式
+  const sizeClasses = {
+    sm: 'w-5 h-5 text-xs',
+    md: 'w-7 h-7 text-sm',
+    lg: 'w-8 h-8 text-base',
+  };
+
+  return (
+    <motion.button
+      className={`
+        absolute ${positionClasses[direction]}
+        ${sizeClasses[size]}
+        rounded-full flex items-center justify-center font-bold
+        transition-all duration-200
+        ${isValid 
+          ? 'bg-green-500 text-white shadow-lg shadow-green-500/50 cursor-pointer hover:bg-green-400 hover:scale-110 border-2 border-green-400' 
+          : 'bg-gray-700 text-gray-500 cursor-not-allowed border-2 border-gray-600'
+        }
+      `}
+      onClick={isValid ? onClick : undefined}
+      whileHover={isValid ? { scale: 1.15 } : undefined}
+      whileTap={isValid ? { scale: 0.95 } : undefined}
+      animate={isValid ? {
+        boxShadow: [
+          '0 0 5px rgba(34, 197, 94, 0.5)',
+          '0 0 15px rgba(34, 197, 94, 0.8)',
+          '0 0 5px rgba(34, 197, 94, 0.5)',
+        ],
+      } : undefined}
+      transition={isValid ? {
+        boxShadow: {
+          duration: 1.5,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        },
+      } : undefined}
+      disabled={!isValid}
+      title={isValid ? `探索${direction === 'north' ? '北' : direction === 'south' ? '南' : direction === 'east' ? '東' : '西'}方` : '無法探索'}
+    >
+      {arrowIcons[direction]}
+    </motion.button>
   );
 }
 
