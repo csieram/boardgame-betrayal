@@ -251,6 +251,7 @@ const createMockGameState = (overrides?: Partial<GameState>): GameState => {
     createdAt: Date.now(),
     updatedAt: Date.now(),
     rngState: { seed: 'test', count: 0, internalState: [0] },
+    placedRoomIds: new Set(['entrance_hall', 'stairs_from_upper', 'stairs_from_basement']),
   };
 
   return { ...baseState, ...overrides };
@@ -499,6 +500,156 @@ describe('ObstacleManager', () => {
   });
 });
 
+// ==================== 門連接移動測試 ====================
+
+describe('Door-based Movement', () => {
+  it('應該只允許通過有門連接的房間移動', () => {
+    // 建立一個地圖，其中入口有東門，但東邊房間沒有西門
+    const customMap = createMockMap();
+    customMap.ground[7][7] = {
+      x: 7,
+      y: 7,
+      floor: 'ground',
+      room: createMockRoom('entrance', ['east'], 'ground'), // 只有東門
+      discovered: true,
+      rotation: 0,
+      placementOrder: 0,
+    };
+    customMap.ground[7][8] = {
+      x: 8,
+      y: 7,
+      floor: 'ground',
+      room: createMockRoom('room_east', ['west'], 'ground'), // 有西門，可以連接
+      discovered: true,
+      rotation: 0,
+      placementOrder: 1,
+    };
+
+    const state = createMockGameState({
+      map: customMap,
+    });
+
+    // 應該可以移動到東邊房間（有門連接）
+    const result = MovementValidator.validateMove(state, 'player-1', { x: 8, y: 7, floor: 'ground' });
+    expect(result.valid).toBe(true);
+  });
+
+  it('應該阻止通過沒有門連接的房間移動', () => {
+    // 建立一個地圖，其中入口有東門，但東邊房間沒有西門
+    const customMap = createMockMap();
+    customMap.ground[7][7] = {
+      x: 7,
+      y: 7,
+      floor: 'ground',
+      room: createMockRoom('entrance', ['east'], 'ground'), // 只有東門
+      discovered: true,
+      rotation: 0,
+      placementOrder: 0,
+    };
+    customMap.ground[7][8] = {
+      x: 8,
+      y: 7,
+      floor: 'ground',
+      room: createMockRoom('room_east', ['north', 'south'], 'ground'), // 沒有西門，無法連接
+      discovered: true,
+      rotation: 0,
+      placementOrder: 1,
+    };
+
+    const state = createMockGameState({
+      map: customMap,
+    });
+
+    // 應該無法移動到東邊房間（沒有門連接）
+    const result = MovementValidator.validateMove(state, 'player-1', { x: 8, y: 7, floor: 'ground' });
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe('No connecting door in that direction');
+  });
+
+  it('getReachablePositions 應該只返回有門連接的位置', () => {
+    // 建立一個地圖，其中入口只有東門
+    const customMap = createMockMap();
+    customMap.ground[7][7] = {
+      x: 7,
+      y: 7,
+      floor: 'ground',
+      room: createMockRoom('entrance', ['east'], 'ground'), // 只有東門
+      discovered: true,
+      rotation: 0,
+      placementOrder: 0,
+    };
+    customMap.ground[7][8] = {
+      x: 8,
+      y: 7,
+      floor: 'ground',
+      room: createMockRoom('room_east', ['west', 'east'], 'ground'), // 有西門和東門
+      discovered: true,
+      rotation: 0,
+      placementOrder: 1,
+    };
+    customMap.ground[7][9] = {
+      x: 9,
+      y: 7,
+      floor: 'ground',
+      room: createMockRoom('room_far_east', ['west'], 'ground'), // 有西門
+      discovered: true,
+      rotation: 0,
+      placementOrder: 2,
+    };
+    // 北邊房間沒有門連接
+    customMap.ground[6][7] = {
+      x: 7,
+      y: 6,
+      floor: 'ground',
+      room: createMockRoom('room_north', ['south'], 'ground'), // 有南門
+      discovered: true,
+      rotation: 0,
+      placementOrder: 3,
+    };
+
+    const state = createMockGameState({
+      map: customMap,
+      turn: {
+        ...createMockGameState().turn,
+        movesRemaining: 4, // 足夠的移動點數
+      },
+    });
+
+    const reachable = PathFinder.getReachablePositions(state, 'player-1');
+    
+    // 應該可以到達東邊房間（有門連接）
+    expect(reachable.some(pos => pos.x === 8 && pos.y === 7)).toBe(true);
+    
+    // 應該可以到達更東邊的房間（有門連接）
+    expect(reachable.some(pos => pos.x === 9 && pos.y === 7)).toBe(true);
+    
+    // 不應該可以到達北邊房間（入口沒有北門）
+    expect(reachable.some(pos => pos.x === 7 && pos.y === 6)).toBe(false);
+  });
+
+  it('應該正確處理雙向門連接', () => {
+    // 建立一個地圖，測試雙向門連接
+    const customMap = createMockMap();
+    customMap.ground[7][7] = {
+      x: 7,
+      y: 7,
+      floor: 'ground',
+      room: createMockRoom('entrance', ['north', 'south', 'east', 'west'], 'ground'),
+      discovered: true,
+      rotation: 0,
+      placementOrder: 0,
+    };
+
+    const state = createMockGameState({
+      map: customMap,
+    });
+
+    // 應該可以移動到所有方向（因為都有門連接）
+    expect(MovementValidator.validateMove(state, 'player-1', { x: 8, y: 7, floor: 'ground' }).valid).toBe(true);
+    expect(MovementValidator.validateMove(state, 'player-1', { x: 7, y: 6, floor: 'ground' }).valid).toBe(true);
+  });
+});
+
 // ==================== 整合測試 ====================
 
 describe('Movement Integration', () => {
@@ -544,5 +695,84 @@ describe('Movement Integration', () => {
 
     const moveResult = MovementExecutor.executeMove(result.newState!, moveAction);
     expect(moveResult.success).toBe(false);
+  });
+});
+
+// ==================== 門連接整合測試 ====================
+
+describe('Door Connection Movement Integration', () => {
+  it('應該完成完整的門連接移動流程', () => {
+    // 建立一個有特定門配置的測試地圖
+    const customMap = createMockMap();
+    
+    // 入口：只有北門和東門
+    customMap.ground[7][7] = {
+      x: 7,
+      y: 7,
+      floor: 'ground',
+      room: createMockRoom('entrance', ['north', 'east'], 'ground'),
+      discovered: true,
+      rotation: 0,
+      placementOrder: 0,
+    };
+    
+    // 北邊房間：有南門（可以連接）
+    customMap.ground[6][7] = {
+      x: 7,
+      y: 6,
+      floor: 'ground',
+      room: createMockRoom('room_north', ['south', 'north'], 'ground'),
+      discovered: true,
+      rotation: 0,
+      placementOrder: 1,
+    };
+    
+    // 東邊房間：有西門（可以連接）
+    customMap.ground[7][8] = {
+      x: 8,
+      y: 7,
+      floor: 'ground',
+      room: createMockRoom('room_east', ['west', 'east'], 'ground'),
+      discovered: true,
+      rotation: 0,
+      placementOrder: 2,
+    };
+    
+    // 西邊房間：有東門，但入口沒有西門，無法直接連接
+    customMap.ground[7][6] = {
+      x: 6,
+      y: 7,
+      floor: 'ground',
+      room: createMockRoom('room_west', ['east'], 'ground'),
+      discovered: true,
+      rotation: 0,
+      placementOrder: 3,
+    };
+
+    const state = createMockGameState({
+      map: customMap,
+      turn: {
+        ...createMockGameState().turn,
+        movesRemaining: 4,
+      },
+    });
+
+    // 驗證可以向北移動（有門連接）
+    expect(MovementValidator.validateMove(state, 'player-1', { x: 7, y: 6, floor: 'ground' }).valid).toBe(true);
+    
+    // 驗證可以向東移動（有門連接）
+    expect(MovementValidator.validateMove(state, 'player-1', { x: 8, y: 7, floor: 'ground' }).valid).toBe(true);
+    
+    // 驗證不能向西移動（入口沒有西門）
+    expect(MovementValidator.validateMove(state, 'player-1', { x: 6, y: 7, floor: 'ground' }).valid).toBe(false);
+    
+    // 驗證不能向南移動（入口沒有南門）
+    expect(MovementValidator.validateMove(state, 'player-1', { x: 7, y: 8, floor: 'ground' }).valid).toBe(false);
+
+    // 驗證可達位置
+    const reachable = PathFinder.getReachablePositions(state, 'player-1');
+    expect(reachable.some(pos => pos.x === 7 && pos.y === 6)).toBe(true); // 北邊
+    expect(reachable.some(pos => pos.x === 8 && pos.y === 7)).toBe(true); // 東邊
+    expect(reachable.some(pos => pos.x === 6 && pos.y === 7)).toBe(false); // 西邊
   });
 });

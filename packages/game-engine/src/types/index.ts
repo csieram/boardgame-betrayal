@@ -234,6 +234,13 @@ export interface RoomDeckState {
   drawn: Set<string>;
 }
 
+/** 房間牌堆（用於初始化） */
+export interface RoomDecks {
+  upper: Room[];
+  ground: Room[];
+  basement: Room[];
+}
+
 // ==================== 回合系統 ====================
 
 /** 回合狀態 */
@@ -362,6 +369,8 @@ export interface GameState {
   updatedAt: number;
   /** 隨機數生成器狀態（用於 replay） */
   rngState: RngState;
+  /** 已放置的房間 ID（確保每個房間只出現一次） */
+  placedRoomIds: Set<string>;
 }
 
 // ==================== RNG 系統（Deterministic） ====================

@@ -354,10 +354,32 @@ function initializeCombatState(): CombatState {
 // ==================== 輔助函數 ====================
 
 /**
- * 深拷貝（簡易版）
+ * 深拷貝（支援 Set 和 Date）
  */
 function deepClone<T>(obj: T): T {
-  return JSON.parse(JSON.stringify(obj));
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+
+  if (obj instanceof Set) {
+    return new Set(obj) as unknown as T;
+  }
+
+  if (obj instanceof Date) {
+    return new Date(obj.getTime()) as unknown as T;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => deepClone(item)) as unknown as T;
+  }
+
+  const cloned = {} as T;
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      cloned[key] = deepClone(obj[key]);
+    }
+  }
+  return cloned;
 }
 
 /**
@@ -449,6 +471,13 @@ export class GameStateManager {
     const turn = initializeTurnState(playerOrder[0]);
     turn.movesRemaining = players[0].currentStats.speed;
 
+    // 初始化已放置房間 ID 集合（包含起始房間）
+    const placedRoomIds = new Set<string>([
+      'entrance_hall',
+      'stairs_from_upper',
+      'stairs_from_basement'
+    ]);
+
     const state: GameState = {
       gameId,
       version: '1.0.0',
@@ -467,6 +496,7 @@ export class GameStateManager {
       createdAt: now(),
       updatedAt: now(),
       rngState: rng.getState(),
+      placedRoomIds,
     };
 
     const manager = new GameStateManager(state);
@@ -493,6 +523,7 @@ export class GameStateManager {
         ...state.roomDeck,
         drawn: Array.from(state.roomDeck.drawn),
       },
+      placedRoomIds: Array.from(state.placedRoomIds),
     };
     return JSON.stringify(serialized);
   }
@@ -509,6 +540,7 @@ export class GameStateManager {
         ...parsed.roomDeck,
         drawn: new Set(parsed.roomDeck.drawn || []),
       },
+      placedRoomIds: new Set(parsed.placedRoomIds || []),
     };
     return new GameStateManager(state);
   }
@@ -645,6 +677,15 @@ export class GameStateManager {
       p.id === action.playerId ? { ...p, position: action.position } : p
     );
 
+    // 更新已放置房間 ID 集合
+    // 注意：this.state 是通過 deepClone 取得的，placedRoomIds 已經是 Set
+    const newPlacedRoomIds = new Set(this.state.placedRoomIds);
+    newPlacedRoomIds.add(action.room.id);
+
+    // 更新房間牌堆的已抽取集合
+    const newRoomDeckDrawn = new Set(this.state.roomDeck.drawn);
+    newRoomDeckDrawn.add(action.room.id);
+
     let newState: GameState = {
       ...this.state,
       map: newMap,
@@ -654,6 +695,11 @@ export class GameStateManager {
         hasDiscoveredRoom: true,
         // 發現新房間後回合自動結束
         hasEnded: true,
+      },
+      placedRoomIds: newPlacedRoomIds,
+      roomDeck: {
+        ...this.state.roomDeck,
+        drawn: newRoomDeckDrawn,
       },
     };
 
@@ -964,6 +1010,86 @@ export class GameStateManager {
   canMoveTo(from: Position3D, to: Position3D): boolean {
     const tile = this.getTileAt(to);
     return tile?.discovered ?? false;
+  }
+
+  // ==================== 房間發現輔助方法 ====================
+
+  /**
+   * 獲取已發現的房間列表
+   * 用於追蹤遊戲中所有已發現的房間
+   * 
+   * @returns 已發現房間的列表
+   */
+  getDiscoveredRooms(): Room[] {
+    const discovered: Room[] = [];
+    const floors: Floor[] = ['ground', 'upper', 'basement'];
+    
+    for (const floor of floors) {
+      const floorMap = this.state.map[floor];
+      for (const row of floorMap) {
+        for (const tile of row) {
+          if (tile.discovered && tile.room) {
+            discovered.push(tile.room);
+          }
+        }
+      }
+    }
+    
+    return discovered;
+  }
+
+  /**
+   * 獲取指定樓層的房間牌堆
+   * 
+   * @param floor 樓層
+   * @returns 該樓層的房間牌堆
+   */
+  getRoomDeck(floor: Floor): Room[] {
+    return this.state.roomDeck[floor];
+  }
+
+  /**
+   * 獲取房間牌堆統計
+   * 
+   * @returns 各樓層牌堆剩餘數量
+   */
+  getRoomDeckStats(): { ground: number; upper: number; basement: number; total: number } {
+    const countRemaining = (floor: Floor): number => {
+      return this.state.roomDeck[floor].filter(r => !this.state.roomDeck.drawn.has(r.id)).length;
+    };
+
+    const ground = countRemaining('ground');
+    const upper = countRemaining('upper');
+    const basement = countRemaining('basement');
+
+    return { ground, upper, basement, total: ground + upper + basement };
+  }
+
+  /**
+   * 檢查房間是否已被抽取
+   * 
+   * @param roomId 房間 ID
+   * @returns 是否已被抽取
+   */
+  isRoomDrawn(roomId: string): boolean {
+    return this.state.roomDeck.drawn.has(roomId);
+  }
+
+  /**
+   * 標記房間為已抽取
+   * 
+   * @param roomId 房間 ID
+   */
+  markRoomAsDrawn(roomId: string): void {
+    const newDrawn = new Set(this.state.roomDeck.drawn);
+    newDrawn.add(roomId);
+    this.state = {
+      ...this.state,
+      roomDeck: {
+        ...this.state.roomDeck,
+        drawn: newDrawn,
+      },
+    };
   }
 }
 

@@ -241,6 +241,7 @@ const createMockGameState = (overrides?: Partial<GameState>): GameState => {
     createdAt: Date.now(),
     updatedAt: Date.now(),
     rngState: { seed: 'test', count: 0, internalState: [0] },
+    placedRoomIds: new Set(['entrance_hall', 'stairs_from_upper', 'stairs_from_basement']),
   };
 
   return { ...baseState, ...overrides };
