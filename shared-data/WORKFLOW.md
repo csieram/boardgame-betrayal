@@ -60,6 +60,65 @@ Agent 0 — Orchestrator / Producer (指揮者)
 - 更新 parent issue 進度
 - 推薦下一步
 
+## Bug 處理流程
+
+### 發現 Bug 時
+
+當 Human 在測試中發現 Bug 時：
+
+**Step 1: 創建 Bug Issue**
+- Agent 0 在 GitHub 創建新的 bug issue
+- 標題格式: `[Bug] 簡短描述`
+- 標籤: `bug` + 相關 agent 標籤 (如 `agent-3`, `frontend`)
+- 內容包含:
+  - Bug 描述
+  - 重現步驟
+  - 預期行為 vs 實際行為
+  - 相關檔案
+  - Acceptance criteria
+
+**Step 2: 指派給對應 Agent**
+- 根據 bug 類型指派:
+  - UI/Frontend 問題 → Agent 3
+  - Rules/Gameplay 問題 → Agent 2
+  - State/Architecture 問題 → Agent 1
+  - AI 問題 → Agent 4
+  - QA/測試問題 → Agent 5
+
+**Step 3: 追蹤修復**
+- Agent 修復 bug
+- 提交 PR
+- Agent 0 驗證修復
+- Human 批准關閉
+
+### Bug Issue 模板
+
+```markdown
+## Bug Description
+[清楚描述 bug]
+
+## Current Behavior
+[實際發生什麼]
+
+## Expected Behavior
+[應該發生什麼]
+
+## Reproduction Steps
+1. [步驟 1]
+2. [步驟 2]
+3. [步驟 3]
+
+## Files Affected
+- [檔案路徑]
+
+## Acceptance Criteria
+- [ ] [修復項目 1]
+- [ ] [修復項目 2]
+
+---
+*Reported during testing of #[原始 issue]*
+```
+
 ## Discord 匯報格式
 
 ### 任務委派時
