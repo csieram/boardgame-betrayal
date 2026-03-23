@@ -15,12 +15,12 @@ interface GameBoardProps {
   playerPosition: { x: number; y: number };
   /** 玩家角色 */
   playerCharacter: Character;
-  /** 點擊房間的回調 */
-  onRoomClick?: (room: Room, x: number, y: number) => void;
+  /** 點擊房間的回調 - room 可能為 null（未探索位置） */
+  onRoomClick?: (room: Room | null, x: number, y: number) => void;
   /** 切換樓層的回調 */
   onFloorChange?: (floor: Floor) => void;
   /** 可達的房間位置 */
-  reachablePositions?: { x: number; y: number }[];
+  reachablePositions?: { x: number; y: number; isExplored?: boolean }[];
   /** 是否顯示所有樓層 */
   showAllFloors?: boolean;
 }
@@ -100,8 +100,13 @@ export function GameBoard({
     };
   }, [exploredRooms]);
 
-  // 檢查位置是否可達
+  // 檢查位置是否可達（用於探索 - 只檢查未探索的 tile）
   const isReachable = (x: number, y: number) => {
+    return reachablePositions.some(pos => pos.x === x && pos.y === y && !pos.isExplored);
+  };
+
+  // 檢查位置是否可移動（用於移動 - 包括已探索和未探索）
+  const isMovable = (x: number, y: number) => {
     return reachablePositions.some(pos => pos.x === x && pos.y === y);
   };
 
@@ -111,8 +116,10 @@ export function GameBoard({
   };
 
   // 處理房間點擊 - 直接移動到相鄰房間
-  const handleRoomClick = (room: Room, x: number, y: number) => {
-    setSelectedRoom({ room, x, y });
+  const handleRoomClick = (room: Room | null, x: number, y: number) => {
+    if (room) {
+      setSelectedRoom({ room, x, y });
+    }
     onRoomClick?.(room, x, y);
   };
 
@@ -159,11 +166,11 @@ export function GameBoard({
         </div>
 
         {/* 房間網格 */}
-        <div className="overflow-x-auto pb-4">
+        <div className="overflow-auto pb-4 max-h-[60vh]">
           <div 
-            className="inline-grid gap-1 sm:gap-2 p-2 sm:p-4 bg-gray-900/50 rounded-xl"
+            className="inline-grid gap-1 sm:gap-2 p-2 sm:p-4 bg-gray-900/50 rounded-xl min-w-max"
             style={{
-              gridTemplateColumns: `repeat(${mapBounds.maxX - mapBounds.minX + 1}, minmax(0, 1fr))`,
+              gridTemplateColumns: `repeat(${mapBounds.maxX - mapBounds.minX + 1}, auto)`,
             }}
           >
             {Array.from({ length: mapBounds.maxY - mapBounds.minY + 1 }, (_, rowIndex) => {
@@ -177,30 +184,28 @@ export function GameBoard({
                 const hasPlayer = hasPlayerAt(x, y) && floor === activeFloor;
 
                 if (!isExplored) {
-                  // 檢查是否相鄰已探索房間（顯示可達提示）
-                  const adjacentExplored = [
-                    map[y-1]?.[x],
-                    map[y+1]?.[x],
-                    map[y]?.[x-1],
-                    map[y]?.[x+1],
-                  ].some(t => t?.discovered && t?.room?.floor === floor);
+                  // 只有當前樓層且真正可達（有門相連）的未探索 tile 才顯示高亮
+                  const isExplorable = reachable && floor === activeFloor;
 
                   return (
                     <EmptyRoomTile
                       key={`${x}-${y}`}
                       size="md"
-                      isReachable={reachable || (adjacentExplored && floor === activeFloor)}
-                      onClick={reachable && tile?.room ? () => onRoomClick?.(tile.room!, x, y) : undefined}
+                      isReachable={isExplorable}
+                      onClick={isExplorable ? () => onRoomClick?.(null, x, y) : undefined}
                     />
                   );
                 }
+
+                // 檢查是否可移動（包括已探索和未探索的可達位置）
+                const movable = isMovable(x, y) && floor === activeFloor;
 
                 return (
                   <RoomTile
                     key={`${x}-${y}`}
                     room={tile.room}
                     isExplored={true}
-                    isReachable={reachable}
+                    isReachable={movable}
                     rotation={tile.rotation}
                     onClick={() => tile.room && handleRoomClick(tile.room, x, y)}
                     players={hasPlayer ? [playerCharacter] : []}
@@ -359,7 +364,7 @@ interface MiniGameBoardProps {
   currentFloor: Floor;
   playerPosition: { x: number; y: number };
   playerCharacter: Character;
-  onRoomClick?: (room: Room, x: number, y: number) => void;
+  onRoomClick?: (room: Room | null, x: number, y: number) => void;
   className?: string;
 }
 

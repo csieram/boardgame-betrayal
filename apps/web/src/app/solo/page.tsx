@@ -87,8 +87,8 @@ export default function SoloGamePage() {
   const [log, setLog] = useState<string[]>(['遊戲開始']);
   const [discovered, setDiscovered] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedRoom, setSelectedRoom] = useState<{ room: Room; x: number; y: number } | null>(null);
-  const [reachablePositions, setReachablePositions] = useState<{ x: number; y: number }[]>([]);
+  const [selectedRoom, setSelectedRoom] = useState<{ room: Room | null; x: number; y: number } | null>(null);
+  const [reachablePositions, setReachablePositions] = useState<{ x: number; y: number; isExplored?: boolean }[]>([]);
   const [validExploreDirections, setValidExploreDirections] = useState<Direction[]>([]);
   const [gameState, setGameState] = useState<SoloGameState>(() => createInitialGameState(Date.now().toString()));
 
@@ -178,7 +178,7 @@ export default function SoloGamePage() {
       return;
     }
 
-    const reachable: { x: number; y: number }[] = [];
+    const reachable: { x: number; y: number; isExplored: boolean }[] = [];
     const currentTile = currentMap[pos.y][pos.x];
     const currentRoom = currentTile.room;
 
@@ -199,7 +199,7 @@ export default function SoloGamePage() {
       west: { x: -1, y: 0 },
     };
 
-    // 檢查每個有效方向
+    // 檢查每個有效方向（用於探索新房間）
     for (const direction of validDirections) {
       const delta = directionMap[direction];
       const newX = pos.x + delta.x;
@@ -208,14 +208,35 @@ export default function SoloGamePage() {
       if (newX >= 0 && newX < MAP_SIZE && newY >= 0 && newY < MAP_SIZE) {
         const tile = currentMap[newY][newX];
         
-        // 如果位置未探索，顯示為可探索
+        // 只將未探索的位置標記為可探索（用於高亮顯示）
         if (!tile.discovered) {
-          reachable.push({ x: newX, y: newY });
+          reachable.push({ x: newX, y: newY, isExplored: false });
           validExploreDirs.push(direction);
         }
-        // 如果位置已探索，也可以移動過去
-        else {
-          reachable.push({ x: newX, y: newY });
+      }
+    }
+
+    // 另外檢查所有已探索的相鄰房間（用於返回移動）
+    // 檢查四個方向
+    const allDirections: Direction[] = ['north', 'south', 'east', 'west'];
+    for (const direction of allDirections) {
+      const delta = directionMap[direction];
+      const newX = pos.x + delta.x;
+      const newY = pos.y + delta.y;
+      
+      if (newX >= 0 && newX < MAP_SIZE && newY >= 0 && newY < MAP_SIZE) {
+        const tile = currentMap[newY][newX];
+        
+        // 如果位置已探索，檢查是否有門可以進入
+        if (tile.discovered && tile.room) {
+          const oppositeDirection = OPPOSITE_DOOR[direction];
+          // 檢查目標房間是否有門面向當前房間
+          if (tile.room.doors.includes(oppositeDirection)) {
+            // 避免重複添加
+            if (!reachable.some(r => r.x === newX && r.y === newY)) {
+              reachable.push({ x: newX, y: newY, isExplored: true });
+            }
+          }
         }
       }
     }
@@ -291,6 +312,13 @@ export default function SoloGamePage() {
   // 移動到指定位置
   const moveToPosition = useCallback((x: number, y: number) => {
     if (discovered || moves <= 0 || !player) return;
+
+    // 檢查目標位置是否可達
+    const isReachable = reachablePositions.some(pos => pos.x === x && pos.y === y);
+    if (!isReachable) {
+      console.log('[moveToPosition] Position not reachable:', x, y);
+      return;
+    }
 
     const tile = map[y][x];
     
@@ -399,10 +427,10 @@ export default function SoloGamePage() {
         return newMoves;
       });
     }
-  }, [map, player, moves, discovered, turn, currentFloor, position, gameState]);
+  }, [map, player, moves, discovered, turn, currentFloor, position, gameState, reachablePositions]);
 
   // 處理房間點擊
-  const handleRoomClick = (room: Room, x: number, y: number) => {
+  const handleRoomClick = (room: Room | null, x: number, y: number) => {
     setSelectedRoom({ room, x, y });
     
     // 如果點擊的是可達位置，移動過去
@@ -436,7 +464,11 @@ export default function SoloGamePage() {
     const newY = position.y + delta.y;
     
     if (newX >= 0 && newX < MAP_SIZE && newY >= 0 && newY < MAP_SIZE) {
-      moveToPosition(newX, newY);
+      // 檢查目標位置是否可達（包括已探索和未探索的房間）
+      const isReachable = reachablePositions.some(pos => pos.x === newX && pos.y === newY);
+      if (isReachable) {
+        moveToPosition(newX, newY);
+      }
     }
   };
 
@@ -643,7 +675,7 @@ export default function SoloGamePage() {
             </div>
 
             {/* 當前房間資訊 */}
-            {selectedRoom && (
+            {selectedRoom && selectedRoom.room && (
               <motion.div 
                 className="bg-gray-800/50 rounded-xl p-4 border border-gray-700"
                 initial={{ opacity: 0, y: 20 }}
@@ -659,8 +691,12 @@ export default function SoloGamePage() {
                     />
                   )}
                   <div>
-                    <p className="font-medium">{selectedRoom.room.name}</p>
-                    <p className="text-sm text-gray-400">{selectedRoom.room.description}</p>
+                    {selectedRoom.room?.name && (
+                      <p className="font-medium">{selectedRoom.room.name}</p>
+                    )}
+                    {selectedRoom.room?.description && (
+                      <p className="text-sm text-gray-400">{selectedRoom.room.description}</p>
+                    )}
                     {(selectedRoom.room as Room & { rotation?: number }).rotation !== undefined && (
                       <p className="text-xs text-gray-500">旋轉: {(selectedRoom.room as Room & { rotation?: number }).rotation}°</p>
                     )}
