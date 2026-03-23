@@ -1,28 +1,58 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Character, CHARACTERS, ROOMS } from '@betrayal/shared';
+import { Character, CHARACTERS, Room, Floor, Tile, Direction } from '@betrayal/shared';
 import { Button } from '@betrayal/ui';
+import { GameBoard } from '@/components/game/GameBoard';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// 地圖大小
+const MAP_SIZE = 15;
+const MAP_CENTER = 7;
+
+/**
+ * 建立空的地圖
+ */
+function createEmptyMap(): Tile[][] {
+  const map: Tile[][] = [];
+  for (let y = 0; y < MAP_SIZE; y++) {
+    const row: Tile[] = [];
+    for (let x = 0; x < MAP_SIZE; x++) {
+      row.push({
+        x,
+        y,
+        room: null,
+        discovered: false,
+        rotation: 0,
+      });
+    }
+    map.push(row);
+  }
+  return map;
+}
 
 /**
  * 單人模式遊戲頁面
  * 
- * 這是單人遊戲的主要遊戲頁面
+ * 這是單人遊戲的主要遊戲頁面，整合 GameBoard 組件顯示探索的房間
  * 
  * @route /solo
  */
 export default function SoloGamePage() {
   const router = useRouter();
   const [phase, setPhase] = useState<'select' | 'play'>('select');
-  const [player, setPlayer] = useState<any>(null);
+  const [player, setPlayer] = useState<Character | null>(null);
   const [turn, setTurn] = useState(1);
   const [moves, setMoves] = useState(0);
-  const [pos, setPos] = useState({ x: 7, y: 7 });
-  const [roomName, setRoomName] = useState('入口大廳');
+  const [position, setPosition] = useState({ x: MAP_CENTER, y: MAP_CENTER });
+  const [currentFloor, setCurrentFloor] = useState<Floor>('ground');
+  const [map, setMap] = useState<Tile[][]>(createEmptyMap());
   const [log, setLog] = useState<string[]>(['遊戲開始']);
   const [discovered, setDiscovered] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedRoom, setSelectedRoom] = useState<{ room: Room; x: number; y: number } | null>(null);
+  const [reachablePositions, setReachablePositions] = useState<{ x: number; y: number }[]>([]);
 
   // 從 sessionStorage 讀取選擇的角色
   useEffect(() => {
@@ -34,59 +64,166 @@ export default function SoloGamePage() {
         startGame(character);
       } catch (error) {
         console.error('Failed to parse stored character:', error);
-        // 如果解析失敗，留在選擇階段
         setIsLoading(false);
       }
     } else {
-      // 如果沒有儲存的角色，導航到選擇頁面
       router.push('/solo/select');
     }
   }, [router]);
 
+  // 初始化遊戲
   const startGame = (character: Character) => {
     setPlayer(character);
     setMoves(character.stats.speed[0]);
     setPhase('play');
+    
+    // 初始化地圖，放置入口大廳
+    const initialMap = createEmptyMap();
+    initialMap[MAP_CENTER][MAP_CENTER] = {
+      ...initialMap[MAP_CENTER][MAP_CENTER],
+      discovered: true,
+      room: {
+        id: 'entrance_hall',
+        name: '入口大廳',
+        nameEn: 'Entrance Hall',
+        floor: 'ground',
+        symbol: null,
+        doors: ['north', 'south'],
+        description: '房屋的入口',
+        color: '#7B6354',
+        icon: '',
+        isOfficial: true,
+        gallerySvg: '/gallery-assets/rooms/entrance_hall.svg',
+      },
+    };
+    
+    setMap(initialMap);
     setLog([`選擇了 ${character.name}`, '從入口大廳開始', '回合 1']);
     setIsLoading(false);
+    
+    // 計算可達位置
+    updateReachablePositions(initialMap, { x: MAP_CENTER, y: MAP_CENTER }, character.stats.speed[0]);
   };
 
-  const move = (dir: string) => {
+  // 計算可達位置
+  const updateReachablePositions = (currentMap: Tile[][], pos: { x: number; y: number }, remainingMoves: number) => {
+    if (remainingMoves <= 0 || discovered) {
+      setReachablePositions([]);
+      return;
+    }
+
+    const reachable: { x: number; y: number }[] = [];
+    const directions = [
+      { x: 0, y: -1 }, // north
+      { x: 0, y: 1 },  // south
+      { x: 1, y: 0 },  // east
+      { x: -1, y: 0 }, // west
+    ];
+
+    for (const dir of directions) {
+      const newX = pos.x + dir.x;
+      const newY = pos.y + dir.y;
+      
+      if (newX >= 0 && newX < MAP_SIZE && newY >= 0 && newY < MAP_SIZE) {
+        const tile = currentMap[newY][newX];
+        // 如果位置未探索，顯示為可探索
+        if (!tile.discovered) {
+          reachable.push({ x: newX, y: newY });
+        }
+        // 如果位置已探索，也可以移動過去
+        else if (tile.discovered) {
+          reachable.push({ x: newX, y: newY });
+        }
+      }
+    }
+
+    setReachablePositions(reachable);
+  };
+
+  // 移動到指定位置
+  const moveToPosition = useCallback((x: number, y: number) => {
     if (discovered || moves <= 0 || !player) return;
+
+    const tile = map[y][x];
     
-    const delta: Record<string, { x: number; y: number }> = { 
-      north: { x: 0, y: -1 }, 
-      south: { x: 0, y: 1 }, 
-      east: { x: 1, y: 0 }, 
-      west: { x: -1, y: 0 } 
-    };
-    const newPos = { x: pos.x + delta[dir].x, y: pos.y + delta[dir].y };
-    
-    if (Math.random() > 0.5) {
-      const room = ROOMS[Math.floor(Math.random() * ROOMS.length)];
-      setPos(newPos);
-      setRoomName(room.name);
-      setDiscovered(true);
-      setLog(prev => [...prev, `發現新房間: ${room.name}`, '回合結束']);
-      setTimeout(() => {
-        setTurn(t => t + 1);
-        setMoves(player.stats.speed[0]);
-        setDiscovered(false);
-        setLog(prev => [...prev, `回合 ${turn + 1}`]);
-      }, 1000);
+    // 如果目標位置未探索，發現新房間
+    if (!tile.discovered) {
+      // 隨機選擇一個房間（這裡簡化處理，實際應該從牌堆抽取）
+      import('@betrayal/shared').then(({ ROOMS }) => {
+        const groundRooms = ROOMS.filter(r => r.floor === currentFloor && r.id !== 'entrance_hall');
+        const randomRoom = groundRooms[Math.floor(Math.random() * groundRooms.length)];
+        
+        const newMap = [...map];
+        newMap[y][x] = {
+          ...newMap[y][x],
+          discovered: true,
+          room: randomRoom,
+        };
+        
+        setMap(newMap);
+        setPosition({ x, y });
+        setDiscovered(true);
+        setLog(prev => [...prev, `發現新房間: ${randomRoom.name}`, '回合結束']);
+        setReachablePositions([]);
+        
+        // 延遲後開始新回合
+        setTimeout(() => {
+          setTurn(t => t + 1);
+          setMoves(player.stats.speed[0]);
+          setDiscovered(false);
+          setLog(prev => [...prev, `回合 ${turn + 1}`]);
+          updateReachablePositions(newMap, { x, y }, player.stats.speed[0]);
+        }, 1500);
+      });
     } else {
-      setPos(newPos);
-      setMoves(m => m - 1);
-      setLog(prev => [...prev, `移動到 (${newPos.x}, ${newPos.y})`]);
+      // 移動到已探索的房間
+      setPosition({ x, y });
+      setMoves(m => {
+        const newMoves = m - 1;
+        setLog(prev => [...prev, `移動到 (${x}, ${y})，剩餘移動: ${newMoves}`]);
+        updateReachablePositions(map, { x, y }, newMoves);
+        return newMoves;
+      });
+    }
+  }, [map, player, moves, discovered, turn, currentFloor]);
+
+  // 處理房間點擊
+  const handleRoomClick = (room: Room, x: number, y: number) => {
+    setSelectedRoom({ room, x, y });
+    
+    // 如果點擊的是可達位置，移動過去
+    const isReachable = reachablePositions.some(pos => pos.x === x && pos.y === y);
+    if (isReachable && !discovered) {
+      moveToPosition(x, y);
     }
   };
 
+  // 結束回合
   const endTurn = () => {
     if (!player) return;
     setTurn(t => t + 1);
     setMoves(player.stats.speed[0]);
     setDiscovered(false);
     setLog(prev => [...prev, '回合結束', `回合 ${turn + 1}`]);
+    updateReachablePositions(map, position, player.stats.speed[0]);
+  };
+
+  // 方向移動
+  const moveDirection = (dir: Direction) => {
+    const deltas: Record<Direction, { x: number; y: number }> = {
+      north: { x: 0, y: -1 },
+      south: { x: 0, y: 1 },
+      east: { x: 1, y: 0 },
+      west: { x: -1, y: 0 },
+    };
+    
+    const delta = deltas[dir];
+    const newX = position.x + delta.x;
+    const newY = position.y + delta.y;
+    
+    if (newX >= 0 && newX < MAP_SIZE && newY >= 0 && newY < MAP_SIZE) {
+      moveToPosition(newX, newY);
+    }
   };
 
   // 載入中顯示
@@ -94,14 +231,18 @@ export default function SoloGamePage() {
     return (
       <main className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <motion.div 
+            className="w-12 h-12 border-b-2 border-white rounded-full mx-auto mb-4"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          />
           <p className="text-gray-300">載入遊戲中...</p>
         </div>
       </main>
     );
   }
 
-  // 角色選擇階段（理論上不會顯示，因為會自動導航）
+  // 角色選擇階段
   if (phase === 'select') {
     return (
       <main className="min-h-screen bg-gray-900 text-white p-6">
@@ -115,130 +256,206 @@ export default function SoloGamePage() {
     );
   }
 
-  const currentRoom = ROOMS.find(r => r.name === roomName);
-
   return (
-    <main className="min-h-screen bg-gray-900 text-white p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">單人遊戲 - 回合 {turn}</h1>
-          <a href="/betrayal/solo/select">
-            <Button variant="secondary" size="sm">重新選擇角色</Button>
-          </a>
+    <main className="min-h-screen bg-gray-900 text-white">
+      {/* 頂部導航欄 */}
+      <header className="bg-gray-800 border-b border-gray-700 px-4 py-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <h1 className="text-xl font-bold">單人遊戲</h1>
+            <span className="text-gray-400">|</span>
+            <span className="text-blue-400 font-medium">回合 {turn}</span>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            {/* 玩家資訊 */}
+            {player && (
+              <div className="flex items-center gap-3">
+                <PlayerToken character={player} size="sm" />
+                <div className="hidden sm:block">
+                  <p className="text-sm font-medium">{player.name}</p>
+                  <p className="text-xs text-gray-400">剩餘移動: {moves}</p>
+                </div>
+              </div>
+            )}
+            
+            <a href="/betrayal/solo/select">
+              <Button variant="secondary" size="sm">重新選擇</Button>
+            </a>
+          </div>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* 左側：玩家資訊與控制 */}
-          <div className="space-y-4">
-            {/* 玩家面板 */}
-            <div className="bg-gray-800 p-4 rounded-lg">
-              <div className="flex items-center gap-3 mb-4">
-                {player?.portraitSvg && (
-                  <img 
-                    src={`/betrayal${player.portraitSvg}`} 
-                    className="w-14 h-14 rounded-full bg-gray-700" 
-                    alt={player?.name}
-                  />
-                )}
-                <div>
-                  <p className="font-bold text-lg">{player?.name}</p>
-                  <p className="text-gray-400 text-sm">剩餘移動: {moves}</p>
+      </header>
+
+      {/* 主要內容區 */}
+      <div className="max-w-7xl mx-auto p-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* 左側：遊戲板 */}
+          <div className="lg:col-span-2">
+            <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold">遊戲地圖</h2>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-gray-400">當前樓層:</span>
+                  <span className="text-white font-medium">
+                    {currentFloor === 'ground' ? '一樓' : currentFloor === 'upper' ? '二樓' : '地下室'}
+                  </span>
                 </div>
               </div>
               
-              {/* 屬性顯示 */}
-              <div className="grid grid-cols-4 gap-2">
-                <StatBox label="速度" value={player?.stats.speed[0]} color="#3B82F6" />
-                <StatBox label="力量" value={player?.stats.might[0]} color="#EF4444" />
-                <StatBox label="理智" value={player?.stats.sanity[0]} color="#8B5CF6" />
-                <StatBox label="知識" value={player?.stats.knowledge[0]} color="#10B981" />
-              </div>
-            </div>
-
-            {/* 當前房間 */}
-            <div className="bg-gray-800 p-4 rounded-lg">
-              <h3 className="font-bold mb-3">當前位置: {roomName}</h3>
-              {currentRoom?.gallerySvg && (
-                <img 
-                  src={`/betrayal${currentRoom.gallerySvg}`} 
-                  className="w-32 h-32 object-contain mx-auto bg-gray-700 rounded" 
-                  alt={roomName}
+              {/* GameBoard 組件 */}
+              <div className="h-[500px] overflow-hidden">
+                <GameBoard
+                  map={map}
+                  currentFloor={currentFloor}
+                  playerPosition={position}
+                  playerCharacter={player!}
+                  onRoomClick={handleRoomClick}
+                  onFloorChange={setCurrentFloor}
+                  reachablePositions={reachablePositions}
+                  showAllFloors={false}
                 />
-              )}
+              </div>
             </div>
 
             {/* 移動控制 */}
-            <div className="bg-gray-800 p-4 rounded-lg">
-              <h3 className="font-bold mb-3 text-center">移動控制</h3>
-              <div className="grid grid-cols-3 gap-2 max-w-xs mx-auto">
-                <div />
-                <Button 
-                  onClick={() => move('north')} 
-                  disabled={discovered || moves <= 0}
-                  size="sm"
-                >
-                  北
-                </Button>
-                <div />
-                <Button 
-                  onClick={() => move('west')} 
-                  disabled={discovered || moves <= 0}
-                  size="sm"
-                >
-                  西
-                </Button>
-                <Button 
-                  onClick={endTurn} 
-                  variant="secondary"
-                  size="sm"
-                >
-                  結束
-                </Button>
-                <Button 
-                  onClick={() => move('east')} 
-                  disabled={discovered || moves <= 0}
-                  size="sm"
-                >
-                  東
-                </Button>
-                <div />
-                <Button 
-                  onClick={() => move('south')} 
-                  disabled={discovered || moves <= 0}
-                  size="sm"
-                >
-                  南
-                </Button>
-                <div />
+            <div className="mt-4 bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+              <h3 className="text-sm font-bold text-gray-400 mb-3 text-center">移動控制</h3>
+              <div className="flex justify-center">
+                <div className="grid grid-cols-3 gap-2">
+                  <div />
+                  <DirectionButton 
+                    direction="north" 
+                    onClick={() => moveDirection('north')}
+                    disabled={discovered || moves <= 0}
+                  />
+                  <div />
+                  <DirectionButton 
+                    direction="west" 
+                    onClick={() => moveDirection('west')}
+                    disabled={discovered || moves <= 0}
+                  />
+                  <Button 
+                    onClick={endTurn} 
+                    variant="secondary"
+                    size="sm"
+                    className="h-12"
+                  >
+                    結束回合
+                  </Button>
+                  <DirectionButton 
+                    direction="east" 
+                    onClick={() => moveDirection('east')}
+                    disabled={discovered || moves <= 0}
+                  />
+                  <div />
+                  <DirectionButton 
+                    direction="south" 
+                    onClick={() => moveDirection('south')}
+                    disabled={discovered || moves <= 0}
+                  />
+                  <div />
+                </div>
               </div>
+              
               {discovered && (
-                <p className="text-yellow-500 text-center mt-3">已發現新房間，回合結束</p>
+                <motion.p 
+                  className="text-yellow-500 text-center mt-3 text-sm"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  已發現新房間，回合結束
+                </motion.p>
               )}
             </div>
           </div>
 
-          {/* 右側：遊戲日誌 */}
-          <div className="bg-gray-800 p-4 rounded-lg h-96 md:h-auto overflow-y-auto">
-            <h3 className="font-bold mb-3">遊戲日誌</h3>
-            <div className="space-y-1">
-              {log.slice(-20).map((entry, i) => (
-                <p 
-                  key={i} 
-                  className={`text-sm py-1 border-b border-gray-700 last:border-0 ${
-                    entry.includes('發現') ? 'text-yellow-400' : 
-                    entry.includes('回合') ? 'text-blue-400' : 
-                    'text-gray-300'
-                  }`}
-                >
-                  {entry}
-                </p>
-              ))}
+          {/* 右側：玩家面板與日誌 */}
+          <div className="space-y-4">
+            {/* 玩家屬性面板 */}
+            {player && (
+              <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+                <h3 className="text-lg font-bold mb-4">角色屬性</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <StatCard 
+                    label="速度" 
+                    value={player.stats.speed[0]} 
+                    color="#3B82F6"
+                    icon="⚡"
+                  />
+                  <StatCard 
+                    label="力量" 
+                    value={player.stats.might[0]} 
+                    color="#EF4444"
+                    icon="💪"
+                  />
+                  <StatCard 
+                    label="理智" 
+                    value={player.stats.sanity[0]} 
+                    color="#8B5CF6"
+                    icon="🧠"
+                  />
+                  <StatCard 
+                    label="知識" 
+                    value={player.stats.knowledge[0]} 
+                    color="#10B981"
+                    icon="📚"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* 遊戲日誌 */}
+            <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+              <h3 className="text-lg font-bold mb-3">遊戲日誌</h3>
+              <div className="h-64 overflow-y-auto space-y-2 pr-2">
+                <AnimatePresence initial={false}>
+                  {log.slice(-20).map((entry, i) => (
+                    <motion.p 
+                      key={i}
+                      className={`text-sm py-2 px-3 rounded-lg ${
+                        entry.includes('發現') ? 'bg-yellow-500/20 text-yellow-400' : 
+                        entry.includes('回合') ? 'bg-blue-500/20 text-blue-400' : 
+                        'bg-gray-700/50 text-gray-300'
+                      }`}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {entry}
+                    </motion.p>
+                  ))}
+                </AnimatePresence>
+              </div>
             </div>
+
+            {/* 當前房間資訊 */}
+            {selectedRoom && (
+              <motion.div 
+                className="bg-gray-800/50 rounded-xl p-4 border border-gray-700"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <h3 className="text-lg font-bold mb-2">房間資訊</h3>
+                <div className="flex items-center gap-3">
+                  {selectedRoom.room.gallerySvg && (
+                    <img 
+                      src={`/betrayal${selectedRoom.room.gallerySvg}`}
+                      alt={selectedRoom.room.name}
+                      className="w-16 h-16 rounded-lg object-cover bg-gray-700"
+                    />
+                  )}
+                  <div>
+                    <p className="font-medium">{selectedRoom.room.name}</p>
+                    <p className="text-sm text-gray-400">{selectedRoom.room.description}</p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
           </div>
         </div>
 
         {/* 底部返回按鈕 */}
-        <div className="text-center mt-6">
+        <div className="text-center mt-8">
           <a href="/betrayal/">
             <Button variant="secondary">← 返回大廳</Button>
           </a>
@@ -249,19 +466,86 @@ export default function SoloGamePage() {
 }
 
 /**
- * 屬性方塊組件
+ * 方向按鈕組件
  */
-interface StatBoxProps {
+interface DirectionButtonProps {
+  direction: Direction;
+  onClick: () => void;
+  disabled?: boolean;
+}
+
+function DirectionButton({ direction, onClick, disabled }: DirectionButtonProps) {
+  const labels: Record<Direction, string> = {
+    north: '北',
+    south: '南',
+    east: '東',
+    west: '西',
+  };
+
+  return (
+    <Button 
+      onClick={onClick}
+      disabled={disabled}
+      size="sm"
+      className="h-12 w-12 flex items-center justify-center"
+    >
+      {labels[direction]}
+    </Button>
+  );
+}
+
+/**
+ * 玩家標記組件（簡化版）
+ */
+interface PlayerTokenProps {
+  character: Character;
+  size?: 'sm' | 'md';
+}
+
+function PlayerToken({ character, size = 'md' }: PlayerTokenProps) {
+  const sizeClasses = {
+    sm: 'w-8 h-8',
+    md: 'w-12 h-12',
+  };
+
+  return (
+    <div 
+      className={`${sizeClasses[size]} rounded-full overflow-hidden border-2 border-white shadow-lg`}
+      style={{ backgroundColor: character.color }}
+    >
+      {character.portraitSvg ? (
+        <img
+          src={`/betrayal${character.portraitSvg}`}
+          alt={character.name}
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center text-white font-bold text-xs">
+          {character.name[0]}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * 屬性卡片組件
+ */
+interface StatCardProps {
   label: string;
   value: number;
   color: string;
+  icon: string;
 }
 
-function StatBox({ label, value, color }: StatBoxProps) {
+function StatCard({ label, value, color, icon }: StatCardProps) {
   return (
-    <div className="bg-gray-700 rounded p-2 text-center">
-      <div className="text-xs text-gray-400">{label}</div>
-      <div className="font-bold text-lg" style={{ color }}>{value}</div>
+    <div className="bg-gray-700/50 rounded-lg p-3 flex items-center gap-3">
+      <span className="text-2xl">{icon}</span>
+      <div>
+        <div className="text-xs text-gray-400">{label}</div>
+        <div className="font-bold text-lg" style={{ color }}>{value}</div>
+      </div>
     </div>
   );
 }
