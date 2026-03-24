@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Character, CHARACTERS, Room, Floor, Tile, Direction } from '@betrayal/shared';
+import { Character, CHARACTERS, Room, Floor, Tile, Direction, Card } from '@betrayal/shared';
 import { Button } from '@betrayal/ui';
 import { GameBoard } from '@/components/game/GameBoard';
 import { CardDisplay } from '@/components/game/CardDisplay';
 import { InventoryPanel } from '@/components/game/InventoryPanel';
 import { HauntRollModal } from '@/components/game/HauntRollModal';
 import { HauntRevealScreen } from '@/components/game/HauntRevealScreen';
+import { EventCheckModal, EventCheckResult } from '@/components/game/EventCheckModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   RoomDiscoveryManager,
@@ -226,6 +227,19 @@ export default function SoloGamePage() {
     selectedTarget: null,
   });
   const [combatManager] = useState(() => new CombatManager(new SeededRng(Date.now().toString())));
+
+  // 事件卡檢定狀態 (Issue #104)
+  const [eventCheckState, setEventCheckState] = useState<{
+    showModal: boolean;
+    card: Card | null;
+    isRolling: boolean;
+    result: EventCheckResult | null;
+  }>({
+    showModal: false,
+    card: null,
+    isRolling: false,
+    result: null,
+  });
 
   // 當前樓層的地圖（向後兼容）
   const map = multiFloorMap[currentFloor];
@@ -1143,6 +1157,8 @@ export default function SoloGamePage() {
 
   // 處理關閉卡牌顯示並繼續遊戲
   const handleCloseCardDisplay = () => {
+    const card = cardDrawState.cardResult?.card;
+    
     setCardDrawState({
       showCard: false,
       cardResult: null,
@@ -1152,10 +1168,84 @@ export default function SoloGamePage() {
     
     // 如果 Haunt Roll 模態框即將顯示，不要立即開始新回合
     // Haunt Roll 處理函數會負責繼續遊戲
-    if (cardDrawState.cardResult?.card?.type === 'omen') {
+    if (card?.type === 'omen') {
       // 預兆卡會觸發 Haunt Roll，不立即開始新回合
       return;
     }
+    
+    // Issue #104: 檢查事件卡是否需要屬性檢定
+    if (card?.type === 'event' && card.rollRequired && playerState) {
+      // 顯示事件卡檢定模態框
+      setEventCheckState({
+        showModal: true,
+        card: card,
+        isRolling: false,
+        result: null,
+      });
+      return;
+    }
+    
+    // 繼續新回合
+    continueToNextTurn();
+  };
+
+  // Issue #104: 處理事件卡檢定擲骰
+  const handleEventCheckRoll = () => {
+    if (!eventCheckState.card || !playerState) return;
+    
+    setEventCheckState(prev => ({ ...prev, isRolling: true }));
+    
+    // 執行檢定
+    const result = effectApplier.performEventCheck(eventCheckState.card, playerState);
+    
+    // 應用屬性變化
+    if (result.statChanges) {
+      setPlayerState(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          stats: {
+            speed: prev.stats.speed + (result.statChanges?.speed || 0),
+            might: prev.stats.might + (result.statChanges?.might || 0),
+            sanity: prev.stats.sanity + (result.statChanges?.sanity || 0),
+            knowledge: prev.stats.knowledge + (result.statChanges?.knowledge || 0),
+          },
+        };
+      });
+      
+      // 記錄到日誌
+      const statNames: Record<string, string> = {
+        speed: '速度',
+        might: '力量',
+        sanity: '理智',
+        knowledge: '知識',
+      };
+      
+      Object.entries(result.statChanges).forEach(([stat, change]) => {
+        if (change !== 0) {
+          setLog(prev => [...prev, `${statNames[stat]} ${change > 0 ? '+' : ''}${change}`]);
+        }
+      });
+    }
+    
+    // 記錄檢定結果到日誌
+    setLog(prev => [...prev, `事件檢定: ${result.success ? '成功' : '失敗'} (${result.roll} vs 目標 ${result.target})`]);
+    
+    setEventCheckState(prev => ({
+      ...prev,
+      isRolling: false,
+      result,
+    }));
+  };
+
+  // Issue #104: 處理關閉事件卡檢定模態框
+  const handleCloseEventCheck = () => {
+    setEventCheckState({
+      showModal: false,
+      card: null,
+      isRolling: false,
+      result: null,
+    });
     
     // 繼續新回合
     continueToNextTurn();
@@ -1428,6 +1518,19 @@ export default function SoloGamePage() {
         playerNames={{ 'solo-player': player?.name || '玩家' }}
         currentPlayerId="solo-player"
         onStartHaunt={handleStartHaunt}
+      />
+
+      {/* 事件卡檢定模態框 (Issue #104) */}
+      <EventCheckModal
+        isOpen={eventCheckState.showModal}
+        card={eventCheckState.card}
+        playerStatValue={eventCheckState.card?.rollRequired?.stat && playerState 
+          ? playerState.stats[eventCheckState.card.rollRequired.stat] 
+          : 0}
+        checkResult={eventCheckState.result}
+        isRolling={eventCheckState.isRolling}
+        onClose={handleCloseEventCheck}
+        onRoll={handleEventCheckRoll}
       />
 
       {/* 作祟檢定結果覆蓋層（舊版，保留用於非預兆卡情況） */}

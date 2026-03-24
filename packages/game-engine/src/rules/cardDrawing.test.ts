@@ -306,6 +306,174 @@ describe('CardEffectApplier', () => {
       expect(result.roll).toBeGreaterThanOrEqual(0);
       expect(result.roll).toBeLessThanOrEqual(16);
     });
+
+    it('應該返回骰子結果陣列', () => {
+      const result = applier.performRoll('might', 3, 4);
+      
+      expect(result.dice).toBeDefined();
+      expect(Array.isArray(result.dice)).toBe(true);
+      expect(result.dice.length).toBe(4); // 4 顆骰子
+      expect(result.dice.every(d => d >= 0 && d <= 2)).toBe(true);
+    });
+  });
+
+  describe('事件卡屬性檢定 performEventCheck', () => {
+    it('應該執行需要檢定的事件卡', () => {
+      const eventCard: Card = {
+        id: 'event_speed_test',
+        type: 'event',
+        name: '速度測試',
+        description: '測試你的速度！',
+        icon: '',
+        rollRequired: { stat: 'speed', target: 3 },
+        success: '你成功了！獲得 1 點速度。',
+        failure: '你失敗了！失去 1 點體力。',
+      };
+
+      const result = applier.performEventCheck(eventCard, player);
+
+      expect(result).toHaveProperty('success');
+      expect(result).toHaveProperty('roll');
+      expect(result).toHaveProperty('dice');
+      expect(result).toHaveProperty('stat');
+      expect(result).toHaveProperty('target');
+      expect(result).toHaveProperty('message');
+      expect(result).toHaveProperty('effectDescription');
+      expect(result.stat).toBe('speed');
+      expect(result.target).toBe(3);
+    });
+
+    it('應該根據成功/失敗返回對應效果描述', () => {
+      const eventCard: Card = {
+        id: 'event_might_test',
+        type: 'event',
+        name: '力量測試',
+        description: '測試你的力量！',
+        icon: '',
+        rollRequired: { stat: 'might', target: 6 }, // 高目標，容易失敗
+        success: '成功：力量 +1',
+        failure: '失敗：力量 -1',
+      };
+
+      const result = applier.performEventCheck(eventCard, player);
+
+      if (result.success) {
+        expect(result.effectDescription).toContain('成功');
+      } else {
+        expect(result.effectDescription).toContain('失敗');
+      }
+    });
+
+    it('應該正確解析效果中的數值變化', () => {
+      const eventCard: Card = {
+        id: 'event_stat_change',
+        type: 'event',
+        name: '屬性變化測試',
+        description: '測試屬性變化',
+        icon: '',
+        rollRequired: { stat: 'knowledge', target: 1 }, // 低目標，容易成功
+        success: '獲得知識 +2',
+        failure: '失去理智 -1',
+      };
+
+      const result = applier.performEventCheck(eventCard, player);
+
+      if (result.success && result.statChanges) {
+        expect(result.statChanges.knowledge).toBe(2);
+      } else if (!result.success && result.statChanges) {
+        expect(result.statChanges.sanity).toBe(-1);
+      }
+    });
+
+    it('應該使用玩家的當前屬性值決定骰子數量', () => {
+      const eventCard: Card = {
+        id: 'event_sanity_test',
+        type: 'event',
+        name: '理智測試',
+        description: '測試你的理智！',
+        icon: '',
+        rollRequired: { stat: 'sanity', target: 4 },
+        success: '成功',
+        failure: '失敗',
+      };
+
+      // 玩家 sanity = 5
+      const result = applier.performEventCheck(eventCard, player);
+      
+      expect(result.dice.length).toBe(5); // 5 顆骰子
+    });
+
+    it('沒有 rollRequired 的卡牌應該拋出錯誤', () => {
+      const eventCard: Card = {
+        id: 'event_no_roll',
+        type: 'event',
+        name: '無檢定事件',
+        description: '不需要檢定',
+        icon: '',
+      };
+
+      expect(() => {
+        applier.performEventCheck(eventCard, player);
+      }).toThrow('does not require a roll');
+    });
+
+    it('應該處理 Creepy Crawlies 類型的事件卡', () => {
+      // 模擬 "Creepy Crawlies" 事件卡
+      const creepyCrawliesCard: Card = {
+        id: 'event_creepy_crawlies',
+        type: 'event',
+        name: '蜘蛛群',
+        description: '一大群蜘蛛從天花板傾瀉而下！',
+        icon: '',
+        rollRequired: { stat: 'speed', target: 3 },
+        success: '你揮開蜘蛛，毫髮無傷。',
+        failure: '你被蜘蛛咬傷，失去 1 點體力。',
+      };
+
+      const result = applier.performEventCheck(creepyCrawliesCard, player);
+
+      expect(result.stat).toBe('speed');
+      expect(result.target).toBe(3);
+      expect(result.effectDescription).toBeDefined();
+    });
+
+    it('應該處理 Disquieting Sounds 類型的事件卡', () => {
+      // 模擬 "Disquieting Sounds" 事件卡
+      const disquietingSoundsCard: Card = {
+        id: 'event_disquieting_sounds',
+        type: 'event',
+        name: '詭異的聲音',
+        description: '牆壁裡傳來低語聲，似乎在呼喚你的名字。',
+        icon: '',
+        rollRequired: { stat: 'sanity', target: 4 },
+        success: '你保持冷靜，聲音消失了。',
+        failure: '你嚇壞了，失去 1 點理智。',
+      };
+
+      const result = applier.performEventCheck(disquietingSoundsCard, player);
+
+      expect(result.stat).toBe('sanity');
+      expect(result.target).toBe(4);
+    });
+
+    it('應該處理 Locked Door 類型的事件卡', () => {
+      // 模擬 "Locked Door" 事件卡
+      const lockedDoorCard: Card = {
+        id: 'event_locked_door',
+        type: 'event',
+        name: '鎖住的門',
+        description: '一扇緊閉的門擋住了你的去路。',
+        icon: '',
+        rollRequired: { stat: 'might', target: 5 },
+        success: '你成功撞開了門，可以繼續前進。',
+        failure: '你撞傷了肩膀，失去 1 點體力。',
+      };
+
+      const result = applier.performEventCheck(lockedDoorCard, player);
+
+      expect(result.stat).toBe('might');
+      expect(result.target).toBe(5);
+    });
   });
 });
 

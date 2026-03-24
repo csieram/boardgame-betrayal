@@ -334,7 +334,7 @@ export class CardEffectApplier {
     stat: 'speed' | 'might' | 'sanity' | 'knowledge',
     target: number,
     playerCurrentValue: number
-  ): { success: boolean; roll: number; message: string } {
+  ): { success: boolean; roll: number; message: string; dice: number[] } {
     // 擲骰子（使用玩家屬性值決定骰子數量，每個骰子 0-2）
     const numDice = Math.max(1, playerCurrentValue);
     let total = 0;
@@ -354,7 +354,70 @@ export class CardEffectApplier {
 
     console.log(`[CardEffectApplier] Roll for ${stat}: ${rolls.join('+')} = ${total} vs ${target} -> ${success ? 'SUCCESS' : 'FAILURE'}`);
 
-    return { success, roll: total, message };
+    return { success, roll: total, message, dice: rolls };
+  }
+
+  /**
+   * 執行事件卡屬性檢定
+   * Rulebook Reference: 事件卡需要進行屬性檢定時使用
+   * 
+   * @param card 事件卡
+   * @param player 玩家狀態
+   * @returns 檢定結果，包含成功/失敗和對應效果
+   */
+  performEventCheck(
+    card: Card,
+    player: PlayerState
+  ): {
+    success: boolean;
+    roll: number;
+    dice: number[];
+    stat: 'speed' | 'might' | 'sanity' | 'knowledge';
+    target: number;
+    message: string;
+    effectDescription: string;
+    statChanges?: Partial<Record<'speed' | 'might' | 'sanity' | 'knowledge', number>>;
+  } {
+    if (!card.rollRequired) {
+      throw new Error(`Card ${card.name} does not require a roll`);
+    }
+
+    const { stat, target } = card.rollRequired;
+    const playerStatValue = player.stats[stat];
+    
+    // 執行檢定擲骰
+    const rollResult = this.performRoll(stat, target, playerStatValue);
+    
+    // 根據成功/失敗決定效果
+    let effectDescription = '';
+    let statChanges: Partial<Record<'speed' | 'might' | 'sanity' | 'knowledge', number>> | undefined;
+    
+    if (rollResult.success) {
+      effectDescription = card.success || '檢定成功！';
+      // 解析成功效果中的數值變化
+      statChanges = this.parseEffectStats(card.success) || undefined;
+    } else {
+      effectDescription = card.failure || '檢定失敗！';
+      // 解析失敗效果中的數值變化（通常是傷害或損失）
+      statChanges = this.parseEffectStats(card.failure) || undefined;
+    }
+
+    console.log(`[CardEffectApplier] Event check for ${card.name}: ${rollResult.success ? 'SUCCESS' : 'FAILURE'}`);
+    console.log(`[CardEffectApplier] Effect: ${effectDescription}`);
+    if (statChanges) {
+      console.log(`[CardEffectApplier] Stat changes:`, statChanges);
+    }
+
+    return {
+      success: rollResult.success,
+      roll: rollResult.roll,
+      dice: rollResult.dice,
+      stat,
+      target,
+      message: rollResult.message,
+      effectDescription,
+      statChanges,
+    };
   }
 
   /**
@@ -454,6 +517,29 @@ export function drawAndApplyCard(
   }
 
   return result;
+}
+
+/**
+ * 事件卡檢定結果
+ * Issue #104: Event Card Trait Checks
+ */
+export interface EventCheckResult {
+  /** 檢定是否成功 */
+  success: boolean;
+  /** 擲骰總和 */
+  roll: number;
+  /** 各骰子結果 */
+  dice: number[];
+  /** 檢定屬性 */
+  stat: 'speed' | 'might' | 'sanity' | 'knowledge';
+  /** 目標值 */
+  target: number;
+  /** 檢定訊息 */
+  message: string;
+  /** 效果描述 */
+  effectDescription: string;
+  /** 屬性變化 */
+  statChanges?: Partial<Record<'speed' | 'might' | 'sanity' | 'knowledge', number>>;
 }
 
 // 匯出類型和函數
