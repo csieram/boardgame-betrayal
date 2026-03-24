@@ -531,6 +531,7 @@ export class PathFinder {
 
   /**
    * 取得所有可移動的位置
+   * 尊重門的限制 - 只能通過有門連接的房間移動
    * 
    * @param state 當前遊戲狀態
    * @param playerId 玩家 ID
@@ -552,11 +553,20 @@ export class PathFinder {
     ];
     visited.add(`${player.position.x},${player.position.y},${player.position.floor}`);
 
+    // 取得當前位置的 tile
+    const startTile = MovementValidator.getTileAt(state, player.position);
+    if (!startTile || !startTile.room) return [];
+
     while (queue.length > 0) {
       const current = queue.shift()!;
+      const currentTile = MovementValidator.getTileAt(state, current.pos);
+      if (!currentTile || !currentTile.room) continue;
 
       const directions: Direction[] = ['north', 'south', 'east', 'west'];
       for (const dir of directions) {
+        // 檢查當前房間是否有門通往該方向
+        if (!currentTile.room.doors.includes(dir)) continue;
+
         const delta = DIRECTION_DELTAS[dir];
         const nextPos: Position3D = {
           x: current.pos.x + delta.x,
@@ -567,11 +577,23 @@ export class PathFinder {
         const posKey = `${nextPos.x},${nextPos.y},${nextPos.floor}`;
         if (visited.has(posKey)) continue;
 
-        // 檢查是否可以移動
-        const validation = MovementValidator.validateMove(state, playerId, nextPos);
-        if (!validation.valid) continue;
+        // 檢查目標位置
+        const targetTile = MovementValidator.getTileAt(state, nextPos);
+        if (!targetTile || !targetTile.discovered || !targetTile.room) continue;
 
-        const newCost = current.cost + (validation.cost || 1);
+        // 檢查目標房間是否有相反方向的門
+        const oppositeDir = OPPOSITE_DIRECTION[dir];
+        if (!targetTile.room.doors.includes(oppositeDir)) continue;
+
+        // 檢查是否有障礙物
+        const obstacle = MovementValidator.getObstacle(state, current.pos, dir);
+        let moveCost = STANDARD_MOVE_COST;
+        if (obstacle) {
+          if (!obstacle.canPass) continue;
+          moveCost = obstacle.moveCost;
+        }
+
+        const newCost = current.cost + moveCost;
         if (newCost > maxCost) continue;
 
         visited.add(posKey);

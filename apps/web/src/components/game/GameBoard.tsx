@@ -89,6 +89,12 @@ export function GameBoard({
   const [stairOptions, setStairOptions] = useState<Array<{ to: Floor; description: string }>>([]);
   const [currentStairRoom, setCurrentStairRoom] = useState<Room | null>(null);
 
+  // Issue #84: 同步 activeFloor 與 currentFloor prop
+  // 當父組件改變 currentFloor 時，更新內部 activeFloor 狀態
+  useEffect(() => {
+    setActiveFloor(currentFloor);
+  }, [currentFloor]);
+
   // 樓層名稱對照
   const floorNames: Record<Floor, string> = {
     upper: '二樓 Upper',
