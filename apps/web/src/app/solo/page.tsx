@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Character, CHARACTERS, Room, Floor, Tile, Direction, Card } from '@betrayal/shared';
 import { Button } from '@betrayal/ui';
@@ -485,6 +485,10 @@ export default function SoloGamePage() {
 
       // 計算可達位置（從入口大廳開始）
       updateReachablePositions(initialMultiFloorMap.ground, { x: MAP_CENTER, y: MAP_CENTER }, character.stats.speed[0], false);
+    }).catch((error) => {
+      console.error('Failed to load ROOMS data:', error);
+      setIsLoading(false);
+      setLog(prev => [...prev, '錯誤：無法載入遊戲資料，請重新整理頁面']);
     });
   };
 
@@ -1353,16 +1357,30 @@ export default function SoloGamePage() {
 
   // Issue #138: 移除結束回合確認彈窗，直接執行結束回合
   const showEndTurnConfirmation = (isAI: boolean, aiPlayerName?: string) => {
+    console.log('[EndTurn] showEndTurnConfirmation called');
     // 直接執行結束回合，不顯示確認彈窗
     executeEndTurn();
   };
 
   // Issue #127 & #134: 實際執行結束回合
   const executeEndTurn = async () => {
+    console.log('[EndTurn] executeEndTurn called, player:', player?.name);
     if (!player) {
-      setIsProcessingTurnSwitch(false);
+      console.log('[EndTurn] No player, returning');
       return;
     }
+
+    // 防止重複點擊
+    if (isProcessingTurnSwitch || isProcessingAITurn) {
+      console.log('[EndTurn] Already processing, returning');
+      return;
+    }
+
+    // 設置處理中狀態
+    setIsProcessingTurnSwitch(true);
+
+    // Issue #144: 記錄人類玩家回合結束
+    setLog(prev => [...prev, '回合結束']);
 
     // 重置回合狀態
     setDiscovered(false);
@@ -1374,16 +1392,16 @@ export default function SoloGamePage() {
     // Issue #111: 如果有 AI 玩家，執行 AI 回合
     if (aiManager && aiPlayers.length > 0) {
       setIsProcessingAITurn(true);
-      
+
       // 顯示 AI Action Modal
       setAiActionModalState({
         isOpen: true,
         currentAIPlayerName: aiPlayers[0]?.name || 'AI',
       });
-      
+
       const currentTime = Date.now();
       const newLogs: AIActionLog[] = [];
-      
+
       setLog(prev => [...prev, '🤖 AI 玩家回合開始...']);
 
       // 執行所有 AI 回合
@@ -1391,6 +1409,10 @@ export default function SoloGamePage() {
         if (!aiPlayer.isAlive) continue;
 
         setCurrentTurnPlayer(aiPlayer.id);
+        
+        // Issue #143: 自動切換到當前 AI 玩家的 Character Tab
+        setSelectedPlayerId(aiPlayer.id);
+        
         setAiActionModalState(prev => ({
           ...prev,
           currentAIPlayerName: aiPlayer.name,
@@ -1474,21 +1496,27 @@ export default function SoloGamePage() {
       setCurrentTurnPlayer('solo-player');
       setIsProcessingAITurn(false);
       setLog(prev => [...prev, '👤 你的回合']);
-      
+
+      // Issue #143: 切換回人類玩家的 Character Tab
+      setSelectedPlayerId('solo-player');
+
       // 進入下一回合
       setTurn(t => t + 1);
       setMoves(player.stats.speed[0]);
+      // Issue #144: 記錄新回合開始
+      setLog(prev => [...prev, `回合 ${turn + 1}`]);
       updateReachablePositions(multiFloorMap[currentFloor], position, player.stats.speed[0], false);
-      
+
       // 完成回合切換
       setIsProcessingTurnSwitch(false);
     } else {
       // 沒有 AI 玩家時，直接進入下一回合
       setTurn(t => t + 1);
       setMoves(player.stats.speed[0]);
-      setLog(prev => [...prev, '回合結束', `回合 ${turn + 1}`]);
+      // Issue #144: 「回合結束」已在函數開始時記錄
+      setLog(prev => [...prev, `回合 ${turn + 1}`]);
       updateReachablePositions(multiFloorMap[currentFloor], position, player.stats.speed[0], false);
-      
+
       // 完成回合切換
       setIsProcessingTurnSwitch(false);
     }
@@ -1598,11 +1626,16 @@ export default function SoloGamePage() {
   // Issue #127 & #134 & #141: 監聽回合結束，顯示確認後切換到下一個玩家
   // 注意：這個 useEffect 必須在所有 early returns 之前調用，以符合 React Hooks 規則
   // Issue #141: 只有當前玩家是 AI 時才自動切換回合，避免人類玩家的回合被自動跳過
+  // Issue #144: 使用 ref 來避免無限循環和閉包問題
+  const executeEndTurnRef = useRef(executeEndTurn);
+  executeEndTurnRef.current = executeEndTurn;
+  
   useEffect(() => {
     if (turnState.hasEnded && !isProcessingTurnSwitch && !isProcessingAITurn && currentTurnPlayer !== 'solo-player') {
       setIsProcessingTurnSwitch(true);
       // Issue #138: 直接執行結束回合（無確認彈窗）
-      showEndTurnConfirmation(false);
+      // Issue #144: 使用 setTimeout 避免在渲染過程中調用 setState
+      setTimeout(() => executeEndTurnRef.current(), 0);
     }
   }, [turnState.hasEnded, isProcessingTurnSwitch, isProcessingAITurn, currentTurnPlayer]);
 
@@ -2033,8 +2066,7 @@ export default function SoloGamePage() {
                     isProcessingAITurn ||
                     turnState.hasEnded ||
                     discovered ||
-                    currentTurnPlayer !== 'solo-player' ||
-                    moves <= 0
+                    currentTurnPlayer !== 'solo-player'
                   }
                 >
                   結束回合
@@ -2047,7 +2079,19 @@ export default function SoloGamePage() {
           <div className="space-y-4">
             {/* Issue #119: Character Detail Panel - 顯示選中玩家的詳細資訊 */}
             {aiPlayers.length > 0 ? (
-              <CharacterDetailPanel player={getSelectedPlayer()} />
+              <>
+                <CharacterDetailPanel player={getSelectedPlayer()} />
+                {/* 背包與預兆面板 - 始終顯示人類玩家的背包 */}
+                {playerState && (
+                  <InventoryPanel
+                    items={playerState.items}
+                    omens={playerState.omens}
+                    omenCount={cardManager.getDeckStatus().omenCount}
+                    hauntTriggered={cardManager.getDeckStatus().hauntTriggered}
+                    defaultExpanded={false}
+                  />
+                )}
+              </>
             ) : (
               /* 沒有 AI 玩家時顯示原有人類玩家面板 */
               <>
