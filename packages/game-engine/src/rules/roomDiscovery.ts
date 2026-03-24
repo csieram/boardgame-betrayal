@@ -80,21 +80,29 @@ export const VALID_ROTATIONS: (0 | 90 | 180 | 270)[] = [0, 90, 180, 270];
 /**
  * 檢查特定旋轉是否會封閉棋盤
  * Issue #72: 嘗試所有 4 個旋轉角度，檢查每個角度是否會封閉棋盤
+ * Issue #87: 添加 floor 參數以支援多樓層探索
  * 
  * @param gameState 當前遊戲狀態
  * @param position 位置
  * @param room 房間
  * @param rotation 旋轉角度
+ * @param floor 樓層（預設使用玩家當前樓層）
  * @returns 是否會封閉棋盤
  */
 export function wouldCloseBoardWithRotation(
   gameState: GameState,
   position: { x: number; y: number },
   room: Room,
-  rotation: 0 | 90 | 180 | 270
+  rotation: 0 | 90 | 180 | 270,
+  floor?: Floor
 ): boolean {
   // 旋轉房間的門
   const rotatedDoors = RoomDiscoveryManager.rotateDoors(room.doors, rotation);
+  
+  // 確定樓層：優先使用傳入的 floor 參數，否則使用玩家當前樓層
+  const targetFloor: Floor = floor ?? (gameState.turn.currentPlayerId 
+    ? gameState.players.find(p => p.id === gameState.turn.currentPlayerId)?.position.floor || 'ground'
+    : 'ground');
   
   // 檢查每個門方向
   for (const door of rotatedDoors) {
@@ -102,9 +110,7 @@ export function wouldCloseBoardWithRotation(
     const neighborPos: Position3D = {
       x: position.x + delta.x,
       y: position.y + delta.y,
-      floor: gameState.turn.currentPlayerId 
-        ? gameState.players.find(p => p.id === gameState.turn.currentPlayerId)?.position.floor || 'ground'
-        : 'ground',
+      floor: targetFloor,
     };
     
     // 檢查鄰居位置
@@ -129,22 +135,25 @@ export function wouldCloseBoardWithRotation(
 /**
  * 尋找第一個不會封閉棋盤的有效旋轉角度
  * Issue #72: 嘗試所有 4 個旋轉角度
+ * Issue #87: 添加 floor 參數以支援多樓層探索
  * 
  * @param room 房間
  * @param gameState 當前遊戲狀態
  * @param position 位置
  * @param entryDirection 進入方向（用於驗證門連接）
+ * @param floor 樓層（預設使用玩家當前樓層）
  * @returns 有效的旋轉角度和房間，如果所有旋轉都會封閉則返回 null
  */
 export function findValidRotation(
   room: Room,
   gameState: GameState,
   position: { x: number; y: number },
-  entryDirection: Direction
+  entryDirection: Direction,
+  floor?: Floor
 ): { room: Room; rotation: 0 | 90 | 180 | 270 } | null {
   const requiredDoor = OPPOSITE_DOOR[entryDirection];
   
-  console.log(`[findValidRotation] Room: ${room.name}, doors: ${room.doors}, entry: ${entryDirection}, required: ${requiredDoor}`);
+  console.log(`[findValidRotation] Room: ${room.name}, doors: ${room.doors}, entry: ${entryDirection}, required: ${requiredDoor}, floor: ${floor}`);
   
   for (const rotation of VALID_ROTATIONS) {
     // 旋轉房間的門
@@ -158,7 +167,7 @@ export function findValidRotation(
     }
     
     // 檢查此旋轉是否會封閉棋盤
-    const wouldClose = wouldCloseBoardWithRotation(gameState, position, room, rotation);
+    const wouldClose = wouldCloseBoardWithRotation(gameState, position, room, rotation, floor);
     console.log(`[findValidRotation] Rotation ${rotation} would close board: ${wouldClose}`);
     
     if (!wouldClose) {
@@ -639,18 +648,21 @@ export function rotateRoomForConnection(
 /**
  * 獲取未連接的門
  * Issue #66: 檢查房間在指定位置和旋轉後，還有哪些門未與相鄰房間連接
+ * Issue #87: 添加 floor 參數以支援多樓層探索
  * 
  * @param gameState 當前遊戲狀態
  * @param position 房間位置
  * @param room 房間
  * @param rotation 旋轉角度
+ * @param floor 樓層（預設使用玩家當前樓層）
  * @returns 未連接的門方向列表
  */
 export function getUnconnectedDoors(
   gameState: GameState,
   position: { x: number; y: number },
   room: Room,
-  rotation: number
+  rotation: number,
+  floor?: Floor
 ): Direction[] {
   // 旋轉房間的門
   const normalizedRotation = ((rotation % 360) + 360) % 360 as 0 | 90 | 180 | 270;
@@ -658,14 +670,17 @@ export function getUnconnectedDoors(
   
   const unconnected: Direction[] = [];
   
+  // 確定樓層：優先使用傳入的 floor 參數，否則使用玩家當前樓層
+  const targetFloor: Floor = floor ?? (gameState.turn.currentPlayerId 
+    ? gameState.players.find(p => p.id === gameState.turn.currentPlayerId)?.position.floor || 'ground'
+    : 'ground');
+  
   for (const door of rotatedDoors) {
     const delta = DIRECTION_DELTAS[door];
     const neighborPos: Position3D = {
       x: position.x + delta.x,
       y: position.y + delta.y,
-      floor: gameState.turn.currentPlayerId 
-        ? gameState.players.find(p => p.id === gameState.turn.currentPlayerId)?.position.floor || 'ground'
-        : 'ground',
+      floor: targetFloor,
     };
     
     // 檢查鄰居位置
@@ -690,6 +705,7 @@ export function getUnconnectedDoors(
 /**
  * 添加隨機門到房間
  * Issue #66: 當房間會封閉棋盤時，添加一個隨機方向的門
+ * Issue #87: 添加 floor 參數以支援多樓層探索
  * 
  * 重要：這個函數會優先選擇可以通向未探索區域的方向，確保棋盤保持開放
  * 
@@ -697,17 +713,19 @@ export function getUnconnectedDoors(
  * @param gameState 當前遊戲狀態
  * @param position 房間位置
  * @param rotation 房間旋轉角度（預設 0）
+ * @param floor 樓層（預設使用玩家當前樓層）
  * @returns 添加門後的新房間
  */
 export function addRandomDoor(
   room: Room,
   gameState: GameState,
   position: { x: number; y: number },
-  rotation: 0 | 90 | 180 | 270 = 0
+  rotation: 0 | 90 | 180 | 270 = 0,
+  floor?: Floor
 ): Room {
   const allDirections: Direction[] = ['north', 'south', 'east', 'west'];
   
-  console.log('[addRandomDoor] Input room:', room.name, 'doors:', room.doors, 'rotation:', rotation);
+  console.log('[addRandomDoor] Input room:', room.name, 'doors:', room.doors, 'rotation:', rotation, 'floor:', floor);
   
   // 計算旋轉後的門方向（原始房間座標系 -> 地圖座標系）
   const rotatedDoors = RoomDiscoveryManager.rotateDoors(room.doors, rotation);
@@ -723,15 +741,18 @@ export function addRandomDoor(
     return room;
   }
   
+  // 確定樓層：優先使用傳入的 floor 參數，否則使用玩家當前樓層
+  const targetFloor: Floor = floor ?? (gameState.turn.currentPlayerId 
+    ? gameState.players.find(p => p.id === gameState.turn.currentPlayerId)?.position.floor || 'ground'
+    : 'ground');
+  
   // 優先選擇可以通向未探索區域的方向
   const candidateDirections = missingDirections.filter(dir => {
     const delta = DIRECTION_DELTAS[dir];
     const neighborPos: Position3D = {
       x: position.x + delta.x,
       y: position.y + delta.y,
-      floor: gameState.turn.currentPlayerId 
-        ? gameState.players.find(p => p.id === gameState.turn.currentPlayerId)?.position.floor || 'ground'
-        : 'ground',
+      floor: targetFloor,
     };
     
     // 檢查鄰居位置是否在地圖範圍內
@@ -818,11 +839,13 @@ export function drawRoomForExploration(
   }
   
   // 計算新房間位置
+  // Issue #87: 使用傳入的 floor 參數，而不是 playerPosition.floor
+  // 這確保了當玩家在不同樓層時，能正確地從對應樓層的牌堆抽取房間
   const delta = DIRECTION_DELTAS[entryDirection];
   const newPosition: Position3D = {
     x: playerPosition.x + delta.x,
     y: playerPosition.y + delta.y,
-    floor: playerPosition.floor,
+    floor: floor, // 使用傳入的 floor 參數，而不是 playerPosition.floor
   };
   
   console.log('[RoomDiscovery] New position:', newPosition);
@@ -865,7 +888,8 @@ export function drawRoomForExploration(
     console.log(`[RoomDiscovery] Attempt ${attempts} - Room drawn: ${room.name}, doors: ${room.doors}`);
     
     // 2. 嘗試所有 4 個旋轉角度
-    const validRotation = findValidRotation(room, gameState, newPosition, entryDirection);
+    // Issue #87: 傳入 floor 參數以確保正確檢查目標樓層的棋盤狀態
+    const validRotation = findValidRotation(room, gameState, newPosition, entryDirection, floor);
     
     if (validRotation) {
       // 找到不會封閉棋盤的旋轉角度
@@ -924,12 +948,14 @@ export function drawRoomForExploration(
   const rotation = RoomDiscoveryManager.calculateRotation(finalRoom, entryDirection);
   console.log('[RoomDiscovery] Calculated rotation for final room:', rotation);
   
-  // 添加隨機門（傳入旋轉角度，確保門添加在正確的位置）
-  const modifiedRoom = addRandomDoor(finalRoom, gameState, newPosition, rotation);
+  // 添加隨機門（傳入旋轉角度和樓層，確保門添加在正確的位置）
+  // Issue #87: 傳入 floor 參數以確保在正確的樓層添加門
+  const modifiedRoom = addRandomDoor(finalRoom, gameState, newPosition, rotation, floor);
   console.log('[RoomDiscovery] Modified room doors:', modifiedRoom.doors);
   
   // 驗證修改後的房間確實有未連接的門
-  const unconnectedAfterModification = getUnconnectedDoors(gameState, newPosition, modifiedRoom, rotation);
+  // Issue #87: 傳入 floor 參數以確保在正確的樓層檢查
+  const unconnectedAfterModification = getUnconnectedDoors(gameState, newPosition, modifiedRoom, rotation, floor);
   console.log('[RoomDiscovery] Unconnected doors after modification:', unconnectedAfterModification);
   
   if (unconnectedAfterModification.length === 0) {

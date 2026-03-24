@@ -44,30 +44,42 @@ interface SoloGameState {
  * 起始房間配置
  * Rulebook: 每個樓層都有固定的起始房間
  */
-const STARTING_ROOMS = {
-  ground: {
-    roomId: 'entrance_hall',
-    position: { x: 7, y: 7 },
-    rotation: 0,
-  },
-  upper: {
-    roomId: 'stairs_from_upper',
-    position: { x: 7, y: 5 },
-    rotation: 0,
-  },
-  basement: {
-    roomId: 'stairs_from_basement',
-    position: { x: 7, y: 7 },
-    rotation: 0,
-  },
+const STARTING_ROOMS: Record<string, Array<{ roomId: string; position: { x: number; y: number }; rotation: 0 | 90 | 180 | 270 }>> = {
+  ground: [
+    {
+      roomId: 'entrance_hall',
+      position: { x: 7, y: 7 },
+      rotation: 0,
+    },
+    {
+      roomId: 'stairs_from_ground',
+      position: { x: 7, y: 9 },
+      rotation: 0,
+    },
+  ],
+  upper: [
+    {
+      roomId: 'stairs_from_upper',
+      position: { x: 7, y: 5 },
+      rotation: 0,
+    },
+  ],
+  basement: [
+    {
+      roomId: 'stairs_from_basement',
+      position: { x: 7, y: 7 },
+      rotation: 0,
+    },
+  ],
 };
 
 /**
  * 建立空的遊戲狀態
  */
 function createInitialGameState(seed: string): SoloGameState {
+  // Issue #88: 添加 stairs_from_ground 到初始放置的房間 ID
   return {
-    placedRoomIds: new Set(['entrance_hall', 'stairs_from_upper', 'stairs_from_basement']),
+    placedRoomIds: new Set(['entrance_hall', 'stairs_from_upper', 'stairs_from_basement', 'stairs_from_ground']),
     roomDecks: {
       ground: [],
       upper: [],
@@ -198,38 +210,44 @@ export default function SoloGamePage() {
       setGameState(newGameState);
 
       // 放置起始房間
-      // 1. 一樓：入口大廳 (7,7)
-      const entranceHall = ROOMS.find(r => r.id === 'entrance_hall');
-      if (entranceHall) {
-        initialMultiFloorMap.ground[STARTING_ROOMS.ground.position.y][STARTING_ROOMS.ground.position.x] = {
-          ...initialMultiFloorMap.ground[STARTING_ROOMS.ground.position.y][STARTING_ROOMS.ground.position.x],
-          discovered: true,
-          room: entranceHall,
-          rotation: 0,
-        };
-      }
+      // 1. 一樓：入口大廳 (7,7) 和 通往地下室的樓梯 (7,9)
+      STARTING_ROOMS.ground.forEach(({ roomId, position, rotation }) => {
+        const room = ROOMS.find(r => r.id === roomId);
+        if (room) {
+          initialMultiFloorMap.ground[position.y][position.x] = {
+            ...initialMultiFloorMap.ground[position.y][position.x],
+            discovered: true,
+            room: room,
+            rotation: rotation,
+          };
+        }
+      });
 
       // 2. 二樓：樓梯房間 (7,5)
-      const stairsFromUpper = ROOMS.find(r => r.id === 'stairs_from_upper');
-      if (stairsFromUpper) {
-        initialMultiFloorMap.upper[STARTING_ROOMS.upper.position.y][STARTING_ROOMS.upper.position.x] = {
-          ...initialMultiFloorMap.upper[STARTING_ROOMS.upper.position.y][STARTING_ROOMS.upper.position.x],
-          discovered: true,
-          room: stairsFromUpper,
-          rotation: 0,
-        };
-      }
+      STARTING_ROOMS.upper.forEach(({ roomId, position, rotation }) => {
+        const room = ROOMS.find(r => r.id === roomId);
+        if (room) {
+          initialMultiFloorMap.upper[position.y][position.x] = {
+            ...initialMultiFloorMap.upper[position.y][position.x],
+            discovered: true,
+            room: room,
+            rotation: rotation,
+          };
+        }
+      });
 
       // 3. 地下室：樓梯房間 (7,7)
-      const stairsFromBasement = ROOMS.find(r => r.id === 'stairs_from_basement');
-      if (stairsFromBasement) {
-        initialMultiFloorMap.basement[STARTING_ROOMS.basement.position.y][STARTING_ROOMS.basement.position.x] = {
-          ...initialMultiFloorMap.basement[STARTING_ROOMS.basement.position.y][STARTING_ROOMS.basement.position.x],
-          discovered: true,
-          room: stairsFromBasement,
-          rotation: 0,
-        };
-      }
+      STARTING_ROOMS.basement.forEach(({ roomId, position, rotation }) => {
+        const room = ROOMS.find(r => r.id === roomId);
+        if (room) {
+          initialMultiFloorMap.basement[position.y][position.x] = {
+            ...initialMultiFloorMap.basement[position.y][position.x],
+            discovered: true,
+            room: room,
+            rotation: rotation,
+          };
+        }
+      });
 
       setMultiFloorMap(initialMultiFloorMap);
       setLog([`選擇了 ${character.name}`, '從入口大廳開始', '回合 1']);
