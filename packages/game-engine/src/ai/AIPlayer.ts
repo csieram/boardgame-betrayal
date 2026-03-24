@@ -374,6 +374,8 @@ export class AIPlayer {
     // 執行回合直到結束
     let movesRemaining = gameState.turn.movesRemaining;
     let hasDiscoveredRoom = gameState.turn.hasDiscoveredRoom;
+    const totalSpeed = player.currentStats.speed;
+    const minMovesRequired = Math.max(1, Math.floor(totalSpeed * 0.5)); // 至少使用 50% 的 Speed
 
     while (movesRemaining > 0 && !hasDiscoveredRoom) {
       const decision = this.decideExplorationAction(
@@ -398,6 +400,13 @@ export class AIPlayer {
 
       // 處理決策結果
       if (decision.action === 'endTurn') {
+        // 檢查是否滿足最小移動要求
+        const movesUsed = totalSpeed - movesRemaining;
+        if (movesUsed < minMovesRequired && legalActions.movablePositions.length > 0) {
+          // 還沒使用足夠的移動點數，繼續行動
+          this.log(`Moves used (${movesUsed}) less than required (${minMovesRequired}), continuing turn`);
+          continue;
+        }
         break;
       } else if (decision.action === 'explore') {
         hasDiscoveredRoom = true;
@@ -526,19 +535,28 @@ export class AIPlayer {
     direction: Direction,
     personality: typeof PERSONALITY_WEIGHTS['explorer']
   ): number {
-    let score = 20; // 基礎探索分數較高
+    let score = 50; // 基礎探索分數大幅提高
 
     // 根據個性調整
     score *= personality.explorePriority;
 
     // 探索者個性額外加成
     if (this.state.config.personality === 'explorer') {
-      score += 15;
+      score += 25;
     }
 
     // 根據已探索房間數量調整（早期更傾向探索）
-    if (this.state.experience.roomsDiscovered < 5) {
-      score += 10;
+    if (this.state.experience.roomsDiscovered < 3) {
+      score += 30; // 遊戲初期強烈傾向探索
+    } else if (this.state.experience.roomsDiscovered < 5) {
+      score += 15;
+    }
+
+    // 檢查該方向是否有更多未探索區域
+    const player = this.getPlayer(gameState);
+    if (player) {
+      const unexploredCount = this.countUnexploredInDirection(gameState, player.position, direction);
+      score += unexploredCount * 15;
     }
 
     // 謹慎個性在探索時考慮風險
@@ -564,17 +582,22 @@ export class AIPlayer {
     personality: typeof PERSONALITY_WEIGHTS['explorer'],
     movesRemaining: number
   ): number {
-    let score = 10;
+    let score = 25; // 提高基礎移動分數
 
     // 檢查目標位置是否有未探索的相鄰房間
     const hasUnexploredNeighbor = this.hasUnexploredNeighbor(gameState, position);
     if (hasUnexploredNeighbor) {
-      score += 20 * personality.explorePriority;
+      score += 40 * personality.explorePriority; // 大幅提高朝向未探索區域的移動分數
+    }
+
+    // 檢查該位置是否可以探索新房間
+    const tile = this.getTileAt(gameState, position);
+    if (tile && !tile.discovered) {
+      score += 30; // 移動到未發現的房間有額外獎勵
     }
 
     // 謹慎個性：偏好已探索的區域
     if (this.state.config.personality === 'cautious') {
-      const tile = this.getTileAt(gameState, position);
       if (tile?.discovered) {
         score += 15;
       }
@@ -582,7 +605,12 @@ export class AIPlayer {
 
     // 激進個性：更願意冒險
     if (this.state.config.personality === 'aggressive') {
-      score += 5;
+      score += 10;
+    }
+
+    // 遊戲初期更傾向移動
+    if (this.state.experience.roomsDiscovered < 3) {
+      score += 20;
     }
 
     // 距離懲罰（偏好短距離移動）
@@ -590,6 +618,11 @@ export class AIPlayer {
     if (player) {
       const distance = this.calculateDistance(player.position, position);
       score -= distance * 2;
+    }
+
+    // 如果有移動點數但未使用，給予懲罰
+    if (movesRemaining > 1) {
+      score += 10; // 鼓勵使用多餘的移動點數
     }
 
     return score;
@@ -641,12 +674,14 @@ export class AIPlayer {
   ): number {
     let score = 0;
 
-    // 如果還有移動點數和可行動，傾向不結束
+    // 如果還有移動點數，強烈傾向不結束回合
     if (movesRemaining > 0) {
       if (legalActions.explorableDirections.length > 0) {
-        score -= 30 * personality.explorePriority;
+        // 有可探索方向時，結束回合的懲罰非常強烈
+        score -= 100 * personality.explorePriority;
       } else if (legalActions.movablePositions.length > 0) {
-        score -= 10;
+        // 有可移動位置時，結束回合也有較強懲罰
+        score -= 50;
       }
     }
 
@@ -654,6 +689,11 @@ export class AIPlayer {
     if (legalActions.explorableDirections.length === 0 && 
         legalActions.movablePositions.length === 0) {
       score = 50;
+    }
+
+    // 早期遊戲（探索房間少於 5 個），更傾向繼續行動
+    if (this.state.experience.roomsDiscovered < 5 && movesRemaining > 0) {
+      score -= 30;
     }
 
     return score;
@@ -824,6 +864,43 @@ export class AIPlayer {
       }
     }
     return false;
+  }
+
+  /**
+   * 計算某方向的未探索數量
+   */
+  private countUnexploredInDirection(
+    gameState: GameState,
+    position: Position3D,
+    direction: Direction
+  ): number {
+    const deltas = {
+      north: { x: 0, y: -1 },
+      south: { x: 0, y: 1 },
+      east: { x: 1, y: 0 },
+      west: { x: -1, y: 0 },
+    };
+
+    let count = 0;
+    let currentPos = { ...position };
+
+    // 檢查該方向最多 3 格
+    for (let i = 0; i < 3; i++) {
+      currentPos = {
+        x: currentPos.x + deltas[direction].x,
+        y: currentPos.y + deltas[direction].y,
+        floor: currentPos.floor,
+      };
+
+      const tile = this.getTileAt(gameState, currentPos);
+      if (tile && !tile.discovered) {
+        count++;
+      } else if (!tile) {
+        break;
+      }
+    }
+
+    return count;
   }
 
   /**

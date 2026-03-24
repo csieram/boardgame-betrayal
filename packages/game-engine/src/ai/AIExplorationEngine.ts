@@ -507,6 +507,9 @@ export class AIExplorationEngine {
     if (!player || movesRemaining <= 0) return false;
 
     const personality = PERSONALITY_WEIGHTS[this.personality];
+    const totalSpeed = player.currentStats.speed;
+    const movesUsed = totalSpeed - movesRemaining;
+    const minMovesRequired = Math.max(1, Math.floor(totalSpeed * 0.5)); // 至少使用 50% 的 Speed
 
     // 檢查健康狀態
     const healthStatus = this.evaluateHealthStatus(player);
@@ -516,21 +519,28 @@ export class AIExplorationEngine {
 
     // 檢查是否有可行的探索方向
     const undiscoveredNearby = this.hasUndiscoveredNeighbors(gameState, player.position);
-    if (!undiscoveredNearby) {
-      return false; // 附近沒有未探索區域
+    
+    // 如果還沒使用足夠的移動點數，繼續探索
+    if (movesUsed < minMovesRequired) {
+      return true;
     }
 
-    // 根據個性決定
-    if (this.personality === 'explorer') {
+    // 如果附近還有未探索區域，根據個性決定是否繼續
+    if (undiscoveredNearby) {
+      // 根據個性決定
+      if (this.personality === 'explorer') {
+        return movesRemaining > 0;
+      }
+
+      if (this.personality === 'cautious') {
+        // 謹慎個性保留至少 1 點移動
+        return movesRemaining > 1 && healthStatus === 'healthy';
+      }
+
       return movesRemaining > 0;
     }
 
-    if (this.personality === 'cautious') {
-      // 謹慎個性保留至少 1 點移動
-      return movesRemaining > 1 && healthStatus === 'healthy';
-    }
-
-    return movesRemaining > 0;
+    return false;
   }
 
   /**
@@ -551,11 +561,17 @@ export class AIExplorationEngine {
     let bestScore = -Infinity;
 
     for (const pos of availablePositions) {
-      let score = 0;
+      let score = 10; // 基礎分數
 
-      // 偏好有未探索鄰居的位置
+      // 偏好有未探索鄰居的位置（大幅提高權重）
       if (this.hasUnexploredNeighbors(gameState, pos)) {
-        score += 30 * personality.explorePriority;
+        score += 50 * personality.explorePriority;
+      }
+
+      // 如果該位置本身是未探索的，給予額外獎勵
+      const tile = this.getTileAt(gameState, pos);
+      if (tile && !tile.discovered) {
+        score += 35;
       }
 
       // 距離懲罰
@@ -564,8 +580,14 @@ export class AIExplorationEngine {
 
       // 謹慎個性偏好已探索區域
       if (this.personality === 'cautious') {
-        const tile = this.getTileAt(gameState, pos);
         if (tile?.discovered) {
+          score += 15;
+        }
+      }
+
+      // 激進個性更願意移動到未探索區域
+      if (this.personality === 'aggressive') {
+        if (tile && !tile.discovered) {
           score += 15;
         }
       }

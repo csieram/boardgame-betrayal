@@ -108,8 +108,8 @@ export interface AIWeights {
 /** 預設權重配置 */
 export const DEFAULT_WEIGHTS: AIWeights = {
   attackWeight: 1.0,
-  moveWeight: 0.8,
-  exploreWeight: 0.6,
+  moveWeight: 1.0,
+  exploreWeight: 1.5, // 提高探索權重
   useItemWeight: 0.7,
   survivalWeight: 1.2,
   objectiveWeight: 1.5,
@@ -527,17 +527,24 @@ export class AIDecisionEngine {
   ): number {
     let score = 0;
 
-    // 基礎探索分數
-    score += 8;
+    // 基礎探索分數大幅提高
+    score += 25;
 
     // 探索階段更有價值
     if (situation.phase === 'exploration') {
-      score += 15;
+      score += 30;
     }
 
     // 根據持有物品數量調整
     if (situation.itemCount < 2) {
-      score += 10; // 物品少時更傾向探索
+      score += 20; // 物品少時更傾向探索
+    }
+
+    // 遊戲初期更傾向探索
+    const player = state.players.find(p => p.id === playerId);
+    if (player) {
+      // 簡單估計：如果地圖探索率低，增加探索分數
+      score += 15;
     }
 
     // 應用權重
@@ -561,9 +568,14 @@ export class AIDecisionEngine {
   ): number {
     let score = 0;
 
-    // 如果還有移動點數，傾向不結束
+    // 如果還有移動點數，強烈傾向不結束
     if (state.turn.movesRemaining > 0) {
-      score -= 10;
+      score -= 30;
+      
+      // 探索階段且有可探索方向時，更強烈傾向不結束
+      if (situation.phase === 'exploration') {
+        score -= 40;
+      }
     }
 
     // 如果附近有敵人且可以攻擊，傾向不結束
