@@ -1005,12 +1005,13 @@ export default function SoloGamePage() {
               ...prev,
               stats: { ...prev.stats, might: newMight },
             } : null);
-            // Issue #114: 同步更新 player (Character) 的 stats
+            // Issue #115: 同步更新 player (Character) 的 stats
+            // 注意：stats[0] 是當前值（UI 顯示用），stats[1] 是初始值
             setPlayer(prev => prev ? {
               ...prev,
               stats: {
                 ...prev.stats,
-                might: [prev.stats.might[0], newMight],
+                might: [newMight, prev.stats.might[1]],
               },
             } : null);
             setLog(prev => [...prev, `💔 你的力量從 ${playerState.stats.might} 降至 ${newMight}`]);
@@ -1627,7 +1628,8 @@ export default function SoloGamePage() {
         };
       });
 
-      // Issue #114: 同步更新 player (Character) 的 stats
+      // Issue #115: 同步更新 player (Character) 的 stats
+      // 注意：stats[0] 是當前值（UI 顯示用），stats[1] 是初始值
       setPlayer(prev => {
         if (!prev) return prev;
         const speedChange = result.statChanges?.speed || 0;
@@ -1637,10 +1639,10 @@ export default function SoloGamePage() {
         return {
           ...prev,
           stats: {
-            speed: [prev.stats.speed[0], prev.stats.speed[1] + speedChange],
-            might: [prev.stats.might[0], prev.stats.might[1] + mightChange],
-            sanity: [prev.stats.sanity[0], prev.stats.sanity[1] + sanityChange],
-            knowledge: [prev.stats.knowledge[0], prev.stats.knowledge[1] + knowledgeChange],
+            speed: [prev.stats.speed[0] + speedChange, prev.stats.speed[1]],
+            might: [prev.stats.might[0] + mightChange, prev.stats.might[1]],
+            sanity: [prev.stats.sanity[0] + sanityChange, prev.stats.sanity[1]],
+            knowledge: [prev.stats.knowledge[0] + knowledgeChange, prev.stats.knowledge[1]],
           },
         };
       });
