@@ -289,15 +289,7 @@ export default function SoloGamePage() {
   });
   const [isProcessingTurnSwitch, setIsProcessingTurnSwitch] = useState(false);
 
-  // Issue #134: 結束回合確認狀態
-  const [endTurnConfirmation, setEndTurnConfirmation] = useState<{
-    show: boolean;
-    isAI: boolean;
-    aiPlayerName?: string;
-  }>({
-    show: false,
-    isAI: false,
-  });
+
 
   // 事件卡檢定狀態 (Issue #104)
   const [eventCheckState, setEventCheckState] = useState<{
@@ -1359,35 +1351,10 @@ export default function SoloGamePage() {
     }
   };
 
-  // Issue #134: 顯示結束回合確認
+  // Issue #138: 移除結束回合確認彈窗，直接執行結束回合
   const showEndTurnConfirmation = (isAI: boolean, aiPlayerName?: string) => {
-    setEndTurnConfirmation({
-      show: true,
-      isAI,
-      aiPlayerName,
-    });
-
-    // AI 自動繼續（短暫延遲）
-    if (isAI) {
-      setTimeout(() => {
-        setEndTurnConfirmation(prev => ({ ...prev, show: false }));
-        executeEndTurn();
-      }, 1500);
-    }
-  };
-
-  // Issue #134: 確認結束回合
-  const confirmEndTurn = () => {
-    setEndTurnConfirmation(prev => ({ ...prev, show: false }));
+    // 直接執行結束回合，不顯示確認彈窗
     executeEndTurn();
-  };
-
-  // Issue #134: 取消結束回合
-  const cancelEndTurn = () => {
-    setEndTurnConfirmation({
-      show: false,
-      isAI: false,
-    });
   };
 
   // Issue #127 & #134: 實際執行結束回合
@@ -1628,15 +1595,16 @@ export default function SoloGamePage() {
     }));
   }, [aiPlayers, aiPlayerPositions]);
 
-  // Issue #127 & #134: 監聽回合結束，顯示確認後切換到下一個玩家
+  // Issue #127 & #134 & #141: 監聽回合結束，顯示確認後切換到下一個玩家
   // 注意：這個 useEffect 必須在所有 early returns 之前調用，以符合 React Hooks 規則
+  // Issue #141: 只有當前玩家是 AI 時才自動切換回合，避免人類玩家的回合被自動跳過
   useEffect(() => {
-    if (turnState.hasEnded && !isProcessingTurnSwitch && !isProcessingAITurn) {
+    if (turnState.hasEnded && !isProcessingTurnSwitch && !isProcessingAITurn && currentTurnPlayer !== 'solo-player') {
       setIsProcessingTurnSwitch(true);
-      // Issue #134: 顯示結束回合確認（人類玩家）
+      // Issue #138: 直接執行結束回合（無確認彈窗）
       showEndTurnConfirmation(false);
     }
-  }, [turnState.hasEnded, isProcessingTurnSwitch, isProcessingAITurn]);
+  }, [turnState.hasEnded, isProcessingTurnSwitch, isProcessingAITurn, currentTurnPlayer]);
 
   // 載入中顯示
   if (isLoading) {
@@ -2066,8 +2034,7 @@ export default function SoloGamePage() {
                     turnState.hasEnded ||
                     discovered ||
                     currentTurnPlayer !== 'solo-player' ||
-                    moves <= 0 ||
-                    endTurnConfirmation.show
+                    moves <= 0
                   }
                 >
                   結束回合
@@ -2124,6 +2091,7 @@ export default function SoloGamePage() {
                     omens={playerState.omens}
                     omenCount={cardManager.getDeckStatus().omenCount}
                     hauntTriggered={cardManager.getDeckStatus().hauntTriggered}
+                    defaultExpanded={false}
                   />
                 )}
               </>
@@ -2453,63 +2421,7 @@ export default function SoloGamePage() {
         )}
       </AnimatePresence>
 
-      {/* Issue #134: 結束回合確認模態框 */}
-      <AnimatePresence>
-        {endTurnConfirmation.show && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="bg-gray-800 rounded-xl p-6 max-w-sm w-full border border-gray-600 shadow-2xl"
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            >
-              {endTurnConfirmation.isAI ? (
-                // AI 結束回合提示
-                <div className="text-center py-4">
-                  <motion.div
-                    className="w-12 h-12 border-3 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                  />
-                  <h3 className="text-lg font-bold text-blue-400 mb-2">
-                    🤖 {endTurnConfirmation.aiPlayerName || 'AI'} 結束回合
-                  </h3>
-                  <p className="text-gray-400 text-sm">AI 正在切換回合...</p>
-                </div>
-              ) : (
-                // 人類玩家結束回合確認
-                <>
-                  <h3 className="text-xl font-bold text-center mb-2">結束回合？</h3>
-                  <p className="text-gray-400 text-center mb-6 text-sm">
-                    確定要結束當前回合嗎？
-                  </p>
-                  <div className="flex gap-3">
-                    <Button
-                      onClick={cancelEndTurn}
-                      variant="secondary"
-                      className="flex-1"
-                    >
-                      繼續回合
-                    </Button>
-                    <Button
-                      onClick={confirmEndTurn}
-                      variant="primary"
-                      className="flex-1 bg-blue-600 hover:bg-blue-700"
-                    >
-                      結束回合
-                    </Button>
-                  </div>
-                </>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
     </main>
   );
 }
