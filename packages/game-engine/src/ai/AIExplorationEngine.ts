@@ -540,6 +540,11 @@ export class AIExplorationEngine {
       return movesRemaining > 0;
     }
 
+    // 即使附近沒有未探索區域，如果還有移動點數，繼續移動尋找新的探索機會
+    if (movesRemaining > 0 && this.exploredRooms.size < 5) {
+      return true;
+    }
+
     return false;
   }
 
@@ -561,17 +566,17 @@ export class AIExplorationEngine {
     let bestScore = -Infinity;
 
     for (const pos of availablePositions) {
-      let score = 10; // 基礎分數
+      let score = 30; // 提高基礎分數
 
       // 偏好有未探索鄰居的位置（大幅提高權重）
       if (this.hasUnexploredNeighbors(gameState, pos)) {
-        score += 50 * personality.explorePriority;
+        score += 80 * personality.explorePriority;
       }
 
       // 如果該位置本身是未探索的，給予額外獎勵
       const tile = this.getTileAt(gameState, pos);
       if (tile && !tile.discovered) {
-        score += 35;
+        score += 50;
       }
 
       // 距離懲罰
@@ -588,7 +593,7 @@ export class AIExplorationEngine {
       // 激進個性更願意移動到未探索區域
       if (this.personality === 'aggressive') {
         if (tile && !tile.discovered) {
-          score += 15;
+          score += 20;
         }
       }
 

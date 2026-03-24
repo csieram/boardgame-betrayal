@@ -525,26 +525,24 @@ export class AIDecisionEngine {
     direction: Direction,
     situation: GameSituation
   ): number {
-    let score = 0;
-
-    // 基礎探索分數大幅提高
-    score += 25;
+    // 大幅提高基礎探索分數，確保探索始終是優先選項
+    let score = 100;
 
     // 探索階段更有價值
     if (situation.phase === 'exploration') {
-      score += 30;
+      score += 50;
     }
 
     // 根據持有物品數量調整
     if (situation.itemCount < 2) {
-      score += 20; // 物品少時更傾向探索
+      score += 30; // 物品少時更傾向探索
     }
 
     // 遊戲初期更傾向探索
     const player = state.players.find(p => p.id === playerId);
     if (player) {
       // 簡單估計：如果地圖探索率低，增加探索分數
-      score += 15;
+      score += 30;
     }
 
     // 應用權重
@@ -570,11 +568,11 @@ export class AIDecisionEngine {
 
     // 如果還有移動點數，強烈傾向不結束
     if (state.turn.movesRemaining > 0) {
-      score -= 30;
+      score -= 50;
       
       // 探索階段且有可探索方向時，更強烈傾向不結束
       if (situation.phase === 'exploration') {
-        score -= 40;
+        score -= 100;
       }
     }
 

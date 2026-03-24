@@ -402,7 +402,10 @@ export class AIPlayer {
       if (decision.action === 'endTurn') {
         // 檢查是否滿足最小移動要求
         const movesUsed = totalSpeed - movesRemaining;
-        if (movesUsed < minMovesRequired && legalActions.movablePositions.length > 0) {
+        // 檢查是否還有可探索方向或可移動位置
+        const hasAvailableActions = legalActions.explorableDirections.length > 0 || 
+                                    legalActions.movablePositions.length > 0;
+        if (movesUsed < minMovesRequired && hasAvailableActions) {
           // 還沒使用足夠的移動點數，繼續行動
           this.log(`Moves used (${movesUsed}) less than required (${minMovesRequired}), continuing turn`);
           continue;
@@ -457,7 +460,8 @@ export class AIPlayer {
     const personality = PERSONALITY_WEIGHTS[this.state.config.personality];
     const decisions: AIDecision[] = [];
 
-    // 評估探索選項（優先）
+    // 評估探索選項（最高優先級）
+    // 探索新房間是遊戲初期的主要目標
     for (const direction of legalActions.explorableDirections) {
       const score = this.evaluateExploration(
         gameState,
@@ -535,28 +539,29 @@ export class AIPlayer {
     direction: Direction,
     personality: typeof PERSONALITY_WEIGHTS['explorer']
   ): number {
-    let score = 50; // 基礎探索分數大幅提高
+    // 大幅提高基礎探索分數，確保探索始終是最高優先級
+    let score = 100; // 基礎探索分數大幅提高
 
     // 根據個性調整
     score *= personality.explorePriority;
 
     // 探索者個性額外加成
     if (this.state.config.personality === 'explorer') {
-      score += 25;
+      score += 50;
     }
 
     // 根據已探索房間數量調整（早期更傾向探索）
     if (this.state.experience.roomsDiscovered < 3) {
-      score += 30; // 遊戲初期強烈傾向探索
+      score += 60; // 遊戲初期強烈傾向探索
     } else if (this.state.experience.roomsDiscovered < 5) {
-      score += 15;
+      score += 30;
     }
 
     // 檢查該方向是否有更多未探索區域
     const player = this.getPlayer(gameState);
     if (player) {
       const unexploredCount = this.countUnexploredInDirection(gameState, player.position, direction);
-      score += unexploredCount * 15;
+      score += unexploredCount * 20;
     }
 
     // 謹慎個性在探索時考慮風險
@@ -678,22 +683,28 @@ export class AIPlayer {
     if (movesRemaining > 0) {
       if (legalActions.explorableDirections.length > 0) {
         // 有可探索方向時，結束回合的懲罰非常強烈
-        score -= 100 * personality.explorePriority;
+        // 確保探索分數（100+）始終高於結束回合分數
+        score -= 200 * personality.explorePriority;
       } else if (legalActions.movablePositions.length > 0) {
         // 有可移動位置時，結束回合也有較強懲罰
-        score -= 50;
+        score -= 80;
       }
     }
 
     // 如果沒有可行動，傾向結束
     if (legalActions.explorableDirections.length === 0 && 
         legalActions.movablePositions.length === 0) {
-      score = 50;
+      score = 100;
     }
 
     // 早期遊戲（探索房間少於 5 個），更傾向繼續行動
     if (this.state.experience.roomsDiscovered < 5 && movesRemaining > 0) {
-      score -= 30;
+      score -= 50;
+    }
+
+    // 確保結束回合的分數始終低於探索分數（當有可探索方向時）
+    if (legalActions.explorableDirections.length > 0) {
+      score = Math.min(score, -100);
     }
 
     return score;
