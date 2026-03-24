@@ -1578,6 +1578,24 @@ export default function SoloGamePage() {
     updateReachablePositions(updatedMultiFloorMap[targetFloor], { x: targetPosition.x, y: targetPosition.y }, resetMoves, false);
   }, [player, position, currentFloor, multiFloorMap]);
 
+  // Issue #122: 創建帶有最新位置的 AI 玩家列表（用於 GameBoard）
+  // 注意：這個 useMemo 必須在所有 early returns 之前調用，以符合 React Hooks 規則
+  const aiPlayersWithLatestPositions = useMemo(() => {
+    return aiPlayers.map(aiPlayer => ({
+      ...aiPlayer,
+      position: aiPlayerPositions.get(aiPlayer.id) || aiPlayer.position || { x: 7, y: 7, floor: 'ground' as Floor },
+    }));
+  }, [aiPlayers, aiPlayerPositions]);
+
+  // Issue #127: 監聽回合結束，自動切換到下一個玩家
+  // 注意：這個 useEffect 必須在所有 early returns 之前調用，以符合 React Hooks 規則
+  useEffect(() => {
+    if (turnState.hasEnded && !isProcessingTurnSwitch && !isProcessingAITurn) {
+      setIsProcessingTurnSwitch(true);
+      handleEndTurn();
+    }
+  }, [turnState.hasEnded, isProcessingTurnSwitch, isProcessingAITurn]);
+
   // 載入中顯示
   if (isLoading) {
     return (
@@ -1738,14 +1756,6 @@ export default function SoloGamePage() {
     });
   };
 
-  // Issue #122: 創建帶有最新位置的 AI 玩家列表（用於 GameBoard）
-  const aiPlayersWithLatestPositions = useMemo(() => {
-    return aiPlayers.map(aiPlayer => ({
-      ...aiPlayer,
-      position: aiPlayerPositions.get(aiPlayer.id) || aiPlayer.position || { x: 7, y: 7, floor: 'ground' as Floor },
-    }));
-  }, [aiPlayers, aiPlayerPositions]);
-
   // Issue #119: 構建所有玩家列表（人類 + AI）
   const buildAllPlayers = (): PlayerInfo[] => {
     const players: PlayerInfo[] = [];
@@ -1838,14 +1848,6 @@ export default function SoloGamePage() {
       return newMap;
     });
   };
-
-  // Issue #127: 監聽回合結束，自動切換到下一個玩家
-  useEffect(() => {
-    if (turnState.hasEnded && !isProcessingTurnSwitch && !isProcessingAITurn) {
-      setIsProcessingTurnSwitch(true);
-      handleEndTurn();
-    }
-  }, [turnState.hasEnded, isProcessingTurnSwitch, isProcessingAITurn]);
 
   return (
     <main className="min-h-screen bg-gray-900 text-white">
