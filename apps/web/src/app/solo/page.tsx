@@ -1589,11 +1589,20 @@ export default function SoloGamePage() {
   // Issue #104: 處理事件卡檢定擲骰
   const handleEventCheckRoll = () => {
     if (!eventCheckState.card || !playerState) return;
-    
+
     setEventCheckState(prev => ({ ...prev, isRolling: true }));
-    
+
     // 執行檢定
     const result = effectApplier.performEventCheck(eventCheckState.card, playerState);
+
+    // Issue #113: Debug logging for dice sum calculation
+    console.log('[EventCheck] Dice roll result:', {
+      dice: result.dice,
+      sum: result.roll,
+      target: result.target,
+      success: result.success,
+      calculatedSum: result.dice.reduce((a, b) => a + b, 0),
+    });
     
     // 應用屬性變化
     if (result.statChanges) {

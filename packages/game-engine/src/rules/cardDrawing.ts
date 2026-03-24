@@ -341,8 +341,8 @@ export class CardEffectApplier {
     const rolls: number[] = [];
 
     for (let i = 0; i < numDice; i++) {
-      // 0, 1, 或 2
-      const roll = this.rng.nextInt(0, 2);
+      // 0, 1, 或 2 (nextInt 是 [min, max) 區間，所以用 0, 3)
+      const roll = this.rng.nextInt(0, 3);
       rolls.push(roll);
       total += roll;
     }
