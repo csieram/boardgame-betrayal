@@ -61,7 +61,7 @@ export function InventoryPanel({
       </div>
 
       {/* 物品欄位網格 */}
-      <div className="grid grid-cols-5 gap-2 mb-4">
+      <div className="grid grid-cols-4 gap-3 mb-4">
         {slots.map((slot, index) => (
           <motion.div
             key={index}
@@ -69,35 +69,35 @@ export function InventoryPanel({
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: index * 0.05 }}
             className={`
-              aspect-square rounded-lg border-2 flex items-center justify-center
+              rounded-xl border-2 flex flex-col items-center justify-center p-2
               ${slot 
                 ? slot.type === 'item'
                   ? 'bg-blue-900/30 border-blue-500/50 hover:border-blue-400'
                   : 'bg-purple-900/30 border-purple-500/50 hover:border-purple-400'
                 : 'bg-gray-700/30 border-gray-600/30 border-dashed'
               }
-              transition-colors cursor-pointer
+              transition-colors cursor-pointer min-h-[100px]
             `}
             title={slot?.card.name}
           >
             {slot ? (
-              <div className="w-full h-full p-1 flex flex-col items-center justify-center">
+              <div className="w-full flex flex-col items-center justify-center">
                 {/* 卡牌圖示 */}
                 <div 
-                  className="w-6 h-6 mb-1"
+                  className="w-12 h-12 mb-2"
                   dangerouslySetInnerHTML={{
-                    __html: `<svg viewBox="0 0 100 100" width="24" height="24">${slot.card.icon}</svg>`,
+                    __html: `<svg viewBox="0 0 100 100" width="48" height="48">${slot.card.icon}</svg>`,
                   }}
                 />
-                {/* 卡牌名稱（縮寫） */}
-                <span className="text-[8px] text-center leading-tight text-gray-300 truncate w-full px-1">
-                  {slot.card.name.length > 4 
-                    ? slot.card.name.slice(0, 4) + '...'
+                {/* 卡牌名稱 */}
+                <span className="text-xs text-center leading-tight text-gray-200 font-medium truncate w-full px-1">
+                  {slot.card.name.length > 6 
+                    ? slot.card.name.slice(0, 6) + '...'
                     : slot.card.name
                   }
                 </span>
                 {/* 類型標記 */}
-                <span className={`text-[6px] mt-0.5 px-1 rounded ${
+                <span className={`text-[10px] mt-1.5 px-2 py-0.5 rounded-full ${
                   slot.type === 'item' 
                     ? 'bg-blue-600/50 text-blue-200'
                     : 'bg-purple-600/50 text-purple-200'
@@ -106,7 +106,7 @@ export function InventoryPanel({
                 </span>
               </div>
             ) : (
-              <span className="text-gray-600 text-xs">+</span>
+              <span className="text-gray-600 text-lg">+</span>
             )}
           </motion.div>
         ))}
