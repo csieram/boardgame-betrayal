@@ -7,6 +7,8 @@ import { Button } from '@betrayal/ui';
 import { GameBoard } from '@/components/game/GameBoard';
 import { CardDisplay } from '@/components/game/CardDisplay';
 import { InventoryPanel } from '@/components/game/InventoryPanel';
+import { HauntRollModal } from '@/components/game/HauntRollModal';
+import { HauntRevealScreen } from '@/components/game/HauntRevealScreen';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   RoomDiscoveryManager,
@@ -22,6 +24,14 @@ import {
   drawAndApplyCard,
   CardDrawResult,
   PlayerState,
+  makeHauntRoll,
+  revealHaunt,
+  HauntRollResult,
+  HauntRevelationResult,
+  // Combat System (Issue #103)
+  CombatManager,
+  CombatResult,
+  calculateWeaponBonus,
 } from '@betrayal/game-engine';
 
 // 地圖大小
@@ -53,6 +63,25 @@ interface CardDrawState {
   cardResult: CardDrawResult | null;
   isHauntRoll: boolean;
   hauntRollResult: { triggered: boolean; roll: number; threshold: number } | null;
+}
+
+/** Haunt 狀態 */
+interface HauntState {
+  isActive: boolean;
+  showRollModal: boolean;
+  showRevealScreen: boolean;
+  isRolling: boolean;
+  rollResult: HauntRollResult | null;
+  revelation: HauntRevelationResult | null;
+}
+
+/** 戰鬥狀態 (Issue #103) */
+interface CombatUIState {
+  showCombatModal: boolean;
+  combatResult: CombatResult | null;
+  isCombatAnimating: boolean;
+  validTargets: string[];
+  selectedTarget: string | null;
 }
 
 /**
@@ -177,6 +206,26 @@ export default function SoloGamePage() {
   
   // 玩家狀態（用於卡牌效果）
   const [playerState, setPlayerState] = useState<PlayerState | null>(null);
+
+  // Haunt 狀態
+  const [hauntState, setHauntState] = useState<HauntState>({
+    isActive: false,
+    showRollModal: false,
+    showRevealScreen: false,
+    isRolling: false,
+    rollResult: null,
+    revelation: null,
+  });
+
+  // 戰鬥系統狀態 (Issue #103)
+  const [combatState, setCombatState] = useState<CombatUIState>({
+    showCombatModal: false,
+    combatResult: null,
+    isCombatAnimating: false,
+    validTargets: [],
+    selectedTarget: null,
+  });
+  const [combatManager] = useState(() => new CombatManager(new SeededRng(Date.now().toString())));
 
   // 當前樓層的地圖（向後兼容）
   const map = multiFloorMap[currentFloor];
@@ -372,6 +421,330 @@ export default function SoloGamePage() {
     setValidExploreDirections(validExploreDirs);
   };
 
+  // 執行 Haunt Roll
+  const performHauntRoll = (omenCount: number) => {
+    // 顯示 Haunt Roll 模態框並開始擲骰動畫
+    setHauntState(prev => ({
+      ...prev,
+      showRollModal: true,
+      isRolling: true,
+      rollResult: null,
+    }));
+
+    // 模擬擲骰延遲（2秒動畫）
+    setTimeout(() => {
+      const rng = new SeededRng(Date.now().toString());
+      const result = makeHauntRoll(omenCount, rng);
+      
+      setHauntState(prev => ({
+        ...prev,
+        isRolling: false,
+        rollResult: result,
+      }));
+
+      // 如果作祟觸發，記錄到日誌
+      if (result.hauntBegins) {
+        setLog(prev => [...prev, `⚠️ 作祟觸發！擲出 ${result.total} < 5`]);
+      } else {
+        setLog(prev => [...prev, `作祟未觸發，擲出 ${result.total} >= 5`]);
+      }
+    }, 2000);
+  };
+
+  // 處理 Haunt Roll 關閉（作祟未觸發）
+  const handleHauntRollClose = () => {
+    setHauntState(prev => ({
+      ...prev,
+      showRollModal: false,
+      rollResult: null,
+    }));
+    
+    // 繼續新回合
+    continueToNextTurn();
+  };
+
+  // 處理進入 Haunt Reveal
+  const handleProceedToReveal = () => {
+    setHauntState(prev => ({
+      ...prev,
+      showRollModal: false,
+    }));
+
+    // 執行 Haunt Revelation
+    const rng = new SeededRng(Date.now().toString());
+    
+    // 構建 gameState 用於 revealHaunt
+    const gameStateForReveal = {
+      players: [{
+        id: 'solo-player',
+        name: player?.name || '玩家',
+        color: player?.color || '#000000',
+        position: { x: position.x, y: position.y, floor: currentFloor },
+        stats: {
+          speed: player?.stats.speed || [0, 0, 0, 0, 0, 0, 0, 0],
+          might: player?.stats.might || [0, 0, 0, 0, 0, 0, 0, 0],
+          sanity: player?.stats.sanity || [0, 0, 0, 0, 0, 0, 0, 0],
+          knowledge: player?.stats.knowledge || [0, 0, 0, 0, 0, 0, 0, 0],
+        },
+        items: playerState?.items || [],
+        omens: playerState?.omens || [],
+        isTraitor: false,
+        isDead: false,
+      }],
+      haunt: {
+        isActive: false,
+        type: null,
+        hauntNumber: null,
+        traitorPlayerId: null,
+        omenCount: cardManager.getDeckStatus().omenCount,
+        heroObjective: null,
+        traitorObjective: null,
+      },
+      turn: {
+        currentPlayerId: 'solo-player',
+        turnNumber: turn,
+      },
+    };
+
+    const revelation = revealHaunt(gameStateForReveal as any, 'solo-player', rng);
+    
+    setHauntState(prev => ({
+      ...prev,
+      isActive: true,
+      showRevealScreen: true,
+      revelation,
+    }));
+
+    // 添加到日誌
+    if (revelation.success && revelation.scenario) {
+      setLog(prev => [...prev, `作祟揭示: ${revelation.scenario!.name}`]);
+      if (revelation.traitorId) {
+        const traitorName = player?.name || '玩家';
+        setLog(prev => [...prev, `${traitorName} 成為叛徒！`]);
+      }
+    }
+  };
+
+  // 處理開始 Haunt 階段
+  const handleStartHaunt = () => {
+    setHauntState(prev => ({
+      ...prev,
+      showRevealScreen: false,
+      isActive: true,
+    }));
+    
+    setLog(prev => [...prev, '作祟階段開始！']);
+  };
+
+  // ==================== 戰鬥系統 (Issue #103) ====================
+
+  // 檢查是否可以攻擊
+  const canAttack = useCallback((): boolean => {
+    if (!hauntState.isActive || !playerState) return false;
+    
+    // 構建 gameState 用於檢查
+    const gameStateForCombat = {
+      players: [{
+        id: 'solo-player',
+        name: player?.name || '玩家',
+        position: { x: position.x, y: position.y, floor: currentFloor },
+        currentStats: {
+          speed: playerState.stats.speed,
+          might: playerState.stats.might,
+          sanity: playerState.stats.sanity,
+          knowledge: playerState.stats.knowledge,
+        },
+        items: playerState.items,
+        omens: playerState.omens,
+        isTraitor: false,
+        isDead: false,
+      }],
+      haunt: {
+        isActive: hauntState.isActive,
+      },
+    };
+
+    return combatManager.canAttack(gameStateForCombat as any, 'solo-player');
+  }, [hauntState.isActive, playerState, player, position, currentFloor, combatManager]);
+
+  // 取得有效攻擊目標
+  const getValidTargets = useCallback((): string[] => {
+    if (!hauntState.isActive || !playerState) return [];
+    
+    // 在單人模式下，這裡會返回 AI 敵人的 ID
+    // 目前暫時返回空列表，等待 AI 系統整合
+    return [];
+  }, [hauntState.isActive, playerState]);
+
+  // 發起戰鬥
+  const initiateCombat = useCallback((targetId: string) => {
+    if (!playerState || !hauntState.isActive) return;
+
+    setCombatState(prev => ({
+      ...prev,
+      showCombatModal: true,
+      isCombatAnimating: true,
+      selectedTarget: targetId,
+    }));
+
+    // 構建 gameState
+    const gameStateForCombat = {
+      gameId: 'solo-game',
+      version: '1.0.0',
+      phase: 'haunt',
+      result: 'ongoing',
+      config: { playerCount: 1, enableAI: true, seed: gameState.seed, maxTurns: 100 },
+      map: {
+        ground: multiFloorMap.ground,
+        upper: multiFloorMap.upper,
+        basement: multiFloorMap.basement,
+        placedRoomCount: gameState.placedRoomIds.size,
+      },
+      players: [{
+        id: 'solo-player',
+        name: player?.name || '玩家',
+        character: {
+          id: player?.id || '',
+          name: player?.name || '',
+          nameEn: player?.nameEn || '',
+          age: player?.age || 30,
+          description: player?.description || '',
+          color: player?.color || '#000',
+          stats: {
+            speed: player?.stats.speed || [0, 0, 0, 0, 0, 0, 0, 0],
+            might: player?.stats.might || [0, 0, 0, 0, 0, 0, 0, 0],
+            sanity: player?.stats.sanity || [0, 0, 0, 0, 0, 0, 0, 0],
+            knowledge: player?.stats.knowledge || [0, 0, 0, 0, 0, 0, 0, 0],
+          },
+          statTrack: player?.statTrack || { speed: [], might: [], sanity: [], knowledge: [] },
+        },
+        position: { x: position.x, y: position.y, floor: currentFloor },
+        currentStats: {
+          speed: playerState.stats.speed,
+          might: playerState.stats.might,
+          sanity: playerState.stats.sanity,
+          knowledge: playerState.stats.knowledge,
+        },
+        items: playerState.items,
+        omens: playerState.omens,
+        isTraitor: false,
+        isDead: false,
+        usedItemsThisTurn: [],
+      }],
+      playerOrder: ['solo-player'],
+      turn: {
+        currentPlayerId: 'solo-player',
+        turnNumber: turn,
+        movesRemaining: moves,
+        hasDiscoveredRoom: discovered,
+        hasDrawnCard: false,
+        hasEnded: false,
+        usedSpecialActions: [],
+        usedItems: [],
+      },
+      cardDecks: {
+        event: { remaining: [], drawn: [], discarded: [] },
+        item: { remaining: [], drawn: [], discarded: [] },
+        omen: { remaining: [], drawn: [], discarded: [] },
+      },
+      roomDeck: {
+        ground: gameState.roomDecks.ground,
+        upper: gameState.roomDecks.upper,
+        basement: gameState.roomDecks.basement,
+        drawn: gameState.roomDecks.drawn,
+      },
+      haunt: {
+        isActive: hauntState.isActive,
+        type: 'single_traitor',
+        hauntNumber: null,
+        traitorPlayerId: null,
+        omenCount: cardManager.getDeckStatus().omenCount,
+        heroObjective: null,
+        traitorObjective: null,
+      },
+      combat: {
+        isActive: true,
+        attackerId: 'solo-player',
+        defenderId: targetId,
+        usedStat: null,
+        attackerRoll: null,
+        defenderRoll: null,
+        damage: null,
+      },
+      log: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      rngState: { seed: gameState.seed, count: 0, internalState: [] },
+      placedRoomIds: gameState.placedRoomIds,
+    };
+
+    // 模擬戰鬥動畫延遲
+    setTimeout(() => {
+      // 執行戰鬥
+      const result = combatManager.initiateCombat(gameStateForCombat as any, 'solo-player', targetId);
+      
+      setCombatState(prev => ({
+        ...prev,
+        combatResult: result,
+        isCombatAnimating: false,
+      }));
+
+      // 更新日誌
+      if (result.success) {
+        const attackerTotal = result.attackerRoll?.total || 0;
+        const defenderTotal = result.defenderRoll?.total || 0;
+        
+        if (result.winner) {
+          const winnerName = result.winner.id === 'solo-player' ? '你' : '敵人';
+          const damage = result.damage || 0;
+          setLog(prev => [
+            ...prev,
+            `⚔️ 戰鬥結果: ${winnerName} 獲勝！`,
+            `  你的擲骰: ${attackerTotal} | 敵人擲骰: ${defenderTotal}`,
+            `  造成傷害: ${damage}`,
+          ]);
+
+          // 如果玩家受傷，更新狀態
+          if (result.loser?.id === 'solo-player' && result.damage) {
+            const newMight = Math.max(0, playerState.stats.might - result.damage);
+            setPlayerState(prev => prev ? {
+              ...prev,
+              stats: { ...prev.stats, might: newMight },
+            } : null);
+            setLog(prev => [...prev, `💔 你的力量從 ${playerState.stats.might} 降至 ${newMight}`]);
+          }
+        } else {
+          setLog(prev => [
+            ...prev,
+            `⚔️ 戰鬥平手！`,
+            `  你的擲骰: ${attackerTotal} | 敵人擲骰: ${defenderTotal}`,
+          ]);
+        }
+      } else {
+        setLog(prev => [...prev, `❌ 戰鬥失敗: ${result.error}`]);
+      }
+    }, 2000);
+  }, [playerState, hauntState.isActive, gameState, player, position, currentFloor, turn, moves, discovered, combatManager, cardManager]);
+
+  // 關閉戰鬥模態框
+  const handleCloseCombat = useCallback(() => {
+    setCombatState(prev => ({
+      ...prev,
+      showCombatModal: false,
+      combatResult: null,
+      selectedTarget: null,
+    }));
+  }, []);
+
+  // 繼續到下一回合
+  const continueToNextTurn = () => {
+    setTurn(t => t + 1);
+    setMoves(player!.stats.speed[0]);
+    setDiscovered(false);
+    setLog(prev => [...prev, `回合 ${turn + 1}`]);
+    updateReachablePositions(multiFloorMap[currentFloor], position, player!.stats.speed[0], false);
+  };
+
   // 從牌堆抽取房間（使用 drawRoomForExploration 確保棋盤不會封閉）
   const drawRoomFromDeck = (floor: Floor, entryDirection: Direction): { room: Room; rotation: number; wasModified: boolean } | null => {
     console.log('[RoomDiscovery] Drawing room for exploration, floor:', floor, 'entryDirection:', entryDirection);
@@ -562,12 +935,6 @@ export default function SoloGamePage() {
           
           if (drawResult.success && drawResult.card) {
             cardDrawn = true;
-            setCardDrawState({
-              showCard: true,
-              cardResult: drawResult,
-              isHauntRoll: !!drawResult.hauntRoll,
-              hauntRollResult: drawResult.hauntRoll || null,
-            });
             
             // 更新玩家狀態（物品/預兆已添加到 playerState）
             setPlayerState({ ...playerState });
@@ -579,17 +946,30 @@ export default function SoloGamePage() {
             // 記錄進入房間和抽卡
             setLog(prev => [...prev, `進入 ${placedRoom.name} (${roomSymbol}) → 抽到${symbolName}: "${drawResult.card!.name}"`]);
             
-            // 如果是預兆卡，顯示預兆計數
+            // 如果是預兆卡，觸發 Haunt Roll 動畫
             if (cardType === 'omen') {
               setLog(prev => [...prev, `預兆 ${currentOmenCount} 🌙（作祟檢定: ${currentOmenCount} 顆骰）`]);
-            }
-            
-            // 如果觸發作祟檢定，添加到日誌
-            if (drawResult.hauntRoll) {
-              const hauntMsg = drawResult.hauntRoll.triggered 
-                ? `⚠️ 作祟觸發！擲出 ${drawResult.hauntRoll.roll} < ${drawResult.hauntRoll.threshold}`
-                : `作祟未觸發，擲出 ${drawResult.hauntRoll.roll} >= ${drawResult.hauntRoll.threshold}`;
-              setLog(prev => [...prev, hauntMsg]);
+              
+              // 延遲後顯示 Haunt Roll 模態框
+              setTimeout(() => {
+                performHauntRoll(currentOmenCount);
+              }, 500);
+              
+              // 先顯示卡牌
+              setCardDrawState({
+                showCard: true,
+                cardResult: drawResult,
+                isHauntRoll: false,
+                hauntRollResult: null,
+              });
+            } else {
+              // 非預兆卡直接顯示
+              setCardDrawState({
+                showCard: true,
+                cardResult: drawResult,
+                isHauntRoll: false,
+                hauntRollResult: null,
+              });
             }
           } else {
             setLog(prev => [...prev, `發現新房間: ${placedRoom.name}（無法抽牌：${drawResult.message}）`]);
@@ -770,12 +1150,15 @@ export default function SoloGamePage() {
       hauntRollResult: null,
     });
     
+    // 如果 Haunt Roll 模態框即將顯示，不要立即開始新回合
+    // Haunt Roll 處理函數會負責繼續遊戲
+    if (cardDrawState.cardResult?.card?.type === 'omen') {
+      // 預兆卡會觸發 Haunt Roll，不立即開始新回合
+      return;
+    }
+    
     // 繼續新回合
-    setTurn(t => t + 1);
-    setMoves(player!.stats.speed[0]);
-    setDiscovered(false);
-    setLog(prev => [...prev, `回合 ${turn + 1}`]);
-    updateReachablePositions(multiFloorMap[currentFloor], position, player!.stats.speed[0], false);
+    continueToNextTurn();
   };
 
   return (
@@ -870,7 +1253,7 @@ export default function SoloGamePage() {
             {/* 移動控制 */}
             <div className="mt-4 bg-gray-800/50 rounded-xl p-3 sm:p-4 border border-gray-700">
               <h3 className="text-sm font-bold text-gray-400 mb-3 text-center">移動控制</h3>
-              <div className="flex justify-center">
+              <div className="flex justify-center gap-3">
                 <Button
                   onClick={endTurn}
                   variant="secondary"
@@ -879,6 +1262,19 @@ export default function SoloGamePage() {
                 >
                   結束回合
                 </Button>
+                
+                {/* 戰鬥按鈕 (Issue #103) - 只在作祟階段顯示 */}
+                {hauntState.isActive && (
+                  <Button
+                    onClick={() => initiateCombat('ai-enemy-1')}
+                    variant="danger"
+                    size="sm"
+                    className="h-10 sm:h-12 text-xs sm:text-sm bg-red-600 hover:bg-red-700"
+                    disabled={combatState.isCombatAnimating}
+                  >
+                    {combatState.isCombatAnimating ? '戰鬥中...' : '⚔️ 攻擊'}
+                  </Button>
+                )}
               </div>
               
               {discovered && (
@@ -1015,7 +1411,26 @@ export default function SoloGamePage() {
         animate={true}
       />
 
-      {/* 作祟檢定結果覆蓋層 */}
+      {/* Haunt Roll 模態框 (Issue #97) */}
+      <HauntRollModal
+        isOpen={hauntState.showRollModal}
+        omenCount={cardManager.getDeckStatus().omenCount}
+        rollResult={hauntState.rollResult}
+        isRolling={hauntState.isRolling}
+        onClose={handleHauntRollClose}
+        onProceedToReveal={handleProceedToReveal}
+      />
+
+      {/* Haunt Reveal 畫面 (Issue #97) */}
+      <HauntRevealScreen
+        isOpen={hauntState.showRevealScreen}
+        revelation={hauntState.revelation}
+        playerNames={{ 'solo-player': player?.name || '玩家' }}
+        currentPlayerId="solo-player"
+        onStartHaunt={handleStartHaunt}
+      />
+
+      {/* 作祟檢定結果覆蓋層（舊版，保留用於非預兆卡情況） */}
       <AnimatePresence>
         {cardDrawState.showCard && cardDrawState.hauntRollResult && (
           <motion.div
@@ -1036,6 +1451,120 @@ export default function SoloGamePage() {
                 }
               </p>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 戰鬥模態框 (Issue #103) */}
+      <AnimatePresence>
+        {combatState.showCombatModal && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={handleCloseCombat}
+          >
+            <motion.div
+              className="bg-gray-800 rounded-xl p-6 max-w-md w-full border border-gray-600"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+            >
+              <h2 className="text-2xl font-bold text-center mb-6">⚔️ 戰鬥</h2>
+              
+              {combatState.isCombatAnimating ? (
+                <div className="text-center py-8">
+                  <motion.div
+                    className="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full mx-auto mb-4"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                  />
+                  <p className="text-gray-300">戰鬥進行中...</p>
+                </div>
+              ) : combatState.combatResult ? (
+                <div className="space-y-4">
+                  {/* 擲骰結果 */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-gray-700/50 rounded-lg p-3 text-center">
+                      <p className="text-sm text-gray-400 mb-1">你的擲骰</p>
+                      <p className="text-2xl font-bold text-blue-400">
+                        {combatState.combatResult.attackerRoll?.total || 0}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        [{combatState.combatResult.attackerRoll?.results.join(', ') || ''}]
+                      </p>
+                    </div>
+                    <div className="bg-gray-700/50 rounded-lg p-3 text-center">
+                      <p className="text-sm text-gray-400 mb-1">敵人擲骰</p>
+                      <p className="text-2xl font-bold text-red-400">
+                        {combatState.combatResult.defenderRoll?.total || 0}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        [{combatState.combatResult.defenderRoll?.results.join(', ') || ''}]
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* 勝負結果 */}
+                  {combatState.combatResult.winner ? (
+                    <div className={`rounded-lg p-4 text-center ${
+                      combatState.combatResult.winner.id === 'solo-player'
+                        ? 'bg-green-900/50 border border-green-500'
+                        : 'bg-red-900/50 border border-red-500'
+                    }`}>
+                      <p className="text-lg font-bold">
+                        {combatState.combatResult.winner.id === 'solo-player' ? '🎉 你獲勝！' : '💀 你輸了！'}
+                      </p>
+                      {combatState.combatResult.damage && combatState.combatResult.damage > 0 && (
+                        <p className="text-sm mt-2">
+                          造成 <span className="font-bold text-yellow-400">{combatState.combatResult.damage}</span> 點傷害
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="bg-yellow-900/50 border border-yellow-500 rounded-lg p-4 text-center">
+                      <p className="text-lg font-bold">🤝 平手！</p>
+                      <p className="text-sm mt-2 text-gray-300">雙方勢均力敵，沒有傷害</p>
+                    </div>
+                  )}
+
+                  {/* 武器加成顯示 */}
+                  {playerState && (
+                    <div className="bg-gray-700/30 rounded-lg p-3">
+                      <p className="text-xs text-gray-400 mb-2">武器加成</p>
+                      {(() => {
+                        const bonus = calculateWeaponBonus(playerState.items, playerState.omens);
+                        return bonus.weapons.length > 0 ? (
+                          <div className="flex flex-wrap gap-2">
+                            {bonus.weapons.map((weapon, i) => (
+                              <span key={i} className="text-xs bg-blue-900/50 px-2 py-1 rounded">
+                                {weapon} (+{bonus.mightBonus > 0 ? bonus.mightBonus : bonus.damageBonus})
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-500">無武器</p>
+                        );
+                      })()}
+                    </div>
+                  )}
+
+                  <Button
+                    onClick={handleCloseCombat}
+                    variant="primary"
+                    className="w-full mt-4"
+                  >
+                    確認
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-gray-400">準備戰鬥...</p>
+                </div>
+              )}
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

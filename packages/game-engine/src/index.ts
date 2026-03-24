@@ -133,5 +133,23 @@ export type {
   PlayerSide,
 } from './data/hauntScenarios';
 
+// Combat System (Issue #103)
+export {
+  CombatManager,
+  initiateCombat,
+  resolveCombat,
+  calculateDamage,
+  applyDamage,
+  calculateWeaponBonus,
+  WEAPON_EFFECTS,
+} from './rules/combat';
+export type {
+  Combatant,
+  CombatantType,
+  CombatResult,
+  CombatValidation,
+  WeaponEffect,
+} from './rules/combat';
+
 // Legacy exports (for backward compatibility)
 export { GameEngine as GameEngineLegacy } from './core/GameEngine';

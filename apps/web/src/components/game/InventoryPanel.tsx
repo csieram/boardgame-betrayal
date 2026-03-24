@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@betrayal/shared';
+import { ItemDetailModal } from './ItemDetailModal';
 
 interface InventoryPanelProps {
   /** 玩家持有的物品 */
@@ -36,16 +38,28 @@ export function InventoryPanel({
   omenCount,
   hauntTriggered,
 }: InventoryPanelProps) {
+  const [selectedCard, setSelectedCard] = useState<{
+    card: Card;
+    type: 'item' | 'omen';
+    omenNumber?: number;
+  } | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const totalItems = items.length + omens.length;
   const slots = Array.from({ length: maxSlots }, (_, i) => {
     if (i < items.length) {
       return { type: 'item' as const, card: items[i] };
     } else if (i < items.length + omens.length) {
       const omenIndex = i - items.length;
-      return { type: 'omen' as const, card: omens[omenIndex] };
+      return { type: 'omen' as const, card: omens[omenIndex], omenNumber: omenIndex + 1 };
     }
     return null;
   });
+
+  const handleCardClick = (slot: { type: 'item' | 'omen'; card: Card; omenNumber?: number }) => {
+    setSelectedCard(slot);
+    setIsModalOpen(true);
+  };
 
   return (
     <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
@@ -61,22 +75,23 @@ export function InventoryPanel({
       </div>
 
       {/* 物品欄位網格 */}
-      <div className="grid grid-cols-4 gap-3 mb-4">
+      <div className="grid grid-cols-3 gap-3 mb-4">
         {slots.map((slot, index) => (
           <motion.div
             key={index}
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: index * 0.05 }}
+            onClick={() => slot && handleCardClick(slot)}
             className={`
               rounded-xl border-2 flex flex-col items-center justify-center p-2
               ${slot 
                 ? slot.type === 'item'
-                  ? 'bg-blue-900/30 border-blue-500/50 hover:border-blue-400'
-                  : 'bg-purple-900/30 border-purple-500/50 hover:border-purple-400'
+                  ? 'bg-blue-900/30 border-blue-500/50 hover:border-blue-400 hover:bg-blue-900/50'
+                  : 'bg-purple-900/30 border-purple-500/50 hover:border-purple-400 hover:bg-purple-900/50'
                 : 'bg-gray-700/30 border-gray-600/30 border-dashed'
               }
-              transition-colors cursor-pointer min-h-[100px]
+              transition-all cursor-pointer min-h-[120px]
             `}
             title={slot?.card.name}
           >
@@ -84,15 +99,15 @@ export function InventoryPanel({
               <div className="w-full flex flex-col items-center justify-center">
                 {/* 卡牌圖示 */}
                 <div 
-                  className="w-12 h-12 mb-2"
+                  className="w-16 h-16 mb-2"
                   dangerouslySetInnerHTML={{
-                    __html: `<svg viewBox="0 0 100 100" width="48" height="48">${slot.card.icon}</svg>`,
+                    __html: `<svg viewBox="0 0 100 100" width="64" height="64">${slot.card.icon}</svg>`,
                   }}
                 />
                 {/* 卡牌名稱 */}
-                <span className="text-xs text-center leading-tight text-gray-200 font-medium truncate w-full px-1">
-                  {slot.card.name.length > 6 
-                    ? slot.card.name.slice(0, 6) + '...'
+                <span className="text-sm text-center leading-tight text-gray-200 font-medium truncate w-full px-1">
+                  {slot.card.name.length > 10 
+                    ? slot.card.name.slice(0, 10) + '...'
                     : slot.card.name
                   }
                 </span>
@@ -161,6 +176,15 @@ export function InventoryPanel({
           <span>預兆</span>
         </div>
       </div>
+
+      {/* 詳情彈窗 */}
+      <ItemDetailModal
+        card={selectedCard?.card ?? null}
+        type={selectedCard?.type ?? null}
+        omenNumber={selectedCard?.omenNumber}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 }

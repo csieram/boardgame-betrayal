@@ -509,4 +509,4 @@ export function getPlayerSide(
 
 // ==================== 匯出 ====================
 
-export { HauntScenario, PlayerSide } from '../data/hauntScenarios';
+export type { HauntScenario, PlayerSide } from '../data/hauntScenarios';
