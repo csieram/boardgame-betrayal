@@ -93,6 +93,14 @@ export function AIActionModal({
 
   // 格式化行動描述
   const formatAction = (log: AIActionLog): { icon: string; text: string; color: string } => {
+    // 防禦性檢查：確保 log 和 action 存在
+    if (!log || !log.action) {
+      return {
+        icon: '❓',
+        text: log?.playerName ? `${log.playerName} 執行行動` : 'AI 執行行動',
+        color: '#9CA3AF',
+      };
+    }
     const action = log.action.toLowerCase();
     
     // 移動相關
@@ -348,6 +356,10 @@ export function AIActionNotification({
   }
 
   const formatAction = (log: AIActionLog): { icon: string; text: string } => {
+    // 防禦性檢查：確保 log 和 action 存在
+    if (!log || !log.action) {
+      return { icon: '❓', text: log?.playerName ? `${log.playerName} 執行行動` : 'AI 執行行動' };
+    }
     const action = log.action.toLowerCase();
     
     if (action.includes('move') || action.includes('移動')) {
