@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Character, CHARACTERS, Room, Floor, Tile, Direction, Card } from '@betrayal/shared';
 import { Button } from '@betrayal/ui';
@@ -279,6 +279,16 @@ export default function SoloGamePage() {
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>('solo-player');
   const [aiPlayerPositions, setAiPlayerPositions] = useState<Map<string, { x: number; y: number; floor: Floor }>>(new Map());
 
+  // Issue #127: 回合狀態管理（用於自動切換回合）
+  const [turnState, setTurnState] = useState<{
+    hasEnded: boolean;
+    endedByDiscovery: boolean;
+  }>({
+    hasEnded: false,
+    endedByDiscovery: false,
+  });
+  const [isProcessingTurnSwitch, setIsProcessingTurnSwitch] = useState(false);
+
   // 事件卡檢定狀態 (Issue #104)
   const [eventCheckState, setEventCheckState] = useState<{
     showModal: boolean;
@@ -448,7 +458,16 @@ export default function SoloGamePage() {
           aiSetup.personalities
         );
 
-        setAiPlayers(manager.getAIPlayers());
+        const initialAIPlayers = manager.getAIPlayers();
+        setAiPlayers(initialAIPlayers);
+        
+        // Issue #122: 初始化 AI 玩家位置到 aiPlayerPositions
+        const initialPositions = new Map<string, { x: number; y: number; floor: Floor }>();
+        initialAIPlayers.forEach(aiPlayer => {
+          initialPositions.set(aiPlayer.id, aiPlayer.position || { x: 7, y: 7, floor: 'ground' });
+        });
+        setAiPlayerPositions(initialPositions);
+        
         setLog(prev => [
           ...prev,
           `選擇了 ${character.name}`,
@@ -580,8 +599,11 @@ export default function SoloGamePage() {
       rollResult: null,
     }));
     
-    // 繼續新回合
-    continueToNextTurn();
+    // Issue #127: 標記回合結束，觸發自動切換
+    setTurnState({
+      hasEnded: true,
+      endedByDiscovery: true,
+    });
   };
 
   // 處理進入 Haunt Reveal
@@ -1046,11 +1068,15 @@ export default function SoloGamePage() {
     }));
   }, []);
 
-  // 繼續到下一回合
+  // 繼續到下一回合（保留用於其他情況）
   const continueToNextTurn = () => {
     setTurn(t => t + 1);
     setMoves(player!.stats.speed[0]);
     setDiscovered(false);
+    setTurnState({
+      hasEnded: false,
+      endedByDiscovery: false,
+    });
     setLog(prev => [...prev, `回合 ${turn + 1}`]);
     updateReachablePositions(multiFloorMap[currentFloor], position, player!.stats.speed[0], false);
   };
@@ -1294,16 +1320,12 @@ export default function SoloGamePage() {
       setLog(prev => [...prev, '回合結束']);
       setReachablePositions([]);
       
-      // 延遲後開始新回合（如果沒有顯示卡牌）
-      if (!cardDrawn) {
-        setTimeout(() => {
-          setTurn(t => t + 1);
-          setMoves(player.stats.speed[0]);
-          setDiscovered(false);
-          setLog(prev => [...prev, `回合 ${turn + 1}`]);
-          updateReachablePositions(newMultiFloorMap[currentFloor], { x, y }, player.stats.speed[0], false);
-        }, 1500);
-      }
+      // Issue #127: 標記回合結束（由發現房間觸發）
+      // 自動切換回合將由 useEffect 處理
+      setTurnState({
+        hasEnded: true,
+        endedByDiscovery: true,
+      });
     } else {
       // 移動到已探索的房間
       setPosition({ x, y });
@@ -1327,9 +1349,19 @@ export default function SoloGamePage() {
     }
   };
 
-  // 結束回合
-  const endTurn = async () => {
-    if (!player) return;
+  // Issue #127: 結束回合並切換到下一個玩家
+  const handleEndTurn = async () => {
+    if (!player) {
+      setIsProcessingTurnSwitch(false);
+      return;
+    }
+
+    // 重置回合狀態
+    setDiscovered(false);
+    setTurnState({
+      hasEnded: false,
+      endedByDiscovery: false,
+    });
 
     // Issue #111: 如果有 AI 玩家，執行 AI 回合
     if (aiManager && aiPlayers.length > 0) {
@@ -1435,15 +1467,22 @@ export default function SoloGamePage() {
       setIsProcessingAITurn(false);
       setLog(prev => [...prev, '👤 你的回合']);
       
-      // 保持 Modal 開啟，讓玩家查看所有 AI 行動
-      // Modal 會在玩家點擊「繼續」後關閉
+      // 進入下一回合
+      setTurn(t => t + 1);
+      setMoves(player.stats.speed[0]);
+      updateReachablePositions(multiFloorMap[currentFloor], position, player.stats.speed[0], false);
+      
+      // 完成回合切換
+      setIsProcessingTurnSwitch(false);
     } else {
       // 沒有 AI 玩家時，直接進入下一回合
       setTurn(t => t + 1);
       setMoves(player.stats.speed[0]);
-      setDiscovered(false);
       setLog(prev => [...prev, '回合結束', `回合 ${turn + 1}`]);
       updateReachablePositions(multiFloorMap[currentFloor], position, player.stats.speed[0], false);
+      
+      // 完成回合切換
+      setIsProcessingTurnSwitch(false);
     }
   };
 
@@ -1451,12 +1490,8 @@ export default function SoloGamePage() {
   const handleAIActionModalContinue = () => {
     setAiActionModalState({ isOpen: false, currentAIPlayerName: '' });
     
-    // 進入下一回合
-    setTurn(t => t + 1);
-    setMoves(player!.stats.speed[0]);
-    setDiscovered(false);
-    setLog(prev => [...prev, `回合 ${turn + 1}`]);
-    updateReachablePositions(multiFloorMap[currentFloor], position, player!.stats.speed[0], false);
+    // Issue #127: 進入下一回合（AI 回合已經在 handleEndTurn 中執行過）
+    // 這裡只需要關閉 Modal，因為 handleEndTurn 已經處理了回合切換
   };
 
   // 樓梯連接配置 - 定義每個樓梯房間對應的目標房間
@@ -1603,8 +1638,11 @@ export default function SoloGamePage() {
       return;
     }
     
-    // 繼續新回合
-    continueToNextTurn();
+    // Issue #127: 標記回合結束，觸發自動切換
+    setTurnState({
+      hasEnded: true,
+      endedByDiscovery: true,
+    });
   };
 
   // Issue #104: 處理事件卡檢定擲骰
@@ -1693,9 +1731,20 @@ export default function SoloGamePage() {
       result: null,
     });
     
-    // 繼續新回合
-    continueToNextTurn();
+    // Issue #127: 標記回合結束，觸發自動切換
+    setTurnState({
+      hasEnded: true,
+      endedByDiscovery: true,
+    });
   };
+
+  // Issue #122: 創建帶有最新位置的 AI 玩家列表（用於 GameBoard）
+  const aiPlayersWithLatestPositions = useMemo(() => {
+    return aiPlayers.map(aiPlayer => ({
+      ...aiPlayer,
+      position: aiPlayerPositions.get(aiPlayer.id) || aiPlayer.position || { x: 7, y: 7, floor: 'ground' as Floor },
+    }));
+  }, [aiPlayers, aiPlayerPositions]);
 
   // Issue #119: 構建所有玩家列表（人類 + AI）
   const buildAllPlayers = (): PlayerInfo[] => {
@@ -1726,8 +1775,9 @@ export default function SoloGamePage() {
       });
     }
 
-    // 添加 AI 玩家
+    // 添加 AI 玩家 - 使用最新的 aiPlayerPositions
     aiPlayers.forEach(aiPlayer => {
+      // Issue #122: 優先使用 aiPlayerPositions 中的位置，確保顯示最新位置
       const aiPos = aiPlayerPositions.get(aiPlayer.id) || aiPlayer.position || { x: 7, y: 7, floor: 'ground' as Floor };
       players.push({
         id: aiPlayer.id,
@@ -1788,6 +1838,14 @@ export default function SoloGamePage() {
       return newMap;
     });
   };
+
+  // Issue #127: 監聽回合結束，自動切換到下一個玩家
+  useEffect(() => {
+    if (turnState.hasEnded && !isProcessingTurnSwitch && !isProcessingAITurn) {
+      setIsProcessingTurnSwitch(true);
+      handleEndTurn();
+    }
+  }, [turnState.hasEnded, isProcessingTurnSwitch, isProcessingAITurn]);
 
   return (
     <main className="min-h-screen bg-gray-900 text-white">
@@ -1886,7 +1944,7 @@ export default function SoloGamePage() {
                       currentPlayerId: 'solo-player',
                     },
                   }}
-                  aiPlayers={aiPlayers}
+                  aiPlayers={aiPlayersWithLatestPositions}
                   currentTurnPlayerId={currentTurnPlayer}
                   onAIClick={(aiId) => {
                     const ai = aiPlayers.find(p => p.id === aiId);
@@ -1904,12 +1962,13 @@ export default function SoloGamePage() {
               <h3 className="text-sm font-bold text-gray-400 mb-3 text-center">移動控制</h3>
               <div className="flex justify-center gap-3">
                 <Button
-                  onClick={endTurn}
+                  onClick={handleEndTurn}
                   variant="secondary"
                   size="sm"
                   className="h-10 sm:h-12 text-xs sm:text-sm"
+                  disabled={isProcessingTurnSwitch || isProcessingAITurn}
                 >
-                  結束回合
+                  {isProcessingTurnSwitch ? '切換中...' : '結束回合'}
                 </Button>
                 
                 {/* 戰鬥按鈕 (Issue #103) - 只在作祟階段顯示 */}
