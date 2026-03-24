@@ -425,6 +425,7 @@ export class CardEffectApplier {
   /**
    * 解析效果描述中的數值變化
    * 簡單的解析器，處理常見的效果格式
+   * Issue #117: 支援 "失去 X 點體力" 和 "獲得 X 點知識" 格式
    */
   private parseEffectStats(effect?: string): Partial<Record<'speed' | 'might' | 'sanity' | 'knowledge', number>> | null {
     if (!effect) return null;
@@ -432,27 +433,63 @@ export class CardEffectApplier {
     const changes: Partial<Record<'speed' | 'might' | 'sanity' | 'knowledge', number>> = {};
     const lowerEffect = effect.toLowerCase();
 
-    // 解析體力/力量變化
+    // Issue #117: 解析 "失去 X 點屬性" 或 "獲得 X 點屬性" 格式
+    // 例如："失去 1 點體力"、"獲得 1 點知識"
+    
+    // 解析體力/力量變化 (might)
+    const mightLossMatch = lowerEffect.match(/失去\s*(\d+)\s*點體力/);
+    const mightGainMatch = lowerEffect.match(/獲得\s*(\d+)\s*點體力/);
+    if (mightLossMatch) {
+      changes.might = -parseInt(mightLossMatch[1]);
+    } else if (mightGainMatch) {
+      changes.might = parseInt(mightGainMatch[1]);
+    }
+
+    // 解析速度變化 (speed)
+    const speedLossMatch = lowerEffect.match(/失去\s*(\d+)\s*點速度/);
+    const speedGainMatch = lowerEffect.match(/獲得\s*(\d+)\s*點速度/);
+    if (speedLossMatch) {
+      changes.speed = -parseInt(speedLossMatch[1]);
+    } else if (speedGainMatch) {
+      changes.speed = parseInt(speedGainMatch[1]);
+    }
+
+    // 解析理智變化 (sanity)
+    const sanityLossMatch = lowerEffect.match(/失去\s*(\d+)\s*點理智/);
+    const sanityGainMatch = lowerEffect.match(/獲得\s*(\d+)\s*點理智/);
+    if (sanityLossMatch) {
+      changes.sanity = -parseInt(sanityLossMatch[1]);
+    } else if (sanityGainMatch) {
+      changes.sanity = parseInt(sanityGainMatch[1]);
+    }
+
+    // 解析知識變化 (knowledge)
+    const knowledgeLossMatch = lowerEffect.match(/失去\s*(\d+)\s*點知識/);
+    const knowledgeGainMatch = lowerEffect.match(/獲得\s*(\d+)\s*點知識/);
+    if (knowledgeLossMatch) {
+      changes.knowledge = -parseInt(knowledgeLossMatch[1]);
+    } else if (knowledgeGainMatch) {
+      changes.knowledge = parseInt(knowledgeGainMatch[1]);
+    }
+
+    // 保留舊格式支援: "力量 +1"、"體力 -1" 等
     const mightMatch = lowerEffect.match(/(力量|體力|might)\s*([+-])(\d+)/);
-    if (mightMatch) {
+    if (mightMatch && changes.might === undefined) {
       changes.might = mightMatch[2] === '+' ? parseInt(mightMatch[3]) : -parseInt(mightMatch[3]);
     }
 
-    // 解析速度變化
     const speedMatch = lowerEffect.match(/(速度|speed)\s*([+-])(\d+)/);
-    if (speedMatch) {
+    if (speedMatch && changes.speed === undefined) {
       changes.speed = speedMatch[2] === '+' ? parseInt(speedMatch[3]) : -parseInt(speedMatch[3]);
     }
 
-    // 解析理智變化
     const sanityMatch = lowerEffect.match(/(理智|sanity)\s*([+-])(\d+)/);
-    if (sanityMatch) {
+    if (sanityMatch && changes.sanity === undefined) {
       changes.sanity = sanityMatch[2] === '+' ? parseInt(sanityMatch[3]) : -parseInt(sanityMatch[3]);
     }
 
-    // 解析知識變化
     const knowledgeMatch = lowerEffect.match(/(知識|knowledge)\s*([+-])(\d+)/);
-    if (knowledgeMatch) {
+    if (knowledgeMatch && changes.knowledge === undefined) {
       changes.knowledge = knowledgeMatch[2] === '+' ? parseInt(knowledgeMatch[3]) : -parseInt(knowledgeMatch[3]);
     }
 
