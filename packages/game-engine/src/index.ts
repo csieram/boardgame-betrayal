@@ -80,5 +80,17 @@ export type {
   DoorMatchResult,
 } from './rules/tilePlacement';
 
+// Card Drawing System (Issue #36)
+export {
+  CardDrawingManager,
+  CardEffectApplier,
+  drawAndApplyCard,
+} from './rules/cardDrawing';
+export type {
+  CardDrawResult,
+  CardEffectResult,
+  PlayerState,
+} from './rules/cardDrawing';
+
 // Legacy exports (for backward compatibility)
 export { GameEngine as GameEngineLegacy } from './core/GameEngine';

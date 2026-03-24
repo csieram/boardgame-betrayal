@@ -15,6 +15,11 @@ import {
   SeededRng,
   StairManager,
   STAIR_ROOM_IDS,
+  CardDrawingManager,
+  CardEffectApplier,
+  drawAndApplyCard,
+  CardDrawResult,
+  PlayerState,
 } from '@betrayal/game-engine';
 
 // 地圖大小
@@ -38,6 +43,14 @@ interface SoloGameState {
     drawn: Set<string>;
   };
   seed: string;
+}
+
+/** 抽卡結果狀態 */
+interface CardDrawState {
+  showCard: boolean;
+  cardResult: CardDrawResult | null;
+  isHauntRoll: boolean;
+  hauntRollResult: { triggered: boolean; roll: number; threshold: number } | null;
 }
 
 /**
@@ -149,6 +162,19 @@ export default function SoloGamePage() {
   const [reachablePositions, setReachablePositions] = useState<{ x: number; y: number; isExplored?: boolean }[]>([]);
   const [validExploreDirections, setValidExploreDirections] = useState<Direction[]>([]);
   const [gameState, setGameState] = useState<SoloGameState>(() => createInitialGameState(Date.now().toString()));
+  
+  // 卡牌抽牌系統
+  const [cardManager] = useState(() => new CardDrawingManager(Date.now().toString()));
+  const [effectApplier] = useState(() => new CardEffectApplier(Date.now().toString()));
+  const [cardDrawState, setCardDrawState] = useState<CardDrawState>({
+    showCard: false,
+    cardResult: null,
+    isHauntRoll: false,
+    hauntRollResult: null,
+  });
+  
+  // 玩家狀態（用於卡牌效果）
+  const [playerState, setPlayerState] = useState<PlayerState | null>(null);
 
   // 當前樓層的地圖（向後兼容）
   const map = multiFloorMap[currentFloor];
@@ -189,7 +215,7 @@ export default function SoloGamePage() {
       const newGameState = createInitialGameState(seed);
 
       // 過濾並洗牌各樓層牌堆（排除起始房間）
-      const groundRooms = ROOMS.filter(r => r.floor === 'ground' && r.id !== 'entrance_hall' && r.id !== 'stairs_from_ground');
+      const groundRooms = ROOMS.filter(r => r.floor === 'ground' && r.id !== 'entrance_hall');
       const upperRooms = ROOMS.filter(r => r.floor === 'upper' && r.id !== 'stairs_from_upper');
       const basementRooms = ROOMS.filter(r => r.floor === 'basement' && r.id !== 'stairs_from_basement');
 
@@ -245,6 +271,22 @@ export default function SoloGamePage() {
       });
 
       setMultiFloorMap(initialMultiFloorMap);
+      
+      // 初始化玩家狀態（用於卡牌效果）
+      const initialPlayerState: PlayerState = {
+        id: 'solo-player',
+        name: character.name,
+        stats: {
+          speed: character.stats.speed[0],
+          might: character.stats.might[0],
+          sanity: character.stats.sanity[0],
+          knowledge: character.stats.knowledge[0],
+        },
+        items: [],
+        omens: [],
+      };
+      setPlayerState(initialPlayerState);
+      
       setLog([`選擇了 ${character.name}`, '從入口大廳開始', '回合 1']);
       setIsLoading(false);
 
@@ -498,17 +540,70 @@ export default function SoloGamePage() {
       setMultiFloorMap(newMultiFloorMap);
       setPosition({ x, y });
       setDiscovered(true);
-      setLog(prev => [...prev, `發現新房間: ${placedRoom.name}（旋轉 ${placedRoom.rotation}°）`, '回合結束']);
+      
+      // 檢查房間符號並抽牌 (Issue #36)
+      const roomSymbol = placedRoom.symbol;
+      let cardDrawn = false;
+      
+      if (roomSymbol && playerState) {
+        const symbolToCardType: Record<string, 'event' | 'item' | 'omen'> = {
+          'E': 'event',
+          'I': 'item',
+          'O': 'omen',
+        };
+        
+        const cardType = symbolToCardType[roomSymbol];
+        if (cardType) {
+          console.log(`[CardDrawing] Room has symbol ${roomSymbol}, drawing ${cardType} card`);
+          
+          const drawResult = drawAndApplyCard(cardManager, effectApplier, cardType, playerState);
+          
+          if (drawResult.success && drawResult.card) {
+            cardDrawn = true;
+            setCardDrawState({
+              showCard: true,
+              cardResult: drawResult,
+              isHauntRoll: !!drawResult.hauntRoll,
+              hauntRollResult: drawResult.hauntRoll || null,
+            });
+            
+            // 更新玩家狀態（物品/預兆已添加到 playerState）
+            setPlayerState({ ...playerState });
+            
+            // 添加到日誌
+            const symbolName = roomSymbol === 'E' ? '事件' : roomSymbol === 'I' ? '物品' : '預兆';
+            setLog(prev => [...prev, `發現新房間: ${placedRoom.name}（${symbolName}符號）`, `抽到${symbolName}卡: ${drawResult.card!.name}`]);
+            
+            // 如果觸發作祟檢定，添加到日誌
+            if (drawResult.hauntRoll) {
+              const hauntMsg = drawResult.hauntRoll.triggered 
+                ? `⚠️ 作祟觸發！擲出 ${drawResult.hauntRoll.roll} < ${drawResult.hauntRoll.threshold}`
+                : `作祟未觸發，擲出 ${drawResult.hauntRoll.roll} >= ${drawResult.hauntRoll.threshold}`;
+              setLog(prev => [...prev, hauntMsg]);
+            }
+          } else {
+            setLog(prev => [...prev, `發現新房間: ${placedRoom.name}（無法抽牌：${drawResult.message}）`]);
+          }
+        }
+      }
+      
+      if (!cardDrawn) {
+        setLog(prev => [...prev, `發現新房間: ${placedRoom.name}（旋轉 ${placedRoom.rotation}°）`]);
+      }
+      
+      setLog(prev => [...prev, '回合結束']);
       setReachablePositions([]);
       
-      // 延遲後開始新回合
-      setTimeout(() => {
-        setTurn(t => t + 1);
-        setMoves(player.stats.speed[0]);
-        setDiscovered(false);
-        setLog(prev => [...prev, `回合 ${turn + 1}`]);
-        updateReachablePositions(newMultiFloorMap[currentFloor], { x, y }, player.stats.speed[0], false);
-      }, 1500);
+      // 延遲後開始新回合（如果沒有顯示卡牌）
+      if (!cardDrawn) {
+        setTimeout(() => {
+          setTurn(t => t + 1);
+          setMoves(player.stats.speed[0]);
+          setDiscovered(false);
+          setLog(prev => [...prev, `回合 ${turn + 1}`]);
+          updateReachablePositions(newMultiFloorMap[currentFloor], { x, y }, player.stats.speed[0], false);
+        }, 1500);
+      }
     } else {
       // 移動到已探索的房間
       setPosition({ x, y });
@@ -677,6 +772,23 @@ export default function SoloGamePage() {
       </main>
     );
   }
+
+  // 處理關閉卡牌顯示並繼續遊戲
+  const handleCloseCardDisplay = () => {
+    setCardDrawState({
+      showCard: false,
+      cardResult: null,
+      isHauntRoll: false,
+      hauntRollResult: null,
+    });
+    
+    // 繼續新回合
+    setTurn(t => t + 1);
+    setMoves(player!.stats.speed[0]);
+    setDiscovered(false);
+    setLog(prev => [...prev, `回合 ${turn + 1}`]);
+    updateReachablePositions(multiFloorMap[currentFloor], position, player!.stats.speed[0], false);
+  };
 
   return (
     <main className="min-h-screen bg-gray-900 text-white">
@@ -918,6 +1030,110 @@ export default function SoloGamePage() {
           </a>
         </div>
       </div>
+
+      {/* 卡牌抽牌彈窗 (Issue #36) */}
+      <AnimatePresence>
+        {cardDrawState.showCard && cardDrawState.cardResult?.card && (
+          <motion.div
+            className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={handleCloseCardDisplay}
+          >
+            <motion.div
+              className="bg-gray-800 rounded-2xl p-6 max-w-md w-full border-2 border-gray-600"
+              initial={{ scale: 0.8, y: 50 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.8, y: 50 }}
+              onClick={e => e.stopPropagation()}
+            >
+              {/* 卡牌類型標題 */}
+              <div className="text-center mb-4">
+                <span className={`inline-block px-4 py-1 rounded-full text-sm font-bold ${
+                  cardDrawState.cardResult.type === 'event' ? 'bg-green-600 text-white' :
+                  cardDrawState.cardResult.type === 'item' ? 'bg-blue-600 text-white' :
+                  'bg-purple-600 text-white'
+                }`}>
+                  {cardDrawState.cardResult.type === 'event' ? '事件卡' :
+                   cardDrawState.cardResult.type === 'item' ? '物品卡' : '預兆卡'}
+                </span>
+              </div>
+
+              {/* 卡牌內容 */}
+              <div className="bg-gray-700 rounded-xl p-6 mb-4">
+                {/* 卡牌圖示 */}
+                <div className="w-24 h-24 mx-auto mb-4 bg-gray-600 rounded-lg flex items-center justify-center">
+                  <svg viewBox="0 0 100 100" className="w-20 h-20" dangerouslySetInnerHTML={{ 
+                    __html: cardDrawState.cardResult.card.icon || '<rect x="20" y="20" width="60" height="60" fill="#666"/>' 
+                  }} />
+                </div>
+
+                {/* 卡牌名稱 */}
+                <h3 className="text-xl font-bold text-center mb-2">
+                  {cardDrawState.cardResult.card.name}
+                </h3>
+
+                {/* 卡牌描述 */}
+                <p className="text-gray-300 text-center text-sm mb-4">
+                  {cardDrawState.cardResult.card.description}
+                </p>
+
+                {/* 效果說明 */}
+                {cardDrawState.cardResult.card.effect && (
+                  <div className="bg-gray-600/50 rounded-lg p-3">
+                    <p className="text-yellow-400 text-sm text-center">
+                      效果：{cardDrawState.cardResult.card.effect}
+                    </p>
+                  </div>
+                )}
+
+                {/* 檢定需求 */}
+                {cardDrawState.cardResult.card.rollRequired && (
+                  <div className="bg-gray-600/50 rounded-lg p-3 mt-2">
+                    <p className="text-orange-400 text-sm text-center">
+                      需要 {cardDrawState.cardResult.card.rollRequired.stat} 檢定（目標 {cardDrawState.cardResult.card.rollRequired.target}）
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* 效果結果訊息 */}
+              {cardDrawState.cardResult.effectResult && (
+                <div className="mb-4 text-center">
+                  <p className="text-white text-sm">
+                    {cardDrawState.cardResult.effectResult.message}
+                  </p>
+                </div>
+              )}
+
+              {/* 作祟檢定結果 */}
+              {cardDrawState.hauntRollResult && (
+                <div className={`rounded-lg p-4 mb-4 text-center ${
+                  cardDrawState.hauntRollResult.triggered 
+                    ? 'bg-red-900/50 border border-red-500' 
+                    : 'bg-green-900/50 border border-green-500'
+                }`}>
+                  <p className="text-lg font-bold mb-1">
+                    {cardDrawState.hauntRollResult.triggered ? '⚠️ 作祟觸發！' : '✅ 作祟未觸發'}
+                  </p>
+                  <p className="text-sm text-gray-300">
+                    擲出 {cardDrawState.hauntRollResult.roll}，需要小於 {cardDrawState.hauntRollResult.threshold} 才觸發
+                  </p>
+                </div>
+              )}
+
+              {/* 確認按鈕 */}
+              <Button 
+                onClick={handleCloseCardDisplay}
+                className="w-full"
+              >
+                {cardDrawState.hauntRollResult?.triggered ? '開始作祟階段' : '繼續遊戲'}
+              </Button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }
