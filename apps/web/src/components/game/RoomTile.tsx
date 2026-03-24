@@ -49,6 +49,8 @@ interface RoomTileProps {
   isHighlighted?: boolean;
   /** 是否顯示樓梯圖示 */
   showStairIcon?: boolean;
+  /** Issue #118: 子元素（用於渲染 AI 標記） */
+  children?: React.ReactNode;
 }
 
 /**
@@ -76,6 +78,7 @@ export function RoomTile({
   showDoors = true,
   isHighlighted = false,
   showStairIcon = true,
+  children,
 }: RoomTileProps) {
   const [svgContent, setSvgContent] = useState<string>('');
   const [isLoaded, setIsLoaded] = useState(false);
@@ -236,16 +239,26 @@ export function RoomTile({
         </p>
       </div>
 
-      {/* 玩家標記 */}
-      {players.length > 0 && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-          <PlayerTokenGroup
-            characters={players}
-            currentPlayerIndex={currentPlayerIndex}
-            size="sm"
-          />
-        </div>
-      )}
+      {/* Issue #126: 玩家和 AI 標記容器 - 使用更大的區域避免重疊 */}
+      <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+        {/* 玩家標記 */}
+        {players.length > 0 && (
+          <div className="pointer-events-auto">
+            <PlayerTokenGroup
+              characters={players}
+              currentPlayerIndex={currentPlayerIndex}
+              size="sm"
+            />
+          </div>
+        )}
+
+        {/* Issue #118: 渲染子元素（AI 標記） */}
+        {children && (
+          <div className="pointer-events-auto ml-1">
+            {children}
+          </div>
+        )}
+      </div>
 
       {/* 可達指示器 */}
       {isReachable && (

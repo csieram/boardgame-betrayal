@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Room, Character, Floor, Tile, Direction } from '@betrayal/shared';
 import { RoomTile, EmptyRoomTile } from './RoomTile';
 import { PlayerToken } from './PlayerToken';
-import { STAIR_ROOM_IDS, StairManager } from '@betrayal/game-engine';
+import { AIPawn, AIPawnGroup } from './AIPawn';
+import { STAIR_ROOM_IDS, StairManager, AIPlayerInfo, AIPersonality } from '@betrayal/game-engine';
 
 /** 樓梯房間 ID 列表 */
 const STAIR_ROOM_LIST = [
@@ -54,6 +55,12 @@ interface GameBoardProps {
       currentPlayerId: string;
     };
   };
+  /** Issue #118: AI 玩家列表 */
+  aiPlayers?: AIPlayerInfo[];
+  /** Issue #118: 當前 AI 回合玩家 ID */
+  currentTurnPlayerId?: string;
+  /** Issue #118: 點擊 AI 標記的回調 */
+  onAIClick?: (aiId: string) => void;
 }
 
 /**
@@ -82,6 +89,9 @@ export function GameBoard({
   reachablePositions = [],
   showAllFloors = true,
   gameState,
+  aiPlayers = [],
+  currentTurnPlayerId,
+  onAIClick,
 }: GameBoardProps) {
   const [selectedRoom, setSelectedRoom] = useState<{ room: Room; x: number; y: number } | null>(null);
   const [activeFloor, setActiveFloor] = useState<Floor>(currentFloor);
@@ -155,6 +165,21 @@ export function GameBoard({
   // 檢查位置是否有玩家
   const hasPlayerAt = (x: number, y: number) => {
     return playerPosition.x === x && playerPosition.y === y;
+  };
+
+  // Issue #118: 檢查位置有哪些 AI 玩家
+  const getAIPlayersAt = (x: number, y: number, floor: Floor) => {
+    return aiPlayers.filter(ai => 
+      ai.position?.x === x && 
+      ai.position?.y === y && 
+      ai.position?.floor === floor &&
+      ai.isAlive
+    );
+  };
+
+  // Issue #118: 檢查位置是否有 AI 玩家
+  const hasAIAt = (x: number, y: number, floor: Floor) => {
+    return getAIPlayersAt(x, y, floor).length > 0;
   };
 
   // 檢查玩家是否在樓梯房間
@@ -277,6 +302,10 @@ export function GameBoard({
                 // 檢查是否可移動（包括已探索和未探索的可達位置）
                 const movable = isMovable(x, y) && floor === activeFloor;
 
+                // Issue #118: 獲取該位置的 AI 玩家
+                const aiPlayersAtPosition = getAIPlayersAt(x, y, floor);
+                const hasAI = aiPlayersAtPosition.length > 0;
+
                 return (
                   <RoomTile
                     key={`${x}-${y}`}
@@ -290,7 +319,39 @@ export function GameBoard({
                     size="md"
                     showDoors={true}
                     isHighlighted={selectedRoom?.x === x && selectedRoom?.y === y}
-                  />
+                  >
+                    {/* Issue #122: 渲染 AI 標記 */}
+                    {hasAI && (
+                      <>
+                        {aiPlayersAtPosition.length === 1 ? (
+                          <AIPawn
+                            character={aiPlayersAtPosition[0].character}
+                            personality={aiPlayersAtPosition[0].personality}
+                            name={aiPlayersAtPosition[0].name}
+                            isCurrentTurn={currentTurnPlayerId === aiPlayersAtPosition[0].id}
+                            isActing={currentTurnPlayerId === aiPlayersAtPosition[0].id}
+                            size="md"
+                            onClick={() => onAIClick?.(aiPlayersAtPosition[0].id)}
+                            activity={`${aiPlayersAtPosition[0].position.floor} (${aiPlayersAtPosition[0].position.x}, ${aiPlayersAtPosition[0].position.y})`}
+                          />
+                        ) : (
+                          <AIPawnGroup
+                            aiPlayers={aiPlayersAtPosition.map(ai => ({
+                              id: ai.id,
+                              character: ai.character,
+                              personality: ai.personality,
+                              name: ai.name,
+                              isCurrentTurn: currentTurnPlayerId === ai.id,
+                              isActing: currentTurnPlayerId === ai.id,
+                            }))}
+                            size="md"
+                            maxDisplay={3}
+                            onAIClick={onAIClick}
+                          />
+                        )}
+                      </>
+                    )}
+                  </RoomTile>
                 );
               });
             })}

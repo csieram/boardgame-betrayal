@@ -113,6 +113,7 @@ export function PlayerToken({
  * 多個玩家標記組件
  * 
  * 當多個玩家在同一個房間時使用
+ * Issue #126: 修復角色重疊問題 - 使用 flex row 佈局
  */
 interface PlayerTokenGroupProps {
   /** 角色列表 */
@@ -134,49 +135,53 @@ export function PlayerTokenGroup({
   const displayCharacters = characters.slice(0, maxDisplay);
   const remainingCount = characters.length - maxDisplay;
 
-  // 根據數量計算佈局
-  const getPosition = (index: number, total: number) => {
-    if (total === 1) return { x: 0, y: 0 };
-    if (total === 2) {
-      return index === 0 ? { x: -8, y: 0 } : { x: 8, y: 0 };
-    }
-    if (total === 3) {
-      if (index === 0) return { x: 0, y: -8 };
-      if (index === 1) return { x: -8, y: 8 };
-      return { x: 8, y: 8 };
-    }
-    // 4個或更多
-    if (index === 0) return { x: -8, y: -8 };
-    if (index === 1) return { x: 8, y: -8 };
-    if (index === 2) return { x: -8, y: 8 };
-    return { x: 8, y: 8 };
+  // Issue #126: 使用 flex row 佈局避免重疊
+  // 根據角色數量調整間距和縮放
+  const getContainerClasses = (count: number) => {
+    if (count === 1) return 'gap-0';
+    if (count === 2) return 'gap-0.5 -space-x-2';
+    if (count === 3) return 'gap-0.5 -space-x-3';
+    return 'gap-0.5 -space-x-4'; // 4+
   };
 
+  // 根據數量調整尺寸
+  const getAdjustedSize = (count: number): 'sm' | 'md' | 'lg' => {
+    if (count <= 2) return size;
+    if (count === 3) return size === 'lg' ? 'md' : 'sm';
+    return 'sm'; // 4+ 使用小尺寸
+  };
+
+  const adjustedSize = getAdjustedSize(displayCharacters.length);
+  const containerClasses = getContainerClasses(displayCharacters.length);
+
   return (
-    <div className="relative w-full h-full flex items-center justify-center">
-      {displayCharacters.map((character, index) => {
-        const pos = getPosition(index, Math.min(characters.length, maxDisplay));
-        return (
-          <motion.div
-            key={character.id}
-            className="absolute"
-            initial={{ x: 0, y: 0 }}
-            animate={{ x: pos.x, y: pos.y }}
-            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-          >
-            <PlayerToken
-              character={character}
-              isCurrentPlayer={index === currentPlayerIndex}
-              size={size}
-            />
-          </motion.div>
-        );
-      })}
+    <div className={`flex items-center justify-center ${containerClasses}`}>
+      {displayCharacters.map((character, index) => (
+        <motion.div
+          key={character.id}
+          className="relative"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ 
+            type: 'spring',
+            stiffness: 500,
+            damping: 30,
+            delay: index * 0.05
+          }}
+          style={{ zIndex: displayCharacters.length - index }}
+        >
+          <PlayerToken
+            character={character}
+            isCurrentPlayer={index === currentPlayerIndex}
+            size={adjustedSize}
+          />
+        </motion.div>
+      ))}
       
       {/* 顯示剩餘玩家數量 */}
       {remainingCount > 0 && (
         <motion.div
-          className="absolute -bottom-1 -right-1 w-5 h-5 bg-gray-800 rounded-full flex items-center justify-center text-[10px] text-white font-bold border border-gray-600"
+          className="relative w-5 h-5 bg-gray-800 rounded-full flex items-center justify-center text-[10px] text-white font-bold border border-gray-600 -ml-2 z-10"
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.2 }}

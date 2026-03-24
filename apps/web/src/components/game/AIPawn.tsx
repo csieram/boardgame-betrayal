@@ -196,6 +196,7 @@ export function AIPawn({
  * AI 標記群組組件
  * 
  * 當多個 AI 玩家在同一個房間時使用
+ * Issue #126: 修復角色重疊問題 - 使用 flex row 佈局
  */
 interface AIPawnGroupProps {
   /** AI 玩家列表 */
@@ -224,47 +225,55 @@ export function AIPawnGroup({
   const displayPlayers = aiPlayers.slice(0, maxDisplay);
   const remainingCount = aiPlayers.length - maxDisplay;
 
-  // 根據數量計算佈局
-  const getPosition = (index: number, total: number) => {
-    if (total === 1) return { x: 0, y: 0 };
-    if (total === 2) {
-      return index === 0 ? { x: -6, y: 0 } : { x: 6, y: 0 };
-    }
-    // 3個或更多
-    if (index === 0) return { x: 0, y: -6 };
-    if (index === 1) return { x: -6, y: 6 };
-    return { x: 6, y: 6 };
+  // Issue #126: 使用 flex row 佈局避免重疊
+  // 根據 AI 數量調整間距和縮放
+  const getContainerClasses = (count: number) => {
+    if (count === 1) return 'gap-0';
+    if (count === 2) return 'gap-0.5 -space-x-2';
+    return 'gap-0.5 -space-x-3'; // 3+
   };
 
+  // 根據數量調整尺寸
+  const getAdjustedSize = (count: number): 'sm' | 'md' | 'lg' => {
+    if (count <= 2) return size;
+    return 'sm'; // 3+ 使用小尺寸
+  };
+
+  const adjustedSize = getAdjustedSize(displayPlayers.length);
+  const containerClasses = getContainerClasses(displayPlayers.length);
+
   return (
-    <div className="relative w-full h-full flex items-center justify-center">
-      {displayPlayers.map((ai, index) => {
-        const pos = getPosition(index, Math.min(aiPlayers.length, maxDisplay));
-        return (
-          <motion.div
-            key={ai.id}
-            className="absolute"
-            initial={{ x: 0, y: 0 }}
-            animate={{ x: pos.x, y: pos.y }}
-            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-          >
-            <AIPawn
-              character={ai.character}
-              personality={ai.personality}
-              name={ai.name}
-              isCurrentTurn={ai.isCurrentTurn}
-              isActing={ai.isActing}
-              size={size}
-              onClick={() => onAIClick?.(ai.id)}
-            />
-          </motion.div>
-        );
-      })}
+    <div className={`flex items-center justify-center ${containerClasses}`}>
+      {displayPlayers.map((ai, index) => (
+        <motion.div
+          key={ai.id}
+          className="relative"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ 
+            type: 'spring',
+            stiffness: 500,
+            damping: 30,
+            delay: index * 0.05
+          }}
+          style={{ zIndex: displayPlayers.length - index }}
+        >
+          <AIPawn
+            character={ai.character}
+            personality={ai.personality}
+            name={ai.name}
+            isCurrentTurn={ai.isCurrentTurn}
+            isActing={ai.isActing}
+            size={adjustedSize}
+            onClick={() => onAIClick?.(ai.id)}
+          />
+        </motion.div>
+      ))}
       
       {/* 顯示剩餘 AI 數量 */}
       {remainingCount > 0 && (
         <motion.div
-          className="absolute -bottom-1 -right-1 w-5 h-5 bg-gray-800 rounded-full flex items-center justify-center text-[10px] text-white font-bold border-2"
+          className="relative w-5 h-5 bg-gray-800 rounded-full flex items-center justify-center text-[10px] text-white font-bold border-2 -ml-2 z-10"
           style={{ borderColor: '#6B7280' }}
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
