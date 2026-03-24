@@ -51,11 +51,7 @@ const STARTING_ROOMS: Record<string, Array<{ roomId: string; position: { x: numb
       position: { x: 7, y: 7 },
       rotation: 0,
     },
-    {
-      roomId: 'stairs_from_ground',
-      position: { x: 7, y: 9 },
-      rotation: 0,
-    },
+    // stairs_from_ground removed - must be discovered
   ],
   upper: [
     {
@@ -77,9 +73,8 @@ const STARTING_ROOMS: Record<string, Array<{ roomId: string; position: { x: numb
  * 建立空的遊戲狀態
  */
 function createInitialGameState(seed: string): SoloGameState {
-  // Issue #88: 添加 stairs_from_ground 到初始放置的房間 ID
   return {
-    placedRoomIds: new Set(['entrance_hall', 'stairs_from_upper', 'stairs_from_basement', 'stairs_from_ground']),
+    placedRoomIds: new Set(['entrance_hall', 'stairs_from_upper', 'stairs_from_basement']),
     roomDecks: {
       ground: [],
       upper: [],
@@ -254,13 +249,13 @@ export default function SoloGamePage() {
       setIsLoading(false);
 
       // 計算可達位置（從入口大廳開始）
-      updateReachablePositions(initialMultiFloorMap.ground, { x: MAP_CENTER, y: MAP_CENTER }, character.stats.speed[0]);
+      updateReachablePositions(initialMultiFloorMap.ground, { x: MAP_CENTER, y: MAP_CENTER }, character.stats.speed[0], false);
     });
   };
 
   // 計算可達位置
-  const updateReachablePositions = (currentMap: Tile[][], pos: { x: number; y: number }, remainingMoves: number) => {
-    if (remainingMoves <= 0 || discovered) {
+  const updateReachablePositions = (currentMap: Tile[][], pos: { x: number; y: number }, remainingMoves: number, isDiscovered: boolean) => {
+    if (remainingMoves <= 0 || isDiscovered) {
       setReachablePositions([]);
       setValidExploreDirections([]);
       return;
@@ -512,7 +507,7 @@ export default function SoloGamePage() {
         setMoves(player.stats.speed[0]);
         setDiscovered(false);
         setLog(prev => [...prev, `回合 ${turn + 1}`]);
-        updateReachablePositions(newMultiFloorMap[currentFloor], { x, y }, player.stats.speed[0]);
+        updateReachablePositions(newMultiFloorMap[currentFloor], { x, y }, player.stats.speed[0], false);
       }, 1500);
     } else {
       // 移動到已探索的房間
@@ -520,7 +515,7 @@ export default function SoloGamePage() {
       setMoves(m => {
         const newMoves = m - 1;
         setLog(prev => [...prev, `移動到 (${x}, ${y})，剩餘移動: ${newMoves}`]);
-        updateReachablePositions(currentMap, { x, y }, newMoves);
+        updateReachablePositions(currentMap, { x, y }, newMoves, discovered);
         return newMoves;
       });
     }
@@ -544,7 +539,7 @@ export default function SoloGamePage() {
     setMoves(player.stats.speed[0]);
     setDiscovered(false);
     setLog(prev => [...prev, '回合結束', `回合 ${turn + 1}`]);
-    updateReachablePositions(multiFloorMap[currentFloor], position, player.stats.speed[0]);
+    updateReachablePositions(multiFloorMap[currentFloor], position, player.stats.speed[0], false);
   };
 
   // 方向移動
@@ -639,13 +634,19 @@ export default function SoloGamePage() {
     // 設置角色位置到目標樓梯房間（Issue #86: 正確的目標位置）
     setPosition({ x: targetPosition.x, y: targetPosition.y });
 
+    // Issue #89: 重置移動點數和 discovered 狀態
+    const resetMoves = player.stats.speed[0];
+    setMoves(resetMoves);
+    setDiscovered(false);
+
     // 更新日誌
     setLog(prev => [...prev, `使用樓梯從 ${FLOOR_NAMES[currentFloor]} 移動到 ${FLOOR_NAMES[targetFloor]}`]);
 
     // 更新可達位置（Issue #85: 使用正確的地圖和位置）
-    // 注意：使用 player.stats.speed[0] 作為移動點數，因為使用樓梯不應消耗移動點數
-    updateReachablePositions(updatedMultiFloorMap[targetFloor], { x: targetPosition.x, y: targetPosition.y }, moves);
-  }, [player, position, currentFloor, multiFloorMap, moves]);
+    // Issue #89: 使用重置後的移動點數來計算可達位置
+    // Issue #90: 直接傳入 false 避免 async state 問題
+    updateReachablePositions(updatedMultiFloorMap[targetFloor], { x: targetPosition.x, y: targetPosition.y }, resetMoves, false);
+  }, [player, position, currentFloor, multiFloorMap]);
 
   // 載入中顯示
   if (isLoading) {
