@@ -92,5 +92,46 @@ export type {
   PlayerState,
 } from './rules/cardDrawing';
 
+// Haunt System (Issue #41)
+export {
+  // Core functions
+  makeHauntRoll,
+  isLastOmen,
+  shouldMakeHauntRoll,
+  selectHauntScenario,
+  assignPlayerSides,
+  revealHaunt,
+  createHauntStartResult,
+  // Helper functions
+  isTraitor,
+  isHero,
+  getTraitor,
+  getHeroes,
+  getPlayerSide,
+  // Constants
+  HAUNT_ROLL_THRESHOLD,
+  TOTAL_OMEN_CARDS,
+} from './rules/haunt';
+export type {
+  HauntRollResult,
+  HauntRevelationResult,
+  PlayerAssignment,
+  HauntStartResult,
+} from './rules/haunt';
+
+// Haunt Scenarios Data
+export {
+  HAUNT_SCENARIOS,
+  getScenarioById,
+  getRecommendedScenarios,
+  getRandomScenario,
+  getScenarioCount,
+} from './data/hauntScenarios';
+export type {
+  HauntScenario,
+  HauntScenarioType,
+  PlayerSide,
+} from './data/hauntScenarios';
+
 // Legacy exports (for backward compatibility)
 export { GameEngine as GameEngineLegacy } from './core/GameEngine';
