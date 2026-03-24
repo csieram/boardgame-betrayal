@@ -12,6 +12,9 @@ import { HauntRevealScreen } from '@/components/game/HauntRevealScreen';
 import { EventCheckModal, EventCheckResult } from '@/components/game/EventCheckModal';
 import { AIPlayerPanel } from '@/components/game/AIPlayerPanel';
 import { AIActionModal, AIActionNotification } from '@/components/game/AIActionModal';
+import { AIActivityLog, AIActivityNotification, AIActivityIndicator } from '@/components/game/AIActivityLog';
+import { CharacterTabs, PlayerInfo } from '@/components/game/CharacterTabs';
+import { CharacterDetailPanel } from '@/components/game/CharacterDetailPanel';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   RoomDiscoveryManager,
@@ -271,6 +274,10 @@ export default function SoloGamePage() {
     isOpen: false,
     currentAIPlayerName: '',
   });
+
+  // Issue #119: Character Tabs 狀態
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string>('solo-player');
+  const [aiPlayerPositions, setAiPlayerPositions] = useState<Map<string, { x: number; y: number; floor: Floor }>>(new Map());
 
   // 事件卡檢定狀態 (Issue #104)
   const [eventCheckState, setEventCheckState] = useState<{
@@ -1388,19 +1395,24 @@ export default function SoloGamePage() {
             setLog(prev => [...prev, `[${timeStr}] 🤖 ${aiPlayer.name} ${logEntry}`]);
           }
 
-          // 如果有新房間發現，更新地圖
-          if (result.discoveredRoom && result.newPosition) {
-            const discoverLog: AIActionLog = {
-              timestamp: currentTime + newLogs.length * 100,
-              turn: turn,
-              playerId: aiPlayer.id,
-              playerName: aiPlayer.name,
-              action: `探索並發現新房間`,
-              details: `位置: (${result.newPosition.x}, ${result.newPosition.y})`,
-            };
-            newLogs.push(discoverLog);
-            setAiActionLogs(prev => [...prev, discoverLog]);
-            setLog(prev => [...prev, `🤖 ${aiPlayer.name} 發現了新房間！`]);
+          // Issue #119: 更新 AI 玩家位置
+          if (result.newPosition) {
+            updateAIPlayerPosition(aiPlayer.id, result.newPosition);
+            
+            // 如果有新房間發現，更新地圖
+            if (result.discoveredRoom) {
+              const discoverLog: AIActionLog = {
+                timestamp: currentTime + newLogs.length * 100,
+                turn: turn,
+                playerId: aiPlayer.id,
+                playerName: aiPlayer.name,
+                action: `探索並發現新房間`,
+                details: `位置: (${result.newPosition.x}, ${result.newPosition.y})`,
+              };
+              newLogs.push(discoverLog);
+              setAiActionLogs(prev => [...prev, discoverLog]);
+              setLog(prev => [...prev, `🤖 ${aiPlayer.name} 發現了新房間！`]);
+            }
           }
         }
 
@@ -1685,6 +1697,98 @@ export default function SoloGamePage() {
     continueToNextTurn();
   };
 
+  // Issue #119: 構建所有玩家列表（人類 + AI）
+  const buildAllPlayers = (): PlayerInfo[] => {
+    const players: PlayerInfo[] = [];
+
+    // 添加人類玩家
+    if (player && playerState) {
+      players.push({
+        id: 'solo-player',
+        name: 'You',
+        type: 'human',
+        character: player,
+        position: {
+          x: position.x,
+          y: position.y,
+          floor: currentFloor,
+        },
+        stats: {
+          speed: playerState.stats.speed,
+          might: playerState.stats.might,
+          sanity: playerState.stats.sanity,
+          knowledge: playerState.stats.knowledge,
+        },
+        items: playerState.items.map(item => ({ id: item.id, name: item.name, type: item.type })),
+        omens: playerState.omens.map(omen => ({ id: omen.id, name: omen.name, type: omen.type })),
+        isAlive: true,
+        isTraitor: hauntState.revelation?.traitorId === 'solo-player',
+      });
+    }
+
+    // 添加 AI 玩家
+    aiPlayers.forEach(aiPlayer => {
+      const aiPos = aiPlayerPositions.get(aiPlayer.id) || aiPlayer.position || { x: 7, y: 7, floor: 'ground' as Floor };
+      players.push({
+        id: aiPlayer.id,
+        name: aiPlayer.name,
+        type: 'ai',
+        character: aiPlayer.character,
+        position: aiPos,
+        stats: {
+          speed: aiPlayer.character?.stats?.speed?.[0] || 0,
+          might: aiPlayer.character?.stats?.might?.[0] || 0,
+          sanity: aiPlayer.character?.stats?.sanity?.[0] || 0,
+          knowledge: aiPlayer.character?.stats?.knowledge?.[0] || 0,
+        },
+        items: [], // AI 物品暫時不顯示詳細資訊
+        omens: [],
+        personality: aiPlayer.personality,
+        isAlive: aiPlayer.isAlive,
+        isTraitor: hauntState.revelation?.traitorId === aiPlayer.id,
+      });
+    });
+
+    return players;
+  };
+
+  // Issue #119: 處理切換玩家 Tab
+  const handleSelectPlayer = (playerId: string) => {
+    setSelectedPlayerId(playerId);
+
+    // 如果是 AI 玩家，將地圖置中到該 AI 的位置
+    if (playerId !== 'solo-player') {
+      const aiPlayer = aiPlayers.find(p => p.id === playerId);
+      const aiPos = aiPlayerPositions.get(playerId) || aiPlayer?.position;
+      
+      if (aiPos) {
+        // 切換到 AI 所在的樓層
+        setCurrentFloor(aiPos.floor);
+        
+        // 更新日誌
+        setLog(prev => [...prev, `👀 查看 ${aiPlayer?.name || 'AI'} 的位置`]);
+      }
+    } else {
+      // 切換回人類玩家
+      setLog(prev => [...prev, '👀 回到你的位置']);
+    }
+  };
+
+  // Issue #119: 取得當前選中的玩家資訊
+  const getSelectedPlayer = (): PlayerInfo | null => {
+    const allPlayers = buildAllPlayers();
+    return allPlayers.find(p => p.id === selectedPlayerId) || allPlayers[0] || null;
+  };
+
+  // Issue #119: 更新 AI 玩家位置（當 AI 行動時）
+  const updateAIPlayerPosition = (playerId: string, newPosition: { x: number; y: number; floor: Floor }) => {
+    setAiPlayerPositions(prev => {
+      const newMap = new Map(prev);
+      newMap.set(playerId, newPosition);
+      return newMap;
+    });
+  };
+
   return (
     <main className="min-h-screen bg-gray-900 text-white">
       {/* 頂部導航欄 */}
@@ -1717,6 +1821,18 @@ export default function SoloGamePage() {
 
       {/* 主要內容區 */}
       <div className="max-w-7xl mx-auto p-4">
+        {/* Issue #119: Character Tabs - 顯示所有玩家 */}
+        {aiPlayers.length > 0 && (
+          <div className="mb-4">
+            <CharacterTabs
+              players={buildAllPlayers()}
+              selectedPlayerId={selectedPlayerId}
+              onSelectPlayer={handleSelectPlayer}
+              currentTurnPlayerId={currentTurnPlayer}
+            />
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* 左側：遊戲板 */}
           <div className="lg:col-span-2">
@@ -1769,6 +1885,15 @@ export default function SoloGamePage() {
                     turn: {
                       currentPlayerId: 'solo-player',
                     },
+                  }}
+                  aiPlayers={aiPlayers}
+                  currentTurnPlayerId={currentTurnPlayer}
+                  onAIClick={(aiId) => {
+                    const ai = aiPlayers.find(p => p.id === aiId);
+                    if (ai?.position) {
+                      setCurrentFloor(ai.position.floor);
+                      setLog(prev => [...prev, `👀 查看 ${ai.name} 的位置`])
+                    }
                   }}
                 />
               </div>
@@ -1828,47 +1953,55 @@ export default function SoloGamePage() {
 
           {/* 右側：玩家面板與日誌 */}
           <div className="space-y-4">
-            {/* 玩家屬性面板 */}
-            {player && (
-              <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
-                <h3 className="text-lg font-bold mb-4">角色屬性</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <StatCard 
-                    label="速度" 
-                    value={player.stats.speed[0]} 
-                    color="#3B82F6"
-                    icon="⚡"
-                  />
-                  <StatCard 
-                    label="力量" 
-                    value={player.stats.might[0]} 
-                    color="#EF4444"
-                    icon="💪"
-                  />
-                  <StatCard 
-                    label="理智" 
-                    value={player.stats.sanity[0]} 
-                    color="#8B5CF6"
-                    icon="🧠"
-                  />
-                  <StatCard 
-                    label="知識" 
-                    value={player.stats.knowledge[0]} 
-                    color="#10B981"
-                    icon="📚"
-                  />
-                </div>
-              </div>
-            )}
+            {/* Issue #119: Character Detail Panel - 顯示選中玩家的詳細資訊 */}
+            {aiPlayers.length > 0 ? (
+              <CharacterDetailPanel player={getSelectedPlayer()} />
+            ) : (
+              /* 沒有 AI 玩家時顯示原有人類玩家面板 */
+              <>
+                {/* 玩家屬性面板 */}
+                {player && (
+                  <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+                    <h3 className="text-lg font-bold mb-4">角色屬性</h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      <StatCard
+                        label="速度"
+                        value={player.stats.speed[0]}
+                        color="#3B82F6"
+                        icon="⚡"
+                      />
+                      <StatCard
+                        label="力量"
+                        value={player.stats.might[0]}
+                        color="#EF4444"
+                        icon="💪"
+                      />
+                      <StatCard
+                        label="理智"
+                        value={player.stats.sanity[0]}
+                        color="#8B5CF6"
+                        icon="🧠"
+                      />
+                      <StatCard
+                        label="知識"
+                        value={player.stats.knowledge[0]}
+                        color="#10B981"
+                        icon="📚"
+                      />
+                    </div>
+                  </div>
+                )}
 
-            {/* 背包與預兆面板 */}
-            {playerState && (
-              <InventoryPanel
-                items={playerState.items}
-                omens={playerState.omens}
-                omenCount={cardManager.getDeckStatus().omenCount}
-                hauntTriggered={cardManager.getDeckStatus().hauntTriggered}
-              />
+                {/* 背包與預兆面板 */}
+                {playerState && (
+                  <InventoryPanel
+                    items={playerState.items}
+                    omens={playerState.omens}
+                    omenCount={cardManager.getDeckStatus().omenCount}
+                    hauntTriggered={cardManager.getDeckStatus().hauntTriggered}
+                  />
+                )}
+              </>
             )}
 
             {/* 遊戲日誌 */}
@@ -1939,6 +2072,16 @@ export default function SoloGamePage() {
               difficulty={gameSetup?.difficulty || 'medium'}
               actingPlayerId={currentTurnPlayer !== 'solo-player' ? currentTurnPlayer : null}
             />
+
+            {/* Issue #118: AI 活動日誌面板 */}
+            {aiPlayers.length > 0 && (
+              <AIActivityLog
+                actionLogs={aiActionLogs}
+                currentAIPlayerId={currentTurnPlayer !== 'solo-player' ? currentTurnPlayer : null}
+                maxDisplay={20}
+                autoScroll={true}
+              />
+            )}
 
             {/* Hero AI 狀態面板 (Issue #109) */}
             {hauntState.isActive && heroAIs.size > 0 && (
@@ -2040,6 +2183,19 @@ export default function SoloGamePage() {
       <AIActionNotification
         latestLog={aiActionLogs.length > 0 ? aiActionLogs[aiActionLogs.length - 1] : null}
         autoHideDelay={3000}
+      />
+
+      {/* Issue #118: AI 活動通知氣泡 */}
+      <AIActivityNotification
+        latestLog={aiActionLogs.length > 0 ? aiActionLogs[aiActionLogs.length - 1] : null}
+        autoHideDelay={4000}
+      />
+
+      {/* Issue #118: AI 活動指示器 */}
+      <AIActivityIndicator
+        activity={isProcessingAITurn ? 'AI 正在行動...' : ''}
+        aiName={aiPlayers.find(p => p.id === currentTurnPlayer)?.name || ''}
+        isVisible={isProcessingAITurn && currentTurnPlayer !== 'solo-player'}
       />
 
       {/* 作祟檢定結果覆蓋層（舊版，保留用於非預兆卡情況） */}
