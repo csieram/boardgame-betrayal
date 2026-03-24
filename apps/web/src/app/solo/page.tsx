@@ -1005,6 +1005,14 @@ export default function SoloGamePage() {
               ...prev,
               stats: { ...prev.stats, might: newMight },
             } : null);
+            // Issue #114: 同步更新 player (Character) 的 stats
+            setPlayer(prev => prev ? {
+              ...prev,
+              stats: {
+                ...prev.stats,
+                might: [prev.stats.might[0], newMight],
+              },
+            } : null);
             setLog(prev => [...prev, `💔 你的力量從 ${playerState.stats.might} 降至 ${newMight}`]);
           }
         } else {
@@ -1618,7 +1626,25 @@ export default function SoloGamePage() {
           },
         };
       });
-      
+
+      // Issue #114: 同步更新 player (Character) 的 stats
+      setPlayer(prev => {
+        if (!prev) return prev;
+        const speedChange = result.statChanges?.speed || 0;
+        const mightChange = result.statChanges?.might || 0;
+        const sanityChange = result.statChanges?.sanity || 0;
+        const knowledgeChange = result.statChanges?.knowledge || 0;
+        return {
+          ...prev,
+          stats: {
+            speed: [prev.stats.speed[0], prev.stats.speed[1] + speedChange],
+            might: [prev.stats.might[0], prev.stats.might[1] + mightChange],
+            sanity: [prev.stats.sanity[0], prev.stats.sanity[1] + sanityChange],
+            knowledge: [prev.stats.knowledge[0], prev.stats.knowledge[1] + knowledgeChange],
+          },
+        };
+      });
+
       // 記錄到日誌
       const statNames: Record<string, string> = {
         speed: '速度',
@@ -1626,7 +1652,7 @@ export default function SoloGamePage() {
         sanity: '理智',
         knowledge: '知識',
       };
-      
+
       Object.entries(result.statChanges).forEach(([stat, change]) => {
         if (change !== 0) {
           setLog(prev => [...prev, `${statNames[stat]} ${change > 0 ? '+' : ''}${change}`]);

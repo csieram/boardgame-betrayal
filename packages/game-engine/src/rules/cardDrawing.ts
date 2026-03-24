@@ -340,9 +340,11 @@ export class CardEffectApplier {
     let total = 0;
     const rolls: number[] = [];
 
+    // 骰子面定義 [0,0,1,1,2,2] 來模擬真正的 Betrayal 骰子
+    const DICE_FACES = [0, 0, 1, 1, 2, 2];
     for (let i = 0; i < numDice; i++) {
-      // 0, 1, 或 2 (nextInt 是 [min, max) 區間，所以用 0, 3)
-      const roll = this.rng.nextInt(0, 3);
+      const faceIndex = this.rng.nextInt(0, 6);
+      const roll = DICE_FACES[faceIndex];
       rolls.push(roll);
       total += roll;
     }
