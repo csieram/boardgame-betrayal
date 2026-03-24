@@ -10,6 +10,8 @@ import { InventoryPanel } from '@/components/game/InventoryPanel';
 import { HauntRollModal } from '@/components/game/HauntRollModal';
 import { HauntRevealScreen } from '@/components/game/HauntRevealScreen';
 import { EventCheckModal, EventCheckResult } from '@/components/game/EventCheckModal';
+import { AIPlayerPanel } from '@/components/game/AIPlayerPanel';
+import { AIActionModal, AIActionNotification } from '@/components/game/AIActionModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   RoomDiscoveryManager,
@@ -33,6 +35,20 @@ import {
   CombatManager,
   CombatResult,
   calculateWeaponBonus,
+  // Hero AI System (Issue #109)
+  HeroAI,
+  createHeroAIs,
+  isAIControlledHero,
+  AIDecision,
+  // Full AI Player System (Issue #110)
+  AIPlayerManager,
+  createAIPlayerManager,
+  AIPlayerInfo,
+  AIActionLog,
+  getPersonalityIcon,
+  getPersonalityColor,
+  AIPersonality,
+  AIDifficulty,
 } from '@betrayal/game-engine';
 
 // 地圖大小
@@ -228,6 +244,34 @@ export default function SoloGamePage() {
   });
   const [combatManager] = useState(() => new CombatManager(new SeededRng(Date.now().toString())));
 
+  // Hero AI 系統狀態 (Issue #109)
+  const [heroAIs, setHeroAIs] = useState<Map<string, HeroAI>>(new Map());
+  const [aiDifficulty, setAiDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
+  const [isAIThinking, setIsAIThinking] = useState(false);
+  const [aiActionLog, setAiActionLog] = useState<string[]>([]);
+
+  // Full AI Player System (Issue #110)
+  const [aiManager, setAiManager] = useState<AIPlayerManager | null>(null);
+  const [aiPlayers, setAiPlayers] = useState<AIPlayerInfo[]>([]);
+  const [aiActionLogs, setAiActionLogs] = useState<AIActionLog[]>([]);
+  const [currentTurnPlayer, setCurrentTurnPlayer] = useState<string>('solo-player');
+  const [isProcessingAITurn, setIsProcessingAITurn] = useState(false);
+  const [gameSetup, setGameSetup] = useState<{
+    aiCount: number;
+    difficulty: AIDifficulty;
+    personalities: AIPersonality[];
+    seed: string;
+  } | null>(null);
+
+  // AI Action Modal 狀態 (Issue #111)
+  const [aiActionModalState, setAiActionModalState] = useState<{
+    isOpen: boolean;
+    currentAIPlayerName: string;
+  }>({
+    isOpen: false,
+    currentAIPlayerName: '',
+  });
+
   // 事件卡檢定狀態 (Issue #104)
   const [eventCheckState, setEventCheckState] = useState<{
     showModal: boolean;
@@ -244,14 +288,31 @@ export default function SoloGamePage() {
   // 當前樓層的地圖（向後兼容）
   const map = multiFloorMap[currentFloor];
 
-  // 從 sessionStorage 讀取選擇的角色
+  // 從 sessionStorage 讀取選擇的角色和 AI 設置
   useEffect(() => {
+    const storedSetup = sessionStorage.getItem('solo-game-setup');
     const storedCharacter = sessionStorage.getItem('solo-selected-character');
-    
-    if (storedCharacter) {
+
+    if (storedSetup) {
+      try {
+        const setup = JSON.parse(storedSetup);
+        setGameSetup({
+          aiCount: setup.aiSetup?.count || 0,
+          difficulty: setup.aiSetup?.difficulty || 'medium',
+          personalities: setup.aiSetup?.personalities || [],
+          seed: setup.seed || Date.now().toString(),
+        });
+        const character: Character = setup.character;
+        startGame(character, setup.aiSetup);
+      } catch (error) {
+        console.error('Failed to parse game setup:', error);
+        setIsLoading(false);
+      }
+    } else if (storedCharacter) {
+      // 向後兼容：沒有 AI 設置的情況
       try {
         const character: Character = JSON.parse(storedCharacter);
-        startGame(character);
+        startGame(character, null);
       } catch (error) {
         console.error('Failed to parse stored character:', error);
         setIsLoading(false);
@@ -262,7 +323,7 @@ export default function SoloGamePage() {
   }, [router]);
 
   // 初始化遊戲
-  const startGame = (character: Character) => {
+  const startGame = (character: Character, aiSetup: { count: number; difficulty: AIDifficulty; personalities: AIPersonality[] } | null) => {
     setPlayer(character);
     setMoves(character.stats.speed[0]);
     setPhase('play');
@@ -270,6 +331,7 @@ export default function SoloGamePage() {
     // 生成隨機 seed
     const seed = Date.now().toString();
     console.log('Game start seed:', seed);
+    console.log('AI Setup:', aiSetup);
 
     // 初始化多樓層地圖
     const initialMultiFloorMap = createEmptyMultiFloorMap();
@@ -336,7 +398,7 @@ export default function SoloGamePage() {
       });
 
       setMultiFloorMap(initialMultiFloorMap);
-      
+
       // 初始化玩家狀態（用於卡牌效果）
       const initialPlayerState: PlayerState = {
         id: 'solo-player',
@@ -351,8 +413,46 @@ export default function SoloGamePage() {
         omens: [],
       };
       setPlayerState(initialPlayerState);
-      
-      setLog([`選擇了 ${character.name}`, '從入口大廳開始', '回合 1']);
+
+      // Issue #110: 初始化 AI 玩家管理器
+      if (aiSetup && aiSetup.count > 0) {
+        const manager = createAIPlayerManager(
+          'solo-player',
+          aiSetup.count,
+          aiSetup.difficulty,
+          seed
+        );
+        setAiManager(manager);
+
+        // 創建 AI 玩家
+        const mockGameState = {
+          players: [],
+          map: {
+            ground: initialMultiFloorMap.ground,
+            upper: initialMultiFloorMap.upper,
+            basement: initialMultiFloorMap.basement,
+            placedRoomCount: 3,
+          },
+        } as any;
+
+        const aiPlayerObjects = manager.initializeAIPlayers(
+          mockGameState,
+          character,
+          aiSetup.personalities
+        );
+
+        setAiPlayers(manager.getAIPlayers());
+        setLog(prev => [
+          ...prev,
+          `選擇了 ${character.name}`,
+          `🤖 AI 玩家: ${aiSetup.count} 位 (${aiSetup.difficulty === 'easy' ? '簡單' : aiSetup.difficulty === 'medium' ? '中等' : '困難'})`,
+          '從入口大廳開始',
+          '回合 1'
+        ]);
+      } else {
+        setLog([`選擇了 ${character.name}`, '從入口大廳開始', '回合 1']);
+      }
+
       setIsLoading(false);
 
       // 計算可達位置（從入口大廳開始）
@@ -548,6 +648,186 @@ export default function SoloGamePage() {
     }));
     
     setLog(prev => [...prev, '作祟階段開始！']);
+    
+    // Issue #109: 初始化 Hero AI（如果玩家是叛徒）
+    initializeHeroAIs();
+  };
+
+  // Issue #109: 初始化 Hero AI
+  const initializeHeroAIs = useCallback(() => {
+    // 檢查玩家是否為叛徒
+    const isPlayerTraitor = hauntState.revelation?.traitorId === 'solo-player';
+    
+    if (!isPlayerTraitor) {
+      // 玩家是英雄，不需要 Hero AI
+      return;
+    }
+
+    // 建立遊戲狀態用於初始化 AI
+    const gameStateForAI = createGameStateForAI();
+    
+    // 創建 Hero AI 控制器
+    const seed = Date.now().toString();
+    const ais = createHeroAIs(gameStateForAI, aiDifficulty, seed);
+    
+    setHeroAIs(ais);
+    setLog(prev => [...prev, `🤖 Hero AI 已啟動（難度: ${aiDifficulty}）`]);
+    
+    // 記錄 AI 控制的英雄
+    ais.forEach((ai, heroId) => {
+      setAiActionLog(prev => [...prev, `Hero ${heroId} 由 AI 控制`]);
+    });
+  }, [hauntState.revelation, aiDifficulty]);
+
+  // Issue #109: 建立 AI 用的遊戲狀態
+  const createGameStateForAI = (): any => {
+    return {
+      gameId: 'solo-game',
+      version: '1.0.0',
+      phase: 'haunt',
+      result: 'ongoing',
+      config: { 
+        playerCount: 2, 
+        enableAI: true, 
+        seed: gameState.seed, 
+        maxTurns: 100 
+      },
+      map: {
+        ground: multiFloorMap.ground,
+        upper: multiFloorMap.upper,
+        basement: multiFloorMap.basement,
+        placedRoomCount: gameState.placedRoomIds.size,
+      },
+      players: [
+        // 玩家（叛徒）
+        {
+          id: 'solo-player',
+          name: player?.name || '玩家',
+          position: { x: position.x, y: position.y, floor: currentFloor },
+          currentStats: {
+            speed: playerState?.stats.speed || 4,
+            might: playerState?.stats.might || 4,
+            sanity: playerState?.stats.sanity || 4,
+            knowledge: playerState?.stats.knowledge || 4,
+          },
+          items: playerState?.items || [],
+          omens: playerState?.omens || [],
+          isTraitor: true,
+          isDead: false,
+        },
+        // AI 英雄
+        {
+          id: 'ai-hero-1',
+          name: 'AI 英雄',
+          position: { x: 3, y: 3, floor: 'ground' },
+          currentStats: { speed: 4, might: 4, sanity: 4, knowledge: 4 },
+          items: [],
+          omens: [],
+          isTraitor: false,
+          isDead: false,
+        },
+      ],
+      playerOrder: ['solo-player', 'ai-hero-1'],
+      turn: {
+        currentPlayerId: 'ai-hero-1',
+        turnNumber: turn,
+        movesRemaining: 4,
+        hasDiscoveredRoom: false,
+        hasDrawnCard: false,
+        hasEnded: false,
+        usedSpecialActions: [],
+        usedItems: [],
+      },
+      cardDecks: {
+        event: { remaining: [], drawn: [], discarded: [] },
+        item: { remaining: [], drawn: [], discarded: [] },
+        omen: { remaining: [], drawn: [], discarded: [] },
+      },
+      roomDeck: {
+        ground: gameState.roomDecks.ground,
+        upper: gameState.roomDecks.upper,
+        basement: gameState.roomDecks.basement,
+        drawn: gameState.roomDecks.drawn,
+      },
+      haunt: {
+        isActive: true,
+        type: 'single_traitor',
+        hauntNumber: hauntState.revelation?.scenario?.id || 1,
+        traitorPlayerId: 'solo-player',
+        omenCount: cardManager.getDeckStatus().omenCount,
+        heroObjective: hauntState.revelation?.scenario?.heroObjective || '擊敗叛徒',
+        traitorObjective: hauntState.revelation?.scenario?.traitorObjective || '消滅所有英雄',
+      },
+      combat: {
+        isActive: false,
+        attackerId: null,
+        defenderId: null,
+        usedStat: null,
+        attackerRoll: null,
+        defenderRoll: null,
+        damage: null,
+      },
+      log: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      rngState: { seed: gameState.seed, count: 0, internalState: [] },
+      placedRoomIds: gameState.placedRoomIds,
+    };
+  };
+
+  // Issue #109: 執行 Hero AI 回合
+  const executeHeroAITurn = useCallback(async (heroId: string) => {
+    const ai = heroAIs.get(heroId);
+    if (!ai) return;
+
+    setIsAIThinking(true);
+    setLog(prev => [...prev, `🤖 Hero ${heroId} 正在思考...`]);
+
+    // 模擬 AI 思考時間
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // 建立當前遊戲狀態
+    const gameStateForAI = createGameStateForAI();
+    
+    // 執行 AI 決策
+    const decisions = ai.executeTurn(gameStateForAI);
+
+    // 記錄 AI 行動
+    for (const decision of decisions) {
+      const actionText = formatAIDecision(decision);
+      setLog(prev => [...prev, `  🤖 ${actionText}`]);
+      setAiActionLog(prev => [...prev, `Hero ${heroId}: ${actionText}`]);
+      
+      // 如果 AI 決定攻擊玩家，觸發戰鬥
+      if (decision.action === 'attack' && decision.targetPlayerId === 'solo-player') {
+        setLog(prev => [...prev, `⚔️ Hero ${heroId} 發起攻擊！`]);
+        // 這裡可以觸發戰鬥系統
+      }
+    }
+
+    setIsAIThinking(false);
+    setLog(prev => [...prev, `🤖 Hero ${heroId} 回合結束`]);
+  }, [heroAIs]);
+
+  // Issue #109: 格式化 AI 決策為可讀文字
+  const formatAIDecision = (decision: AIDecision): string => {
+    switch (decision.action) {
+      case 'move':
+        if (decision.targetPosition) {
+          return `移動到 (${decision.targetPosition.x}, ${decision.targetPosition.y})`;
+        }
+        return '移動';
+      case 'attack':
+        return `攻擊 ${decision.targetPlayerId === 'solo-player' ? '玩家' : decision.targetPlayerId}`;
+      case 'useItem':
+        return `使用物品 ${decision.itemId}`;
+      case 'explore':
+        return `向 ${decision.exploreDirection} 探索`;
+      case 'endTurn':
+        return '結束回合';
+      default:
+        return '未知行動';
+    }
   };
 
   // ==================== 戰鬥系統 (Issue #103) ====================
@@ -1032,13 +1312,130 @@ export default function SoloGamePage() {
   };
 
   // 結束回合
-  const endTurn = () => {
+  const endTurn = async () => {
     if (!player) return;
+
+    // Issue #111: 如果有 AI 玩家，執行 AI 回合
+    if (aiManager && aiPlayers.length > 0) {
+      setIsProcessingAITurn(true);
+      
+      // 顯示 AI Action Modal
+      setAiActionModalState({
+        isOpen: true,
+        currentAIPlayerName: aiPlayers[0]?.name || 'AI',
+      });
+      
+      const currentTime = Date.now();
+      const newLogs: AIActionLog[] = [];
+      
+      setLog(prev => [...prev, '🤖 AI 玩家回合開始...']);
+
+      // 執行所有 AI 回合
+      for (const aiPlayer of aiPlayers) {
+        if (!aiPlayer.isAlive) continue;
+
+        setCurrentTurnPlayer(aiPlayer.id);
+        setAiActionModalState(prev => ({
+          ...prev,
+          currentAIPlayerName: aiPlayer.name,
+        }));
+
+        // 添加回合開始日誌
+        const turnStartLog: AIActionLog = {
+          timestamp: currentTime + newLogs.length * 100,
+          turn: turn,
+          playerId: aiPlayer.id,
+          playerName: aiPlayer.name,
+          action: '開始回合',
+        };
+        newLogs.push(turnStartLog);
+        setAiActionLogs(prev => [...prev, turnStartLog]);
+
+        // 模擬 AI 思考時間
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        // 創建遊戲狀態供 AI 使用
+        const mockGameState = createGameStateForAI();
+
+        // 執行 AI 回合
+        const result = await aiManager.executeNextAITurn(mockGameState);
+
+        if (result) {
+          // 將 AI 行動轉換為結構化日誌
+          for (const logEntry of result.logs) {
+            const actionLog: AIActionLog = {
+              timestamp: currentTime + newLogs.length * 100,
+              turn: turn,
+              playerId: aiPlayer.id,
+              playerName: aiPlayer.name,
+              action: logEntry,
+              details: result.discoveredRoom && result.newPosition ? `位置: (${result.newPosition.x}, ${result.newPosition.y})` : undefined,
+            };
+            newLogs.push(actionLog);
+            setAiActionLogs(prev => [...prev, actionLog]);
+            
+            // 同時添加到主遊戲日誌 (Issue #111)
+            const timeStr = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+            setLog(prev => [...prev, `[${timeStr}] 🤖 ${aiPlayer.name} ${logEntry}`]);
+          }
+
+          // 如果有新房間發現，更新地圖
+          if (result.discoveredRoom && result.newPosition) {
+            const discoverLog: AIActionLog = {
+              timestamp: currentTime + newLogs.length * 100,
+              turn: turn,
+              playerId: aiPlayer.id,
+              playerName: aiPlayer.name,
+              action: `探索並發現新房間`,
+              details: `位置: (${result.newPosition.x}, ${result.newPosition.y})`,
+            };
+            newLogs.push(discoverLog);
+            setAiActionLogs(prev => [...prev, discoverLog]);
+            setLog(prev => [...prev, `🤖 ${aiPlayer.name} 發現了新房間！`]);
+          }
+        }
+
+        // 添加回合結束日誌
+        const turnEndLog: AIActionLog = {
+          timestamp: currentTime + newLogs.length * 100,
+          turn: turn,
+          playerId: aiPlayer.id,
+          playerName: aiPlayer.name,
+          action: '結束回合',
+        };
+        newLogs.push(turnEndLog);
+        setAiActionLogs(prev => [...prev, turnEndLog]);
+
+        // 短暫延遲
+        await new Promise(resolve => setTimeout(resolve, 400));
+      }
+
+      setCurrentTurnPlayer('solo-player');
+      setIsProcessingAITurn(false);
+      setLog(prev => [...prev, '👤 你的回合']);
+      
+      // 保持 Modal 開啟，讓玩家查看所有 AI 行動
+      // Modal 會在玩家點擊「繼續」後關閉
+    } else {
+      // 沒有 AI 玩家時，直接進入下一回合
+      setTurn(t => t + 1);
+      setMoves(player.stats.speed[0]);
+      setDiscovered(false);
+      setLog(prev => [...prev, '回合結束', `回合 ${turn + 1}`]);
+      updateReachablePositions(multiFloorMap[currentFloor], position, player.stats.speed[0], false);
+    }
+  };
+
+  // Issue #111: 處理 AI Action Modal 關閉並繼續遊戲
+  const handleAIActionModalContinue = () => {
+    setAiActionModalState({ isOpen: false, currentAIPlayerName: '' });
+    
+    // 進入下一回合
     setTurn(t => t + 1);
-    setMoves(player.stats.speed[0]);
+    setMoves(player!.stats.speed[0]);
     setDiscovered(false);
-    setLog(prev => [...prev, '回合結束', `回合 ${turn + 1}`]);
-    updateReachablePositions(multiFloorMap[currentFloor], position, player.stats.speed[0], false);
+    setLog(prev => [...prev, `回合 ${turn + 1}`]);
+    updateReachablePositions(multiFloorMap[currentFloor], position, player!.stats.speed[0], false);
   };
 
   // 樓梯連接配置 - 定義每個樓梯房間對應的目標房間
@@ -1365,6 +1762,19 @@ export default function SoloGamePage() {
                     {combatState.isCombatAnimating ? '戰鬥中...' : '⚔️ 攻擊'}
                   </Button>
                 )}
+                
+                {/* Hero AI 測試按鈕 (Issue #109) */}
+                {hauntState.isActive && heroAIs.size > 0 && (
+                  <Button
+                    onClick={() => executeHeroAITurn('ai-hero-1')}
+                    variant="secondary"
+                    size="sm"
+                    className="h-10 sm:h-12 text-xs sm:text-sm"
+                    disabled={isAIThinking}
+                  >
+                    {isAIThinking ? '🤖 思考中...' : '🤖 AI 回合'}
+                  </Button>
+                )}
               </div>
               
               {discovered && (
@@ -1483,6 +1893,53 @@ export default function SoloGamePage() {
                 </div>
               </motion.div>
             )}
+
+            {/* AI 玩家面板 (Issue #111) */}
+            <AIPlayerPanel
+              aiPlayers={aiPlayers}
+              currentTurnPlayer={currentTurnPlayer}
+              isProcessing={isProcessingAITurn}
+              difficulty={gameSetup?.difficulty || 'medium'}
+              actingPlayerId={currentTurnPlayer !== 'solo-player' ? currentTurnPlayer : null}
+            />
+
+            {/* Hero AI 狀態面板 (Issue #109) */}
+            {hauntState.isActive && heroAIs.size > 0 && (
+              <motion.div 
+                className="bg-gray-800/50 rounded-xl p-4 border border-gray-700"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-bold">🤖 Hero AI 狀態</h3>
+                  <span className="text-xs bg-blue-900/50 px-2 py-1 rounded text-blue-300">
+                    難度: {aiDifficulty === 'easy' ? '簡單' : aiDifficulty === 'medium' ? '中等' : '困難'}
+                  </span>
+                </div>
+                
+                {isAIThinking && (
+                  <div className="flex items-center gap-2 text-yellow-400 mb-3">
+                    <motion.div
+                      className="w-4 h-4 border-2 border-yellow-400 border-t-transparent rounded-full"
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                    />
+                    <span className="text-sm">AI 正在思考...</span>
+                  </div>
+                )}
+                
+                {aiActionLog.length > 0 && (
+                  <div className="space-y-1 max-h-32 overflow-y-auto">
+                    <p className="text-xs text-gray-400 mb-2">最近行動:</p>
+                    {aiActionLog.slice(-5).map((action, i) => (
+                      <p key={i} className="text-sm text-gray-300 bg-gray-700/30 px-2 py-1 rounded">
+                        {action}
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </motion.div>
+            )}
           </div>
         </div>
 
@@ -1531,6 +1988,21 @@ export default function SoloGamePage() {
         isRolling={eventCheckState.isRolling}
         onClose={handleCloseEventCheck}
         onRoll={handleEventCheckRoll}
+      />
+
+      {/* AI 行動日誌模態框 (Issue #111) */}
+      <AIActionModal
+        isOpen={aiActionModalState.isOpen}
+        actionLogs={aiActionLogs}
+        currentAIPlayerName={aiActionModalState.currentAIPlayerName}
+        onClose={handleAIActionModalContinue}
+        onContinue={handleAIActionModalContinue}
+      />
+
+      {/* AI 行動通知氣泡 (Issue #111) */}
+      <AIActionNotification
+        latestLog={aiActionLogs.length > 0 ? aiActionLogs[aiActionLogs.length - 1] : null}
+        autoHideDelay={3000}
       />
 
       {/* 作祟檢定結果覆蓋層（舊版，保留用於非預兆卡情況） */}
