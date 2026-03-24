@@ -10,7 +10,7 @@ import { InventoryPanel } from '@/components/game/InventoryPanel';
 import { HauntRollModal } from '@/components/game/HauntRollModal';
 import { HauntRevealScreen } from '@/components/game/HauntRevealScreen';
 import { EventCheckModal, EventCheckResult } from '@/components/game/EventCheckModal';
-import { AIPlayerPanel } from '@/components/game/AIPlayerPanel';
+
 import { AIActionModal, AIActionNotification } from '@/components/game/AIActionModal';
 import { AIActivityLog, AIActivityNotification, AIActivityIndicator } from '@/components/game/AIActivityLog';
 import { CharacterTabs, PlayerInfo } from '@/components/game/CharacterTabs';
@@ -288,6 +288,16 @@ export default function SoloGamePage() {
     endedByDiscovery: false,
   });
   const [isProcessingTurnSwitch, setIsProcessingTurnSwitch] = useState(false);
+
+  // Issue #134: 結束回合確認狀態
+  const [endTurnConfirmation, setEndTurnConfirmation] = useState<{
+    show: boolean;
+    isAI: boolean;
+    aiPlayerName?: string;
+  }>({
+    show: false,
+    isAI: false,
+  });
 
   // 事件卡檢定狀態 (Issue #104)
   const [eventCheckState, setEventCheckState] = useState<{
@@ -1349,8 +1359,39 @@ export default function SoloGamePage() {
     }
   };
 
-  // Issue #127: 結束回合並切換到下一個玩家
-  const handleEndTurn = async () => {
+  // Issue #134: 顯示結束回合確認
+  const showEndTurnConfirmation = (isAI: boolean, aiPlayerName?: string) => {
+    setEndTurnConfirmation({
+      show: true,
+      isAI,
+      aiPlayerName,
+    });
+
+    // AI 自動繼續（短暫延遲）
+    if (isAI) {
+      setTimeout(() => {
+        setEndTurnConfirmation(prev => ({ ...prev, show: false }));
+        executeEndTurn();
+      }, 1500);
+    }
+  };
+
+  // Issue #134: 確認結束回合
+  const confirmEndTurn = () => {
+    setEndTurnConfirmation(prev => ({ ...prev, show: false }));
+    executeEndTurn();
+  };
+
+  // Issue #134: 取消結束回合
+  const cancelEndTurn = () => {
+    setEndTurnConfirmation({
+      show: false,
+      isAI: false,
+    });
+  };
+
+  // Issue #127 & #134: 實際執行結束回合
+  const executeEndTurn = async () => {
     if (!player) {
       setIsProcessingTurnSwitch(false);
       return;
@@ -1587,12 +1628,13 @@ export default function SoloGamePage() {
     }));
   }, [aiPlayers, aiPlayerPositions]);
 
-  // Issue #127: 監聽回合結束，自動切換到下一個玩家
+  // Issue #127 & #134: 監聽回合結束，顯示確認後切換到下一個玩家
   // 注意：這個 useEffect 必須在所有 early returns 之前調用，以符合 React Hooks 規則
   useEffect(() => {
     if (turnState.hasEnded && !isProcessingTurnSwitch && !isProcessingAITurn) {
       setIsProcessingTurnSwitch(true);
-      handleEndTurn();
+      // Issue #134: 顯示結束回合確認（人類玩家）
+      showEndTurnConfirmation(false);
     }
   }, [turnState.hasEnded, isProcessingTurnSwitch, isProcessingAITurn]);
 
@@ -1963,16 +2005,6 @@ export default function SoloGamePage() {
             <div className="mt-4 bg-gray-800/50 rounded-xl p-3 sm:p-4 border border-gray-700">
               <h3 className="text-sm font-bold text-gray-400 mb-3 text-center">移動控制</h3>
               <div className="flex justify-center gap-3">
-                <Button
-                  onClick={handleEndTurn}
-                  variant="secondary"
-                  size="sm"
-                  className="h-10 sm:h-12 text-xs sm:text-sm"
-                  disabled={isProcessingTurnSwitch || isProcessingAITurn}
-                >
-                  {isProcessingTurnSwitch ? '切換中...' : '結束回合'}
-                </Button>
-                
                 {/* 戰鬥按鈕 (Issue #103) - 只在作祟階段顯示 */}
                 {hauntState.isActive && (
                   <Button
@@ -2000,6 +2032,17 @@ export default function SoloGamePage() {
                 )}
               </div>
               
+              {/* 狀態訊息 */}
+              {isProcessingTurnSwitch && (
+                <motion.p 
+                  className="text-blue-400 text-center mt-3 text-sm"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  切換中...
+                </motion.p>
+              )}
+              
               {discovered && (
                 <motion.p 
                   className="text-yellow-500 text-center mt-3 text-sm"
@@ -2009,6 +2052,27 @@ export default function SoloGamePage() {
                   已發現新房間，回合結束
                 </motion.p>
               )}
+              
+              {/* End Turn Button (Issue #135) - 移至狀態訊息下方 */}
+              <div className="flex justify-center mt-3">
+                <Button
+                  onClick={() => showEndTurnConfirmation(false)}
+                  variant="secondary"
+                  size="sm"
+                  className="h-10 sm:h-12 text-xs sm:text-sm"
+                  disabled={
+                    isProcessingTurnSwitch ||
+                    isProcessingAITurn ||
+                    turnState.hasEnded ||
+                    discovered ||
+                    currentTurnPlayer !== 'solo-player' ||
+                    moves <= 0 ||
+                    endTurnConfirmation.show
+                  }
+                >
+                  結束回合
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -2124,15 +2188,6 @@ export default function SoloGamePage() {
                 </div>
               </motion.div>
             )}
-
-            {/* AI 玩家面板 (Issue #111) */}
-            <AIPlayerPanel
-              aiPlayers={aiPlayers}
-              currentTurnPlayer={currentTurnPlayer}
-              isProcessing={isProcessingAITurn}
-              difficulty={gameSetup?.difficulty || 'medium'}
-              actingPlayerId={currentTurnPlayer !== 'solo-player' ? currentTurnPlayer : null}
-            />
 
             {/* Issue #118: AI 活動日誌面板 */}
             {aiPlayers.length > 0 && (
@@ -2392,6 +2447,64 @@ export default function SoloGamePage() {
                 <div className="text-center py-4">
                   <p className="text-gray-400">準備戰鬥...</p>
                 </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Issue #134: 結束回合確認模態框 */}
+      <AnimatePresence>
+        {endTurnConfirmation.show && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-gray-800 rounded-xl p-6 max-w-sm w-full border border-gray-600 shadow-2xl"
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            >
+              {endTurnConfirmation.isAI ? (
+                // AI 結束回合提示
+                <div className="text-center py-4">
+                  <motion.div
+                    className="w-12 h-12 border-3 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                  />
+                  <h3 className="text-lg font-bold text-blue-400 mb-2">
+                    🤖 {endTurnConfirmation.aiPlayerName || 'AI'} 結束回合
+                  </h3>
+                  <p className="text-gray-400 text-sm">AI 正在切換回合...</p>
+                </div>
+              ) : (
+                // 人類玩家結束回合確認
+                <>
+                  <h3 className="text-xl font-bold text-center mb-2">結束回合？</h3>
+                  <p className="text-gray-400 text-center mb-6 text-sm">
+                    確定要結束當前回合嗎？
+                  </p>
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={cancelEndTurn}
+                      variant="secondary"
+                      className="flex-1"
+                    >
+                      繼續回合
+                    </Button>
+                    <Button
+                      onClick={confirmEndTurn}
+                      variant="primary"
+                      className="flex-1 bg-blue-600 hover:bg-blue-700"
+                    >
+                      結束回合
+                    </Button>
+                  </div>
+                </>
               )}
             </motion.div>
           </motion.div>
