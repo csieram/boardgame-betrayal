@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Character, CHARACTERS, Room, Floor, Tile, Direction } from '@betrayal/shared';
 import { Button } from '@betrayal/ui';
 import { GameBoard } from '@/components/game/GameBoard';
+import { CardDisplay } from '@/components/game/CardDisplay';
+import { InventoryPanel } from '@/components/game/InventoryPanel';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   RoomDiscoveryManager,
@@ -570,9 +572,17 @@ export default function SoloGamePage() {
             // 更新玩家狀態（物品/預兆已添加到 playerState）
             setPlayerState({ ...playerState });
             
-            // 添加到日誌
+            // 添加到日誌 - 詳細記錄卡牌抽取
             const symbolName = roomSymbol === 'E' ? '事件' : roomSymbol === 'I' ? '物品' : '預兆';
-            setLog(prev => [...prev, `發現新房間: ${placedRoom.name}（${symbolName}符號）`, `抽到${symbolName}卡: ${drawResult.card!.name}`]);
+            const currentOmenCount = cardManager.getDeckStatus().omenCount;
+            
+            // 記錄進入房間和抽卡
+            setLog(prev => [...prev, `進入 ${placedRoom.name} (${roomSymbol}) → 抽到${symbolName}: "${drawResult.card!.name}"`]);
+            
+            // 如果是預兆卡，顯示預兆計數
+            if (cardType === 'omen') {
+              setLog(prev => [...prev, `預兆 ${currentOmenCount} 🌙（作祟檢定: ${currentOmenCount} 顆骰）`]);
+            }
             
             // 如果觸發作祟檢定，添加到日誌
             if (drawResult.hauntRoll) {
@@ -966,6 +976,16 @@ export default function SoloGamePage() {
               </div>
             )}
 
+            {/* 背包與預兆面板 */}
+            {playerState && (
+              <InventoryPanel
+                items={playerState.items}
+                omens={playerState.omens}
+                omenCount={cardManager.getDeckStatus().omenCount}
+                hauntTriggered={cardManager.getDeckStatus().hauntTriggered}
+              />
+            )}
+
             {/* 遊戲日誌 */}
             <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
               <h3 className="text-lg font-bold mb-3">遊戲日誌</h3>
@@ -977,6 +997,11 @@ export default function SoloGamePage() {
                       className={`text-sm py-2 px-3 rounded-lg ${
                         entry.includes('發現') ? 'bg-yellow-500/20 text-yellow-400' : 
                         entry.includes('回合') ? 'bg-blue-500/20 text-blue-400' : 
+                        entry.includes('抽到物品') ? 'bg-blue-500/20 text-blue-400' :
+                        entry.includes('抽到預兆') ? 'bg-purple-500/20 text-purple-400' :
+                        entry.includes('抽到事件') ? 'bg-green-500/20 text-green-400' :
+                        entry.includes('作祟觸發') ? 'bg-red-500/20 text-red-400 font-bold' :
+                        entry.includes('作祟未觸發') ? 'bg-green-500/20 text-green-400' :
                         'bg-gray-700/50 text-gray-300'
                       }`}
                       initial={{ opacity: 0, x: -20 }}
@@ -1031,106 +1056,34 @@ export default function SoloGamePage() {
         </div>
       </div>
 
-      {/* 卡牌抽牌彈窗 (Issue #36) */}
+      {/* 卡牌抽牌顯示 (Issue #94) - 使用 CardDisplay 組件 */}
+      <CardDisplay
+        card={cardDrawState.showCard ? cardDrawState.cardResult?.card || null : null}
+        onClose={handleCloseCardDisplay}
+        animate={true}
+      />
+
+      {/* 作祟檢定結果覆蓋層 */}
       <AnimatePresence>
-        {cardDrawState.showCard && cardDrawState.cardResult?.card && (
+        {cardDrawState.showCard && cardDrawState.hauntRollResult && (
           <motion.div
-            className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={handleCloseCardDisplay}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
           >
-            <motion.div
-              className="bg-gray-800 rounded-2xl p-6 max-w-md w-full border-2 border-gray-600"
-              initial={{ scale: 0.8, y: 50 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.8, y: 50 }}
-              onClick={e => e.stopPropagation()}
-            >
-              {/* 卡牌類型標題 */}
-              <div className="text-center mb-4">
-                <span className={`inline-block px-4 py-1 rounded-full text-sm font-bold ${
-                  cardDrawState.cardResult.type === 'event' ? 'bg-green-600 text-white' :
-                  cardDrawState.cardResult.type === 'item' ? 'bg-blue-600 text-white' :
-                  'bg-purple-600 text-white'
-                }`}>
-                  {cardDrawState.cardResult.type === 'event' ? '事件卡' :
-                   cardDrawState.cardResult.type === 'item' ? '物品卡' : '預兆卡'}
-                </span>
-              </div>
-
-              {/* 卡牌內容 */}
-              <div className="bg-gray-700 rounded-xl p-6 mb-4">
-                {/* 卡牌圖示 */}
-                <div className="w-24 h-24 mx-auto mb-4 bg-gray-600 rounded-lg flex items-center justify-center">
-                  <svg viewBox="0 0 100 100" className="w-20 h-20" dangerouslySetInnerHTML={{ 
-                    __html: cardDrawState.cardResult.card.icon || '<rect x="20" y="20" width="60" height="60" fill="#666"/>' 
-                  }} />
-                </div>
-
-                {/* 卡牌名稱 */}
-                <h3 className="text-xl font-bold text-center mb-2">
-                  {cardDrawState.cardResult.card.name}
-                </h3>
-
-                {/* 卡牌描述 */}
-                <p className="text-gray-300 text-center text-sm mb-4">
-                  {cardDrawState.cardResult.card.description}
-                </p>
-
-                {/* 效果說明 */}
-                {cardDrawState.cardResult.card.effect && (
-                  <div className="bg-gray-600/50 rounded-lg p-3">
-                    <p className="text-yellow-400 text-sm text-center">
-                      效果：{cardDrawState.cardResult.card.effect}
-                    </p>
-                  </div>
-                )}
-
-                {/* 檢定需求 */}
-                {cardDrawState.cardResult.card.rollRequired && (
-                  <div className="bg-gray-600/50 rounded-lg p-3 mt-2">
-                    <p className="text-orange-400 text-sm text-center">
-                      需要 {cardDrawState.cardResult.card.rollRequired.stat} 檢定（目標 {cardDrawState.cardResult.card.rollRequired.target}）
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* 效果結果訊息 */}
-              {cardDrawState.cardResult.effectResult && (
-                <div className="mb-4 text-center">
-                  <p className="text-white text-sm">
-                    {cardDrawState.cardResult.effectResult.message}
-                  </p>
-                </div>
-              )}
-
-              {/* 作祟檢定結果 */}
-              {cardDrawState.hauntRollResult && (
-                <div className={`rounded-lg p-4 mb-4 text-center ${
-                  cardDrawState.hauntRollResult.triggered 
-                    ? 'bg-red-900/50 border border-red-500' 
-                    : 'bg-green-900/50 border border-green-500'
-                }`}>
-                  <p className="text-lg font-bold mb-1">
-                    {cardDrawState.hauntRollResult.triggered ? '⚠️ 作祟觸發！' : '✅ 作祟未觸發'}
-                  </p>
-                  <p className="text-sm text-gray-300">
-                    擲出 {cardDrawState.hauntRollResult.roll}，需要小於 {cardDrawState.hauntRollResult.threshold} 才觸發
-                  </p>
-                </div>
-              )}
-
-              {/* 確認按鈕 */}
-              <Button 
-                onClick={handleCloseCardDisplay}
-                className="w-full"
-              >
-                {cardDrawState.hauntRollResult?.triggered ? '開始作祟階段' : '繼續遊戲'}
-              </Button>
-            </motion.div>
+            <div className={`rounded-lg px-6 py-3 border shadow-lg ${
+              cardDrawState.hauntRollResult.triggered 
+                ? 'bg-red-900/90 border-red-500 text-red-100' 
+                : 'bg-green-900/90 border-green-500 text-green-100'
+            }`}>
+              <p className="font-bold text-center">
+                {cardDrawState.hauntRollResult.triggered 
+                  ? `⚠️ 作祟觸發！擲出 ${cardDrawState.hauntRollResult.roll} < ${cardDrawState.hauntRollResult.threshold}` 
+                  : `✅ 作祟未觸發，擲出 ${cardDrawState.hauntRollResult.roll} >= ${cardDrawState.hauntRollResult.threshold}`
+                }
+              </p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
