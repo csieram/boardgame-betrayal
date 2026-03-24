@@ -647,28 +647,6 @@ export default function SoloGamePage() {
     updateReachablePositions(multiFloorMap[currentFloor], position, player.stats.speed[0], false);
   };
 
-  // 方向移動
-  const moveDirection = (dir: Direction) => {
-    const deltas: Record<Direction, { x: number; y: number }> = {
-      north: { x: 0, y: -1 },
-      south: { x: 0, y: 1 },
-      east: { x: 1, y: 0 },
-      west: { x: -1, y: 0 },
-    };
-    
-    const delta = deltas[dir];
-    const newX = position.x + delta.x;
-    const newY = position.y + delta.y;
-    
-    if (newX >= 0 && newX < MAP_SIZE && newY >= 0 && newY < MAP_SIZE) {
-      // 檢查目標位置是否可達（包括已探索和未探索的房間）
-      const isReachable = reachablePositions.some(pos => pos.x === newX && pos.y === newY);
-      if (isReachable) {
-        moveToPosition(newX, newY);
-      }
-    }
-  };
-
   // 樓梯連接配置 - 定義每個樓梯房間對應的目標房間
   const STAIR_CONNECTIONS: Record<string, { targetRoom: string; targetFloor: Floor }> = {
     'grand_staircase': { targetRoom: 'stairs_from_upper', targetFloor: 'upper' },
@@ -893,40 +871,14 @@ export default function SoloGamePage() {
             <div className="mt-4 bg-gray-800/50 rounded-xl p-3 sm:p-4 border border-gray-700">
               <h3 className="text-sm font-bold text-gray-400 mb-3 text-center">移動控制</h3>
               <div className="flex justify-center">
-                <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                  <div />
-                  <DirectionButton
-                    direction="north"
-                    onClick={() => moveDirection('north')}
-                    disabled={discovered || moves <= 0 || !validExploreDirections.includes('north')}
-                  />
-                  <div />
-                  <DirectionButton
-                    direction="west"
-                    onClick={() => moveDirection('west')}
-                    disabled={discovered || moves <= 0 || !validExploreDirections.includes('west')}
-                  />
-                  <Button
-                    onClick={endTurn}
-                    variant="secondary"
-                    size="sm"
-                    className="h-10 sm:h-12 text-xs sm:text-sm"
-                  >
-                    結束回合
-                  </Button>
-                  <DirectionButton
-                    direction="east"
-                    onClick={() => moveDirection('east')}
-                    disabled={discovered || moves <= 0 || !validExploreDirections.includes('east')}
-                  />
-                  <div />
-                  <DirectionButton
-                    direction="south"
-                    onClick={() => moveDirection('south')}
-                    disabled={discovered || moves <= 0 || !validExploreDirections.includes('south')}
-                  />
-                  <div />
-                </div>
+                <Button
+                  onClick={endTurn}
+                  variant="secondary"
+                  size="sm"
+                  className="h-10 sm:h-12 text-xs sm:text-sm"
+                >
+                  結束回合
+                </Button>
               </div>
               
               {discovered && (
@@ -1088,43 +1040,6 @@ export default function SoloGamePage() {
         )}
       </AnimatePresence>
     </main>
-  );
-}
-
-/**
- * 方向按鈕組件
- */
-interface DirectionButtonProps {
-  direction: Direction;
-  onClick: () => void;
-  disabled?: boolean;
-}
-
-function DirectionButton({ direction, onClick, disabled }: DirectionButtonProps) {
-  const labels: Record<Direction, string> = {
-    north: '北',
-    south: '南',
-    east: '東',
-    west: '西',
-  };
-
-  // 箭頭圖標
-  const arrows: Record<Direction, string> = {
-    north: '↑',
-    south: '↓',
-    east: '→',
-    west: '←',
-  };
-
-  return (
-    <Button
-      onClick={onClick}
-      disabled={disabled}
-      size="sm"
-      className="h-10 w-10 sm:h-12 sm:w-12 flex items-center justify-center text-base sm:text-lg font-bold"
-    >
-      {arrows[direction]}
-    </Button>
   );
 }
 
