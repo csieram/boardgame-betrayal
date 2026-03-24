@@ -13,11 +13,20 @@ import {
   drawRoomForExploration,
   OPPOSITE_DOOR,
   SeededRng,
+  StairManager,
+  STAIR_ROOM_IDS,
 } from '@betrayal/game-engine';
 
 // 地圖大小
 const MAP_SIZE = 15;
 const MAP_CENTER = 7;
+
+// 樓層名稱對照
+const FLOOR_NAMES: Record<Floor, string> = {
+  upper: '二樓',
+  ground: '一樓',
+  basement: '地下室',
+};
 
 /** 單人模式遊戲狀態 */
 interface SoloGameState {
@@ -542,6 +551,74 @@ export default function SoloGamePage() {
     }
   };
 
+  // 處理使用樓梯
+  const handleUseStairs = useCallback((targetFloor: Floor) => {
+    if (!player) return;
+
+    // 構建 gameState 供 StairManager 使用
+    const gameStateForStairs = {
+      players: [{
+        id: 'solo-player',
+        position: {
+          x: position.x,
+          y: position.y,
+          floor: currentFloor,
+        },
+      }],
+      map: {
+        ground: multiFloorMap.ground.map(row => row.map(tile => ({
+          ...tile,
+          floor: 'ground' as const,
+        }))),
+        upper: multiFloorMap.upper.map(row => row.map(tile => ({
+          ...tile,
+          floor: 'upper' as const,
+        }))),
+        basement: multiFloorMap.basement.map(row => row.map(tile => ({
+          ...tile,
+          floor: 'basement' as const,
+        }))),
+      },
+      turn: {
+        currentPlayerId: 'solo-player',
+        movesRemaining: moves,
+        hasDiscoveredRoom: discovered,
+        hasEnded: false,
+      },
+    };
+
+    // 使用 StairManager 計算目標位置
+    const newPosition = StairManager.useStairs(gameStateForStairs as any, 'solo-player', targetFloor);
+    
+    if (newPosition) {
+      // 切換樓層和位置
+      setCurrentFloor(targetFloor);
+      setPosition({ x: newPosition.x, y: newPosition.y });
+      
+      // 確保目標樓層的樓梯房間已探索
+      const targetMap = multiFloorMap[targetFloor];
+      const targetTile = targetMap[newPosition.y][newPosition.x];
+      
+      if (!targetTile.discovered && targetTile.room) {
+        // 標記目標樓梯房間為已探索
+        const newMultiFloorMap = { ...multiFloorMap };
+        newMultiFloorMap[targetFloor] = [...targetMap];
+        newMultiFloorMap[targetFloor][newPosition.y] = [...targetMap[newPosition.y]];
+        newMultiFloorMap[targetFloor][newPosition.y][newPosition.x] = {
+          ...targetTile,
+          discovered: true,
+        };
+        setMultiFloorMap(newMultiFloorMap);
+      }
+      
+      // 更新日誌
+      setLog(prev => [...prev, `使用樓梯從 ${FLOOR_NAMES[currentFloor]} 移動到 ${FLOOR_NAMES[targetFloor]}`]);
+      
+      // 更新可達位置
+      updateReachablePositions(multiFloorMap[targetFloor], { x: newPosition.x, y: newPosition.y }, moves);
+    }
+  }, [player, position, currentFloor, multiFloorMap, moves, discovered]);
+
   // 載入中顯示
   if (isLoading) {
     return (
@@ -627,8 +704,36 @@ export default function SoloGamePage() {
                   playerCharacter={player!}
                   onRoomClick={handleRoomClick}
                   onFloorChange={setCurrentFloor}
+                  onUseStairs={handleUseStairs}
                   reachablePositions={reachablePositions}
                   showAllFloors={false}
+                  gameState={{
+                    players: [{
+                      id: 'solo-player',
+                      position: {
+                        x: position.x,
+                        y: position.y,
+                        floor: currentFloor,
+                      },
+                    }],
+                    map: {
+                      ground: multiFloorMap.ground.map(row => row.map(tile => ({
+                        ...tile,
+                        floor: 'ground' as const,
+                      }))),
+                      upper: multiFloorMap.upper.map(row => row.map(tile => ({
+                        ...tile,
+                        floor: 'upper' as const,
+                      }))),
+                      basement: multiFloorMap.basement.map(row => row.map(tile => ({
+                        ...tile,
+                        floor: 'basement' as const,
+                      }))),
+                    },
+                    turn: {
+                      currentPlayerId: 'solo-player',
+                    },
+                  }}
                 />
               </div>
             </div>

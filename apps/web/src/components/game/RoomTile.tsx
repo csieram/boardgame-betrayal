@@ -6,6 +6,26 @@ import { Room, SymbolType, Direction } from '@betrayal/shared';
 import { PlayerTokenGroup } from './PlayerToken';
 import { Character } from '@betrayal/shared';
 
+/** 樓梯房間 ID */
+const STAIR_ROOM_IDS = [
+  'grand_staircase',
+  'stairs_from_basement',
+  'stairs_from_ground',
+  'stairs_from_upper',
+  'mystic_elevator',
+  'collapsed_room',
+];
+
+/** 樓梯圖示映射 */
+const STAIR_ICONS: Record<string, string> = {
+  'grand_staircase': '↕️',
+  'stairs_from_basement': '↑',
+  'stairs_from_ground': '↓',
+  'stairs_from_upper': '↓',
+  'mystic_elevator': '🛗',
+  'collapsed_room': '⚠️',
+};
+
 interface RoomTileProps {
   /** 房間資料 */
   room: Room | null;
@@ -27,6 +47,8 @@ interface RoomTileProps {
   showDoors?: boolean;
   /** 是否高亮 */
   isHighlighted?: boolean;
+  /** 是否顯示樓梯圖示 */
+  showStairIcon?: boolean;
 }
 
 /**
@@ -53,6 +75,7 @@ export function RoomTile({
   size = 'md',
   showDoors = true,
   isHighlighted = false,
+  showStairIcon = true,
 }: RoomTileProps) {
   const [svgContent, setSvgContent] = useState<string>('');
   const [isLoaded, setIsLoaded] = useState(false);
@@ -85,11 +108,11 @@ export function RoomTile({
     }
   }, [room?.gallerySvg, room?.icon]);
 
-  // 尺寸設定 - 響應式設計
+  // 尺寸設定 - 響應式設計，使用固定最小尺寸防止重疊
   const sizeClasses = {
-    sm: 'w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20',
-    md: 'w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28',
-    lg: 'w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-36 lg:h-36',
+    sm: 'w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 flex-shrink-0',
+    md: 'w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 flex-shrink-0',
+    lg: 'w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-36 lg:h-36 flex-shrink-0',
   };
 
   // 符號顏色
@@ -196,6 +219,16 @@ export function RoomTile({
         </div>
       )}
 
+      {/* 樓梯圖示 */}
+      {showStairIcon && room.id && STAIR_ROOM_IDS.includes(room.id) && (
+        <div 
+          className="absolute top-1 left-1 w-6 h-6 rounded-full flex items-center justify-center text-sm bg-amber-600/90 shadow-md z-20"
+          title="樓梯房間 - 可切換樓層"
+        >
+          {STAIR_ICONS[room.id] || '📶'}
+        </div>
+      )}
+
       {/* 房間名稱 */}
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-1">
         <p className="text-[10px] text-white text-center truncate font-medium">
@@ -247,11 +280,11 @@ export function EmptyRoomTile({
   isReachable = false,
   onClick 
 }: EmptyRoomTileProps) {
-  // 響應式尺寸
+  // 響應式尺寸，使用固定最小尺寸防止重疊
   const sizeClasses = {
-    sm: 'w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20',
-    md: 'w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28',
-    lg: 'w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-36 lg:h-36',
+    sm: 'w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 flex-shrink-0',
+    md: 'w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 flex-shrink-0',
+    lg: 'w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-36 lg:h-36 flex-shrink-0',
   };
 
   return (

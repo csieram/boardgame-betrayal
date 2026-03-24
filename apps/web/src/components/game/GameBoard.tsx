@@ -1,10 +1,28 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Room, Character, Floor, Tile, Direction } from '@betrayal/shared';
 import { RoomTile, EmptyRoomTile } from './RoomTile';
 import { PlayerToken } from './PlayerToken';
+import { STAIR_ROOM_IDS, StairManager } from '@betrayal/game-engine';
+
+/** 樓梯房間 ID 列表 */
+const STAIR_ROOM_LIST = [
+  'grand_staircase',
+  'stairs_from_basement',
+  'stairs_from_ground',
+  'stairs_from_upper',
+  'mystic_elevator',
+  'collapsed_room',
+];
+
+/** 樓層名稱對照（繁體中文） */
+const FLOOR_NAMES: Record<Floor, string> = {
+  upper: '二樓',
+  ground: '一樓',
+  basement: '地下室',
+};
 
 interface GameBoardProps {
   /** 地圖資料 - 二維陣列 */
@@ -19,10 +37,23 @@ interface GameBoardProps {
   onRoomClick?: (room: Room | null, x: number, y: number) => void;
   /** 切換樓層的回調 */
   onFloorChange?: (floor: Floor) => void;
+  /** 使用樓梯的回調 */
+  onUseStairs?: (targetFloor: Floor) => void;
   /** 可達的房間位置 */
   reachablePositions?: { x: number; y: number; isExplored?: boolean }[];
   /** 是否顯示所有樓層 */
   showAllFloors?: boolean;
+  /** 遊戲狀態（用於樓梯檢查） */
+  gameState?: {
+    players: Array<{
+      id: string;
+      position: { x: number; y: number; floor: Floor };
+    }>;
+    map: Record<Floor, Tile[][]>;
+    turn: {
+      currentPlayerId: string;
+    };
+  };
 }
 
 /**
@@ -47,11 +78,16 @@ export function GameBoard({
   playerCharacter,
   onRoomClick,
   onFloorChange,
+  onUseStairs,
   reachablePositions = [],
   showAllFloors = true,
+  gameState,
 }: GameBoardProps) {
   const [selectedRoom, setSelectedRoom] = useState<{ room: Room; x: number; y: number } | null>(null);
   const [activeFloor, setActiveFloor] = useState<Floor>(currentFloor);
+  const [showStairModal, setShowStairModal] = useState(false);
+  const [stairOptions, setStairOptions] = useState<Array<{ to: Floor; description: string }>>([]);
+  const [currentStairRoom, setCurrentStairRoom] = useState<Room | null>(null);
 
   // 樓層名稱對照
   const floorNames: Record<Floor, string> = {
@@ -113,6 +149,41 @@ export function GameBoard({
   // 檢查位置是否有玩家
   const hasPlayerAt = (x: number, y: number) => {
     return playerPosition.x === x && playerPosition.y === y;
+  };
+
+  // 檢查玩家是否在樓梯房間
+  useEffect(() => {
+    if (!gameState) return;
+    
+    const currentPlayer = gameState.players.find(
+      p => p.id === gameState.turn.currentPlayerId
+    );
+    if (!currentPlayer) return;
+
+    const tile = gameState.map[currentFloor][currentPlayer.position.y]?.[currentPlayer.position.x];
+    if (!tile?.room) return;
+
+    // 檢查是否為樓梯房間
+    if (STAIR_ROOM_LIST.includes(tile.room.id)) {
+      setCurrentStairRoom(tile.room);
+      // 獲取可用的樓梯選項
+      const options = StairManager.getAvailableStairOptions(gameState as any, currentPlayer.id);
+      setStairOptions(options);
+      // 如果玩家在樓梯房間，顯示彈窗
+      if (options.length > 0) {
+        setShowStairModal(true);
+      }
+    } else {
+      setCurrentStairRoom(null);
+      setStairOptions([]);
+      setShowStairModal(false);
+    }
+  }, [gameState, currentFloor]);
+
+  // 處理樓梯使用
+  const handleUseStairs = (targetFloor: Floor) => {
+    setShowStairModal(false);
+    onUseStairs?.(targetFloor);
   };
 
   // 處理房間點擊 - 直接移動到相鄰房間
@@ -276,6 +347,67 @@ export function GameBoard({
           )}
         </AnimatePresence>
       </div>
+
+      {/* 樓梯切換彈窗 */}
+      <AnimatePresence>
+        {showStairModal && stairOptions.length > 0 && currentStairRoom && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowStairModal(false)}
+          >
+            <motion.div
+              className="bg-gray-800 rounded-2xl p-6 max-w-sm w-full mx-4 border border-amber-600/50 shadow-2xl"
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* 標題 */}
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-amber-600/20 flex items-center justify-center text-3xl">
+                  🪜
+                </div>
+                <h3 className="text-xl font-bold text-white mb-1">
+                  {currentStairRoom.name}
+                </h3>
+                <p className="text-gray-400 text-sm">
+                  當前樓層: {FLOOR_NAMES[currentFloor]}
+                </p>
+              </div>
+
+              {/* 可用選項 */}
+              <div className="space-y-3 mb-6">
+                <p className="text-sm text-gray-400 text-center mb-3">
+                  選擇要前往的樓層：
+                </p>
+                {stairOptions.map((option) => (
+                  <button
+                    key={option.to}
+                    onClick={() => handleUseStairs(option.to)}
+                    className="w-full py-3 px-4 bg-amber-600 hover:bg-amber-500 active:bg-amber-700 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
+                  >
+                    <span>前往 {FLOOR_NAMES[option.to]}</span>
+                    <span className="text-amber-200">
+                      {option.to === 'upper' ? '↑' : option.to === 'basement' ? '↓' : '→'}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              {/* 取消按鈕 */}
+              <button
+                onClick={() => setShowStairModal(false)}
+                className="w-full py-2 px-4 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-xl font-medium transition-all"
+              >
+                取消
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 選中房間詳情面板 */}
       <AnimatePresence>
