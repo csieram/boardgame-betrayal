@@ -314,6 +314,9 @@ export class AIPlayerManager {
 
   /**
    * 執行所有 AI 回合（人類回合後調用）
+   * Issue #147: 修復雙重回合推進問題
+   * - 確保順序執行（非平行）
+   * - 正確管理回合計數器
    */
   async executeAllAITurns(
     gameState: GameState,
@@ -322,10 +325,13 @@ export class AIPlayerManager {
   ): Promise<TurnExecutionResult[]> {
     const results: TurnExecutionResult[] = [];
 
-    // 執行所有 AI 玩家的回合
-    this.aiPlayers.forEach(async (aiPlayer, aiId) => {
+    // Issue #147: 使用 for...of 確保順序執行（非平行）
+    for (const [aiId, aiPlayer] of Array.from(this.aiPlayers.entries())) {
       if (this.isAIAlive(gameState, aiId)) {
         onTurnStart?.(aiPlayer.getPlayerName());
+
+        // Issue #147: 設置當前玩家為此 AI
+        this.turnOrder.currentPlayerId = aiId;
 
         const result = await this.executeSingleAITurn(gameState, aiId);
         if (result) {
@@ -336,12 +342,14 @@ export class AIPlayerManager {
         // 短暫延遲以便 UI 更新
         await new Promise(resolve => setTimeout(resolve, 500));
       }
-    });
+    }
 
-    // 回合結束，開始新一輪
+    // Issue #147: 所有 AI 回合完成後，才開始新一輪
     this.turnOrder.round++;
     this.turnOrder.currentIndex = 0;
     this.turnOrder.currentPlayerId = this.humanPlayerId;
+
+    this.log('All AI turns completed, starting new round', { round: this.turnOrder.round });
 
     return results;
   }

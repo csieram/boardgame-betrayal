@@ -1389,7 +1389,7 @@ export default function SoloGamePage() {
       endedByDiscovery: false,
     });
 
-    // Issue #111: 如果有 AI 玩家，執行 AI 回合
+    // Issue #147: 使用 executeAllAITurns 統一管理 AI 回合，避免雙重回合推進
     if (aiManager && aiPlayers.length > 0) {
       setIsProcessingAITurn(true);
 
@@ -1399,99 +1399,89 @@ export default function SoloGamePage() {
         currentAIPlayerName: aiPlayers[0]?.name || 'AI',
       });
 
-      const currentTime = Date.now();
-      const newLogs: AIActionLog[] = [];
-
       setLog(prev => [...prev, '🤖 AI 玩家回合開始...']);
 
-      // 執行所有 AI 回合
-      for (const aiPlayer of aiPlayers) {
-        if (!aiPlayer.isAlive) continue;
+      // 創建遊戲狀態供 AI 使用
+      const mockGameState = createGameStateForAI();
 
-        setCurrentTurnPlayer(aiPlayer.id);
-        
-        // Issue #143: 自動切換到當前 AI 玩家的 Character Tab
-        setSelectedPlayerId(aiPlayer.id);
-        
-        setAiActionModalState(prev => ({
-          ...prev,
-          currentAIPlayerName: aiPlayer.name,
-        }));
+      // Issue #147: 使用 executeAllAITurns 執行所有 AI 回合（順序執行，統一管理回合計數）
+      const results = await aiManager.executeAllAITurns(
+        mockGameState,
+        (aiName) => {
+          // onTurnStart: AI 回合開始回調
+          const aiPlayer = aiPlayers.find(p => p.name === aiName);
+          if (aiPlayer) {
+            setCurrentTurnPlayer(aiPlayer.id);
+            setSelectedPlayerId(aiPlayer.id);
+            setAiActionModalState(prev => ({
+              ...prev,
+              currentAIPlayerName: aiName,
+            }));
 
-        // 添加回合開始日誌
-        const turnStartLog: AIActionLog = {
-          timestamp: currentTime + newLogs.length * 100,
-          turn: turn,
-          playerId: aiPlayer.id,
-          playerName: aiPlayer.name,
-          action: '開始回合',
-        };
-        newLogs.push(turnStartLog);
-        setAiActionLogs(prev => [...prev, turnStartLog]);
-
-        // 模擬 AI 思考時間
-        await new Promise(resolve => setTimeout(resolve, 800));
-
-        // 創建遊戲狀態供 AI 使用
-        const mockGameState = createGameStateForAI();
-
-        // 執行 AI 回合
-        const result = await aiManager.executeNextAITurn(mockGameState);
-
-        if (result) {
-          // 將 AI 行動轉換為結構化日誌
-          for (const logEntry of result.logs) {
-            const actionLog: AIActionLog = {
-              timestamp: currentTime + newLogs.length * 100,
+            // 添加回合開始日誌
+            const turnStartLog: AIActionLog = {
+              timestamp: Date.now(),
               turn: turn,
               playerId: aiPlayer.id,
-              playerName: aiPlayer.name,
-              action: logEntry,
-              details: result.discoveredRoom && result.newPosition ? `位置: (${result.newPosition.x}, ${result.newPosition.y})` : undefined,
+              playerName: aiName,
+              action: '開始回合',
             };
-            newLogs.push(actionLog);
-            setAiActionLogs(prev => [...prev, actionLog]);
-            
-            // 同時添加到主遊戲日誌 (Issue #111)
-            const timeStr = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
-            setLog(prev => [...prev, `[${timeStr}] 🤖 ${aiPlayer.name} ${logEntry}`]);
+            setAiActionLogs(prev => [...prev, turnStartLog]);
           }
-
-          // Issue #119: 更新 AI 玩家位置
-          if (result.newPosition) {
-            updateAIPlayerPosition(aiPlayer.id, result.newPosition);
-            
-            // 如果有新房間發現，更新地圖
-            if (result.discoveredRoom) {
-              const discoverLog: AIActionLog = {
-                timestamp: currentTime + newLogs.length * 100,
+        },
+        (result) => {
+          // onTurnEnd: AI 回合結束回調
+          // 從結果中獲取 AI 玩家資訊
+          const aiPlayer = aiPlayers.find(p => p.id === currentTurnPlayer);
+          if (aiPlayer && result) {
+            // 將 AI 行動轉換為結構化日誌
+            for (const logEntry of result.logs) {
+              const actionLog: AIActionLog = {
+                timestamp: Date.now(),
                 turn: turn,
                 playerId: aiPlayer.id,
                 playerName: aiPlayer.name,
-                action: `探索並發現新房間`,
-                details: `位置: (${result.newPosition.x}, ${result.newPosition.y})`,
+                action: logEntry,
+                details: result.discoveredRoom && result.newPosition ? `位置: (${result.newPosition.x}, ${result.newPosition.y})` : undefined,
               };
-              newLogs.push(discoverLog);
-              setAiActionLogs(prev => [...prev, discoverLog]);
-              setLog(prev => [...prev, `🤖 ${aiPlayer.name} 發現了新房間！`]);
+              setAiActionLogs(prev => [...prev, actionLog]);
+
+              // 同時添加到主遊戲日誌
+              const timeStr = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+              setLog(prev => [...prev, `[${timeStr}] 🤖 ${aiPlayer.name} ${logEntry}`]);
             }
+
+            // Issue #119: 更新 AI 玩家位置
+            if (result.newPosition) {
+              updateAIPlayerPosition(aiPlayer.id, result.newPosition);
+
+              // 如果有新房間發現，更新地圖
+              if (result.discoveredRoom) {
+                const discoverLog: AIActionLog = {
+                  timestamp: Date.now(),
+                  turn: turn,
+                  playerId: aiPlayer.id,
+                  playerName: aiPlayer.name,
+                  action: `探索並發現新房間`,
+                  details: `位置: (${result.newPosition.x}, ${result.newPosition.y})`,
+                };
+                setAiActionLogs(prev => [...prev, discoverLog]);
+                setLog(prev => [...prev, `🤖 ${aiPlayer.name} 發現了新房間！`]);
+              }
+            }
+
+            // 添加回合結束日誌
+            const turnEndLog: AIActionLog = {
+              timestamp: Date.now(),
+              turn: turn,
+              playerId: aiPlayer.id,
+              playerName: aiPlayer.name,
+              action: '結束回合',
+            };
+            setAiActionLogs(prev => [...prev, turnEndLog]);
           }
         }
-
-        // 添加回合結束日誌
-        const turnEndLog: AIActionLog = {
-          timestamp: currentTime + newLogs.length * 100,
-          turn: turn,
-          playerId: aiPlayer.id,
-          playerName: aiPlayer.name,
-          action: '結束回合',
-        };
-        newLogs.push(turnEndLog);
-        setAiActionLogs(prev => [...prev, turnEndLog]);
-
-        // 短暫延遲
-        await new Promise(resolve => setTimeout(resolve, 400));
-      }
+      );
 
       setCurrentTurnPlayer('solo-player');
       setIsProcessingAITurn(false);
