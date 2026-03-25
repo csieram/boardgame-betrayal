@@ -368,134 +368,140 @@ export default function SoloGamePage() {
     
     // 從 ROOMS 獲取房間資料
     import('@betrayal/shared').then(({ ROOMS }) => {
-      const rng = new SeededRng(seed);
-      const newGameState = createInitialGameState(seed);
+      try {
+        const rng = new SeededRng(seed);
+        const newGameState = createInitialGameState(seed);
 
-      // 過濾並洗牌各樓層牌堆（排除起始房間）
-      const groundRooms = ROOMS.filter(r => r.floor === 'ground' && r.id !== 'entrance_hall');
-      const upperRooms = ROOMS.filter(r => r.floor === 'upper' && r.id !== 'stairs_from_upper');
-      const basementRooms = ROOMS.filter(r => r.floor === 'basement' && r.id !== 'stairs_from_basement');
+        // 過濾並洗牌各樓層牌堆（排除起始房間）
+        const groundRooms = ROOMS.filter(r => r.floor === 'ground' && r.id !== 'entrance_hall');
+        const upperRooms = ROOMS.filter(r => r.floor === 'upper' && r.id !== 'stairs_from_upper');
+        const basementRooms = ROOMS.filter(r => r.floor === 'basement' && r.id !== 'stairs_from_basement');
 
-      newGameState.roomDecks.ground = rng.shuffle(groundRooms);
-      newGameState.roomDecks.upper = rng.shuffle(upperRooms);
-      newGameState.roomDecks.basement = rng.shuffle(basementRooms);
+        newGameState.roomDecks.ground = rng.shuffle(groundRooms);
+        newGameState.roomDecks.upper = rng.shuffle(upperRooms);
+        newGameState.roomDecks.basement = rng.shuffle(basementRooms);
 
-      // 記錄前 5 個房間 ID 用於除錯
-      console.log('First 5 ground room IDs:', newGameState.roomDecks.ground.slice(0, 5).map(r => r.id));
-      console.log('First 5 upper room IDs:', newGameState.roomDecks.upper.slice(0, 5).map(r => r.id));
-      console.log('First 5 basement room IDs:', newGameState.roomDecks.basement.slice(0, 5).map(r => r.id));
+        // 記錄前 5 個房間 ID 用於除錯
+        console.log('First 5 ground room IDs:', newGameState.roomDecks.ground.slice(0, 5).map(r => r.id));
+        console.log('First 5 upper room IDs:', newGameState.roomDecks.upper.slice(0, 5).map(r => r.id));
+        console.log('First 5 basement room IDs:', newGameState.roomDecks.basement.slice(0, 5).map(r => r.id));
 
-      setGameState(newGameState);
+        setGameState(newGameState);
 
-      // 放置起始房間
-      // 1. 一樓：入口大廳 (7,7) 和 通往地下室的樓梯 (7,9)
-      STARTING_ROOMS.ground.forEach(({ roomId, position, rotation }) => {
-        const room = ROOMS.find(r => r.id === roomId);
-        if (room) {
-          initialMultiFloorMap.ground[position.y][position.x] = {
-            ...initialMultiFloorMap.ground[position.y][position.x],
-            discovered: true,
-            room: room,
-            rotation: rotation,
-          };
-        }
-      });
-
-      // 2. 二樓：樓梯房間 (7,5)
-      STARTING_ROOMS.upper.forEach(({ roomId, position, rotation }) => {
-        const room = ROOMS.find(r => r.id === roomId);
-        if (room) {
-          initialMultiFloorMap.upper[position.y][position.x] = {
-            ...initialMultiFloorMap.upper[position.y][position.x],
-            discovered: true,
-            room: room,
-            rotation: rotation,
-          };
-        }
-      });
-
-      // 3. 地下室：樓梯房間 (7,7)
-      STARTING_ROOMS.basement.forEach(({ roomId, position, rotation }) => {
-        const room = ROOMS.find(r => r.id === roomId);
-        if (room) {
-          initialMultiFloorMap.basement[position.y][position.x] = {
-            ...initialMultiFloorMap.basement[position.y][position.x],
-            discovered: true,
-            room: room,
-            rotation: rotation,
-          };
-        }
-      });
-
-      setMultiFloorMap(initialMultiFloorMap);
-
-      // 初始化玩家狀態（用於卡牌效果）
-      const initialPlayerState: PlayerState = {
-        id: 'solo-player',
-        name: character.name,
-        stats: {
-          speed: character.stats.speed[0],
-          might: character.stats.might[0],
-          sanity: character.stats.sanity[0],
-          knowledge: character.stats.knowledge[0],
-        },
-        items: [],
-        omens: [],
-      };
-      setPlayerState(initialPlayerState);
-
-      // Issue #110: 初始化 AI 玩家管理器
-      if (aiSetup && aiSetup.count > 0) {
-        const manager = createAIPlayerManager(
-          'solo-player',
-          aiSetup.count,
-          aiSetup.difficulty,
-          seed
-        );
-        setAiManager(manager);
-
-        // 創建 AI 玩家
-        const mockGameState = {
-          players: [],
-          map: {
-            ground: initialMultiFloorMap.ground,
-            upper: initialMultiFloorMap.upper,
-            basement: initialMultiFloorMap.basement,
-            placedRoomCount: 3,
-          },
-        } as any;
-
-        const aiPlayerObjects = manager.initializeAIPlayers(
-          mockGameState,
-          character,
-          aiSetup.personalities
-        );
-
-        const initialAIPlayers = manager.getAIPlayers();
-        setAiPlayers(initialAIPlayers);
-        
-        // Issue #122: 初始化 AI 玩家位置到 aiPlayerPositions
-        const initialPositions = new Map<string, { x: number; y: number; floor: Floor }>();
-        initialAIPlayers.forEach(aiPlayer => {
-          initialPositions.set(aiPlayer.id, aiPlayer.position || { x: 7, y: 7, floor: 'ground' });
+        // 放置起始房間
+        // 1. 一樓：入口大廳 (7,7) 和 通往地下室的樓梯 (7,9)
+        STARTING_ROOMS.ground.forEach(({ roomId, position, rotation }) => {
+          const room = ROOMS.find(r => r.id === roomId);
+          if (room) {
+            initialMultiFloorMap.ground[position.y][position.x] = {
+              ...initialMultiFloorMap.ground[position.y][position.x],
+              discovered: true,
+              room: room,
+              rotation: rotation,
+            };
+          }
         });
-        setAiPlayerPositions(initialPositions);
-        
-        setLog(prev => [
-          ...prev,
-          `選擇了 ${character.name}`,
-          `🤖 AI 玩家: ${aiSetup.count} 位 (${aiSetup.difficulty === 'easy' ? '簡單' : aiSetup.difficulty === 'medium' ? '中等' : '困難'})`,
-          '從入口大廳開始',
-          '回合 1'
-        ]);
-      } else {
-        setLog([`選擇了 ${character.name}`, '從入口大廳開始', '回合 1']);
+
+        // 2. 二樓：樓梯房間 (7,5)
+        STARTING_ROOMS.upper.forEach(({ roomId, position, rotation }) => {
+          const room = ROOMS.find(r => r.id === roomId);
+          if (room) {
+            initialMultiFloorMap.upper[position.y][position.x] = {
+              ...initialMultiFloorMap.upper[position.y][position.x],
+              discovered: true,
+              room: room,
+              rotation: rotation,
+            };
+          }
+        });
+
+        // 3. 地下室：樓梯房間 (7,7)
+        STARTING_ROOMS.basement.forEach(({ roomId, position, rotation }) => {
+          const room = ROOMS.find(r => r.id === roomId);
+          if (room) {
+            initialMultiFloorMap.basement[position.y][position.x] = {
+              ...initialMultiFloorMap.basement[position.y][position.x],
+              discovered: true,
+              room: room,
+              rotation: rotation,
+            };
+          }
+        });
+
+        setMultiFloorMap(initialMultiFloorMap);
+
+        // 初始化玩家狀態（用於卡牌效果）
+        const initialPlayerState: PlayerState = {
+          id: 'solo-player',
+          name: character.name,
+          stats: {
+            speed: character.stats.speed[0],
+            might: character.stats.might[0],
+            sanity: character.stats.sanity[0],
+            knowledge: character.stats.knowledge[0],
+          },
+          items: [],
+          omens: [],
+        };
+        setPlayerState(initialPlayerState);
+
+        // Issue #110: 初始化 AI 玩家管理器
+        if (aiSetup && aiSetup.count > 0) {
+          const manager = createAIPlayerManager(
+            'solo-player',
+            aiSetup.count,
+            aiSetup.difficulty,
+            seed
+          );
+          setAiManager(manager);
+
+          // 創建 AI 玩家
+          const mockGameState = {
+            players: [],
+            map: {
+              ground: initialMultiFloorMap.ground,
+              upper: initialMultiFloorMap.upper,
+              basement: initialMultiFloorMap.basement,
+              placedRoomCount: 3,
+            },
+          } as any;
+
+          const aiPlayerObjects = manager.initializeAIPlayers(
+            mockGameState,
+            character,
+            aiSetup.personalities
+          );
+
+          const initialAIPlayers = manager.getAIPlayers();
+          setAiPlayers(initialAIPlayers);
+          
+          // Issue #122: 初始化 AI 玩家位置到 aiPlayerPositions
+          const initialPositions = new Map<string, { x: number; y: number; floor: Floor }>();
+          initialAIPlayers.forEach(aiPlayer => {
+            initialPositions.set(aiPlayer.id, aiPlayer.position || { x: 7, y: 7, floor: 'ground' });
+          });
+          setAiPlayerPositions(initialPositions);
+          
+          setLog(prev => [
+            ...prev,
+            `選擇了 ${character.name}`,
+            `🤖 AI 玩家: ${aiSetup.count} 位 (${aiSetup.difficulty === 'easy' ? '簡單' : aiSetup.difficulty === 'medium' ? '中等' : '困難'})`,
+            '從入口大廳開始',
+            '回合 1'
+          ]);
+        } else {
+          setLog([`選擇了 ${character.name}`, '從入口大廳開始', '回合 1']);
+        }
+
+        // 計算可達位置（從入口大廳開始）
+        updateReachablePositions(initialMultiFloorMap.ground, { x: MAP_CENTER, y: MAP_CENTER }, character.stats.speed[0], false);
+      } catch (error) {
+        console.error('Error initializing game:', error);
+        setLog(prev => [...prev, `錯誤：遊戲初始化失敗 - ${error instanceof Error ? error.message : '未知錯誤'}`]);
+      } finally {
+        // 確保無論成功或失敗，都關閉載入狀態
+        setIsLoading(false);
       }
-
-      setIsLoading(false);
-
-      // 計算可達位置（從入口大廳開始）
-      updateReachablePositions(initialMultiFloorMap.ground, { x: MAP_CENTER, y: MAP_CENTER }, character.stats.speed[0], false);
     }).catch((error) => {
       console.error('Failed to load ROOMS data:', error);
       setIsLoading(false);
@@ -1208,6 +1214,9 @@ export default function SoloGamePage() {
     room: Room,
     rotation: 0 | 90 | 180 | 270
   ) => {
+    // Issue #161-debug: 調試日誌 - updateRoom 被調用
+    console.log('[Fix #161] updateRoom called with:', { floor, x, y, room, rotation });
+
     // 旋轉門方向（從房間座標系轉換到地圖座標系）
     const rotationMap: Record<number, Record<Direction, Direction>> = {
       0: { north: 'north', south: 'south', east: 'east', west: 'west' },
@@ -1215,9 +1224,9 @@ export default function SoloGamePage() {
       180: { north: 'south', south: 'north', east: 'west', west: 'east' },
       270: { north: 'west', south: 'east', east: 'north', west: 'south' },
     };
-    
+
     const rotatedDoors = room.doors.map((door: Direction) => rotationMap[rotation][door]);
-    
+
     const placedRoom = {
       ...room,
       doors: rotatedDoors,
@@ -1226,12 +1235,15 @@ export default function SoloGamePage() {
 
     // 更新多樓層地圖 - 使用深拷貝確保 React 檢測到變化
     setMultiFloorMap(prev => {
+      // Issue #161-debug: 調試日誌 - 更新前的地圖狀態
+      console.log('[Fix #161] multiFloorMap before:', prev[floor][y][x]);
+
       const newMap: MultiFloorMap = {
         ground: prev.ground.map(row => row.map(tile => ({ ...tile }))),
         upper: prev.upper.map(row => row.map(tile => ({ ...tile }))),
         basement: prev.basement.map(row => row.map(tile => ({ ...tile }))),
       };
-      
+
       newMap[floor][y][x] = {
         x,
         y,
@@ -1239,7 +1251,10 @@ export default function SoloGamePage() {
         room: placedRoom,
         rotation: placedRoom.rotation,
       };
-      
+
+      // Issue #161-debug: 調試日誌 - 更新後的地圖狀態
+      console.log('[Fix #161] multiFloorMap after:', newMap[floor][y][x]);
+
       return newMap;
     });
     
@@ -1510,9 +1525,22 @@ export default function SoloGamePage() {
             
             // Issue #2-fix & #151-fix: 處理 AI 房間發現並更新地圖
             // AI 已經在 game-engine 中抽取了房間，使用 updateRoom 統一更新地圖
+            // Issue #161-debug: 添加調試日誌
+            console.log('[Fix #161] discoveredRoomData:', result.discoveredRoomData);
+            console.log('[Fix #161] discoveredRoom flag:', result.discoveredRoom);
             if (result.discoveredRoom && result.discoveredRoomData) {
               const { room, position: roomPosition, rotation, floor } = result.discoveredRoomData;
-              
+
+              // Issue #161-debug: 調試日誌 - 調用 updateRoom 前
+              console.log('[Fix #161] About to call updateRoom with:', {
+                floor,
+                x: roomPosition.x,
+                y: roomPosition.y,
+                roomName: room.name,
+                roomId: room.id,
+                rotation
+              });
+
               // Issue #2-fix: 使用 updateRoom 函數統一處理房間更新
               const placedRoom = updateRoom(floor, roomPosition.x, roomPosition.y, room, rotation as 0 | 90 | 180 | 270);
               
