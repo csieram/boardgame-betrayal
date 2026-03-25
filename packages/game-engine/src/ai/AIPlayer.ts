@@ -399,10 +399,27 @@ export class AIPlayer {
     this.state.position = player.position;
 
     // 獲取合法行動
+    // Issue #150: 添加調試日誌
+    this.log('Getting legal actions', { 
+      playerId: this.state.playerId, 
+      currentPlayerId: gameState.turn.currentPlayerId,
+      position: player.position,
+      movesRemaining: gameState.turn.movesRemaining,
+      hasDiscoveredRoom: gameState.turn.hasDiscoveredRoom
+    });
+    
     const legalActions = this.decisionEngine.getLegalActions(
       gameState,
       this.state.playerId
     );
+
+    // Issue #150: 添加詳細調試日誌
+    this.log('Legal actions received', {
+      explorableDirections: legalActions.explorableDirections,
+      movablePositionsCount: legalActions.movablePositions.length,
+      usableItemsCount: legalActions.usableItems.length,
+      canEndTurn: legalActions.canEndTurn
+    });
 
     // Issue #148: 檢查是否有任何可行動
     const hasAnyAction = legalActions.explorableDirections.length > 0 || 

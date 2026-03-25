@@ -193,6 +193,7 @@ export class AIDecisionEngine {
   getLegalActions(state: GameState, playerId: string): LegalActions {
     const player = state.players.find(p => p.id === playerId);
     if (!player) {
+      console.log(`[AIDecisionEngine] Player not found: ${playerId}`);
       return {
         movablePositions: [],
         attackableTargets: [],
@@ -202,8 +203,21 @@ export class AIDecisionEngine {
       };
     }
 
+    // Issue #150: 添加調試日誌
+    console.log(`[AIDecisionEngine] Getting legal actions for ${playerId}`, {
+      currentPlayerId: state.turn.currentPlayerId,
+      isCurrentPlayer: state.turn.currentPlayerId === playerId,
+      position: player.position,
+      movesRemaining: state.turn.movesRemaining,
+      hasDiscoveredRoom: state.turn.hasDiscoveredRoom,
+      isHauntActive: state.haunt.isActive,
+    });
+
     // 取得可移動位置
     const movablePositions = PathFinder.getReachablePositions(state, playerId);
+    
+    // Issue #150: 添加調試日誌
+    console.log(`[AIDecisionEngine] Reachable positions:`, movablePositions.length);
 
     // 取得可攻擊目標（僅在作祟階段）
     let attackableTargets: string[] = [];
@@ -229,8 +243,19 @@ export class AIDecisionEngine {
       playerId
     );
 
+    // Issue #150: 添加調試日誌
+    console.log(`[AIDecisionEngine] Explorable directions:`, explorableDirections);
+
     // 是否可以結束回合
     const canEndTurn = state.turn.currentPlayerId === playerId && !state.turn.hasEnded;
+
+    // Issue #150: 添加調試日誌
+    console.log(`[AIDecisionEngine] Final legal actions:`, {
+      movablePositions: movablePositions.length,
+      explorableDirections: explorableDirections.length,
+      usableItems: usableItems.length,
+      canEndTurn,
+    });
 
     return {
       movablePositions,

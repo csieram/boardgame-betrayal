@@ -356,6 +356,10 @@ export class AIPlayerManager {
 
   /**
    * 執行單個 AI 回合
+   * 
+   * Issue #150: 修復 AI 無法執行行動的問題
+   * - 更新 gameState.turn.currentPlayerId 為當前 AI ID
+   * - 這確保 getLegalActions 中的 TurnManager.isCurrentPlayer 檢查通過
    */
   private async executeSingleAITurn(
     gameState: GameState,
@@ -363,6 +367,13 @@ export class AIPlayerManager {
   ): Promise<TurnExecutionResult | null> {
     const aiPlayer = this.aiPlayers.get(aiId);
     if (!aiPlayer) return null;
+
+    // Issue #150: 更新 gameState 的 currentPlayerId 為當前 AI
+    // 這是關鍵修復：確保 getLegalActions 中的 isCurrentPlayer 檢查通過
+    const originalPlayerId = gameState.turn.currentPlayerId;
+    gameState.turn.currentPlayerId = aiId;
+    
+    this.log(`Updated gameState.turn.currentPlayerId to ${aiId}`);
 
     // 更新位置
     const player = gameState.players.find(p => p.id === aiId);
@@ -372,6 +383,9 @@ export class AIPlayerManager {
 
     // 執行回合
     const result = aiPlayer.executeTurn(gameState);
+
+    // Issue #150: 恢復原來的 currentPlayerId（可選，取決於後續邏輯需求）
+    gameState.turn.currentPlayerId = originalPlayerId;
 
     // 記錄日誌
     for (const log of result.logs) {

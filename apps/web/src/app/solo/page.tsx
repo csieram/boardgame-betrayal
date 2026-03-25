@@ -715,11 +715,35 @@ export default function SoloGamePage() {
   }, [hauntState.revelation, aiDifficulty]);
 
   // Issue #109: 建立 AI 用的遊戲狀態
-  const createGameStateForAI = (): any => {
+  // Issue #150: 支持探索階段和作祟階段
+  const createGameStateForAI = (isExplorationPhase: boolean = false): any => {
+    // Issue #148-fix: 使用真實的 AI 玩家位置
+    const aiPlayersList = aiPlayers.map(aiPlayer => {
+      const aiPos = aiPlayerPositions.get(aiPlayer.id) || aiPlayer.position || { x: 7, y: 7, floor: 'ground' as Floor };
+      return {
+        id: aiPlayer.id,
+        name: aiPlayer.name,
+        position: aiPos,
+        currentStats: {
+          speed: aiPlayer.character?.stats?.speed?.[0] || 4,
+          might: aiPlayer.character?.stats?.might?.[0] || 4,
+          sanity: aiPlayer.character?.stats?.sanity?.[0] || 4,
+          knowledge: aiPlayer.character?.stats?.knowledge?.[0] || 4,
+        },
+        items: [],
+        omens: [],
+        isTraitor: false,
+        isDead: !aiPlayer.isAlive,
+      };
+    });
+
+    // Issue #150: 根據階段設置正確的遊戲狀態
+    const isHauntActive = !isExplorationPhase && hauntState.isActive;
+    
     return {
       gameId: 'solo-game',
       version: '1.0.0',
-      phase: 'haunt',
+      phase: isHauntActive ? 'haunt' : 'exploration',
       result: 'ongoing',
       config: { 
         playerCount: 2, 
@@ -734,7 +758,7 @@ export default function SoloGamePage() {
         placedRoomCount: gameState.placedRoomIds.size,
       },
       players: [
-        // 玩家（叛徒）
+        // 玩家
         {
           id: 'solo-player',
           name: player?.name || '玩家',
@@ -747,24 +771,15 @@ export default function SoloGamePage() {
           },
           items: playerState?.items || [],
           omens: playerState?.omens || [],
-          isTraitor: true,
+          isTraitor: isHauntActive && hauntState.revelation?.traitorId === 'solo-player',
           isDead: false,
         },
-        // AI 英雄
-        {
-          id: 'ai-hero-1',
-          name: 'AI 英雄',
-          position: { x: 3, y: 3, floor: 'ground' },
-          currentStats: { speed: 4, might: 4, sanity: 4, knowledge: 4 },
-          items: [],
-          omens: [],
-          isTraitor: false,
-          isDead: false,
-        },
+        // AI 玩家 - 使用真實位置
+        ...aiPlayersList,
       ],
-      playerOrder: ['solo-player', 'ai-hero-1'],
+      playerOrder: ['solo-player', ...aiPlayers.map(p => p.id)],
       turn: {
-        currentPlayerId: 'ai-hero-1',
+        currentPlayerId: 'solo-player', // Issue #150: 默認為 solo-player，AIPlayerManager 會更新為當前 AI
         turnNumber: turn,
         movesRemaining: 4,
         hasDiscoveredRoom: false,
@@ -785,13 +800,13 @@ export default function SoloGamePage() {
         drawn: gameState.roomDecks.drawn,
       },
       haunt: {
-        isActive: true,
-        type: 'single_traitor',
-        hauntNumber: hauntState.revelation?.scenario?.id || 1,
-        traitorPlayerId: 'solo-player',
+        isActive: isHauntActive,
+        type: isHauntActive ? 'single_traitor' : null,
+        hauntNumber: isHauntActive ? hauntState.revelation?.scenario?.id || 1 : null,
+        traitorPlayerId: isHauntActive ? hauntState.revelation?.traitorId || null : null,
         omenCount: cardManager.getDeckStatus().omenCount,
-        heroObjective: hauntState.revelation?.scenario?.heroObjective || '擊敗叛徒',
-        traitorObjective: hauntState.revelation?.scenario?.traitorObjective || '消滅所有英雄',
+        heroObjective: isHauntActive ? hauntState.revelation?.scenario?.heroObjective || '擊敗叛徒' : null,
+        traitorObjective: isHauntActive ? hauntState.revelation?.scenario?.traitorObjective || '消滅所有英雄' : null,
       },
       combat: {
         isActive: false,
@@ -1401,14 +1416,21 @@ export default function SoloGamePage() {
 
       setLog(prev => [...prev, '🤖 AI 玩家回合開始...']);
 
-      // 創建遊戲狀態供 AI 使用
-      const mockGameState = createGameStateForAI();
+      // Issue #150: 創建遊戲狀態供 AI 使用
+      // 根據當前階段創建正確的 gameState
+      const isExplorationPhase = !hauntState.isActive;
+      const mockGameState = createGameStateForAI(isExplorationPhase);
+      console.log('[AI Debug] Created gameState for phase:', isExplorationPhase ? 'exploration' : 'haunt');
 
       // Issue #147: 使用 executeAllAITurns 執行所有 AI 回合（順序執行，統一管理回合計數）
+      // Issue #148: 添加調試日誌
+      console.log('[AI Debug] Starting executeAllAITurns, aiPlayers count:', aiPlayers.length);
+      
       const results = await aiManager.executeAllAITurns(
         mockGameState,
         (aiName) => {
           // onTurnStart: AI 回合開始回調
+          console.log('[AI Debug] onTurnStart:', aiName);
           const aiPlayer = aiPlayers.find(p => p.name === aiName);
           if (aiPlayer) {
             setCurrentTurnPlayer(aiPlayer.id);
@@ -1427,13 +1449,22 @@ export default function SoloGamePage() {
               action: '開始回合',
             };
             setAiActionLogs(prev => [...prev, turnStartLog]);
+            setLog(prev => [...prev, `🤖 ${aiName}: 開始回合`]);
           }
         },
         (result) => {
           // onTurnEnd: AI 回合結束回調
+          // Issue #148: 添加調試日誌
+          console.log('[AI Debug] onTurnEnd, result:', result);
+          
           // 從結果中獲取 AI 玩家資訊
           const aiPlayer = aiPlayers.find(p => p.id === currentTurnPlayer);
           if (aiPlayer && result) {
+            // Issue #148: 記錄 AI 行動詳情
+            console.log('[AI Debug] AI actions:', result.logs);
+            console.log('[AI Debug] New position:', result.newPosition);
+            console.log('[AI Debug] Discovered room:', result.discoveredRoom);
+            
             // 將 AI 行動轉換為結構化日誌
             for (const logEntry of result.logs) {
               const actionLog: AIActionLog = {
@@ -1453,6 +1484,7 @@ export default function SoloGamePage() {
 
             // Issue #119: 更新 AI 玩家位置
             if (result.newPosition) {
+              console.log('[AI Debug] Updating AI position:', aiPlayer.id, result.newPosition);
               updateAIPlayerPosition(aiPlayer.id, result.newPosition);
 
               // 如果有新房間發現，更新地圖
@@ -1483,6 +1515,10 @@ export default function SoloGamePage() {
         }
       );
 
+      // Issue #148: 添加調試日誌
+      console.log('[AI Debug] executeAllAITurns completed, results count:', results.length);
+      console.log('[AI Debug] All results:', results);
+      
       setCurrentTurnPlayer('solo-player');
       setIsProcessingAITurn(false);
       setLog(prev => [...prev, '👤 你的回合']);

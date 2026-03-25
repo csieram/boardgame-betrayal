@@ -482,19 +482,36 @@ export class RoomDiscoveryManager {
     playerId: string
   ): Direction[] {
     const player = state.players.find(p => p.id === playerId);
-    if (!player) return [];
+    if (!player) {
+      console.log(`[RoomDiscovery] Player not found: ${playerId}`);
+      return [];
+    }
 
     // 檢查是否已發現房間
-    if (state.turn.hasDiscoveredRoom) return [];
+    if (state.turn.hasDiscoveredRoom) {
+      console.log(`[RoomDiscovery] Already discovered room this turn`);
+      return [];
+    }
 
     // 檢查是否有足夠的移動點數
-    if (state.turn.movesRemaining < 1) return [];
+    if (state.turn.movesRemaining < 1) {
+      console.log(`[RoomDiscovery] No moves remaining`);
+      return [];
+    }
 
     // 檢查是否為當前玩家
-    if (!TurnManager.isCurrentPlayer(state, playerId)) return [];
+    if (!TurnManager.isCurrentPlayer(state, playerId)) {
+      console.log(`[RoomDiscovery] Not current player. Expected: ${playerId}, Got: ${state.turn.currentPlayerId}`);
+      return [];
+    }
 
     const currentTile = this.getTileAt(state, player.position);
-    if (!currentTile || !currentTile.room) return [];
+    if (!currentTile || !currentTile.room) {
+      console.log(`[RoomDiscovery] No room at current position`, player.position);
+      return [];
+    }
+
+    console.log(`[RoomDiscovery] Current room: ${currentTile.room.name}, doors: ${currentTile.room.doors}`);
 
     // 使用 getValidExploreDirections 取得有效的探索方向
     // 這確保了玩家只能通過當前房間現有的門進行探索
@@ -511,14 +528,22 @@ export class RoomDiscoveryManager {
       };
 
       // 檢查位置是否有效
-      if (!this.isValidPosition(state, newPos)) continue;
+      if (!this.isValidPosition(state, newPos)) {
+        console.log(`[RoomDiscovery] Invalid position for ${dir}:`, newPos);
+        continue;
+      }
 
       // 檢查位置是否已被佔用
       const existingTile = this.getTileAt(state, newPos);
-      if (existingTile && existingTile.room) continue;
+      if (existingTile && existingTile.room) {
+        console.log(`[RoomDiscovery] Position already occupied for ${dir}:`, newPos);
+        continue;
+      }
 
       discoverable.push(dir);
     }
+
+    console.log(`[RoomDiscovery] Discoverable directions:`, discoverable);
 
     return discoverable;
   }
