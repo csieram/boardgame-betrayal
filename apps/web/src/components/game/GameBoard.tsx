@@ -120,20 +120,25 @@ export function GameBoard({
   };
 
   // 過濾出當前樓層的已探索房間
+  // Issue #156-fix: 移除 tile.room?.floor === activeFloor 檢查
+  // 房間的 floor 屬性是原始樓層分類（用於牌堆），不是實際放置的樓層
+  // 實際放置的樓層由 map 參數決定（multiFloorMap.ground/upper/basement）
   const exploredRooms = useMemo(() => {
     const rooms: { tile: Tile; x: number; y: number }[] = [];
     
     for (let y = 0; y < map.length; y++) {
       for (let x = 0; x < map[y].length; x++) {
         const tile = map[y][x];
-        if (tile.discovered && tile.room?.floor === activeFloor) {
+        // 只檢查 tile.discovered 和 tile.room 是否存在
+        // 不檢查 room.floor，因為房間可以放置在任何樓層（由 map 參數決定）
+        if (tile.discovered && tile.room) {
           rooms.push({ tile, x, y });
         }
       }
     }
     
     return rooms;
-  }, [map, activeFloor]);
+  }, [map]);
 
   // 計算地圖邊界
   const mapBounds = useMemo(() => {
@@ -168,14 +173,39 @@ export function GameBoard({
   };
 
   // Issue #118: 檢查位置有哪些 AI 玩家
+  // Issue #155: 添加除錯日誌
   const getAIPlayersAt = (x: number, y: number, floor: Floor) => {
-    return aiPlayers.filter(ai => 
+    const playersAtPosition = aiPlayers.filter(ai => 
       ai.position?.x === x && 
       ai.position?.y === y && 
       ai.position?.floor === floor &&
       ai.isAlive
     );
+    if (playersAtPosition.length > 0) {
+      console.log('[getAIPlayersAt] Found AI at', { x, y, floor }, ':', playersAtPosition.map(p => ({ id: p.id, name: p.name, position: p.position })));
+    }
+    return playersAtPosition;
   };
+
+  // Issue #155: 監聽 aiPlayers 變化，確保正確重新渲染
+  useEffect(() => {
+    console.log('[GameBoard] aiPlayers updated:', aiPlayers.map(p => ({ id: p.id, name: p.name, position: p.position })));
+  }, [aiPlayers]);
+
+  // Issue #156: 添加除錯日誌追蹤 exploredRooms
+  useEffect(() => {
+    console.log('[GameBoard] exploredRooms updated:', {
+      count: exploredRooms.length,
+      activeFloor,
+      rooms: exploredRooms.map(r => ({
+        name: r.tile.room?.name,
+        x: r.x,
+        y: r.y,
+        floor: r.tile.room?.floor,
+        discovered: r.tile.discovered
+      }))
+    });
+  }, [exploredRooms, activeFloor]);
 
   // Issue #118: 檢查位置是否有 AI 玩家
   const hasAIAt = (x: number, y: number, floor: Floor) => {
@@ -232,9 +262,12 @@ export function GameBoard({
   };
 
   // 渲染單個樓層
+  // Issue #156-fix: 移除 r.tile.room?.floor === floor 過濾條件
+  // exploredRooms 已經只包含當前樓層的房間（由 map 參數決定）
   const renderFloor = (floor: Floor) => {
-    const floorRooms = exploredRooms.filter(r => r.tile.room?.floor === floor);
-    
+    // 直接使用 exploredRooms，因為它已經是從當前 map（特定樓層）計算出來的
+    const floorRooms = exploredRooms;
+
     if (floorRooms.length === 0 && floor !== activeFloor) {
       return null;
     }
@@ -281,7 +314,9 @@ export function GameBoard({
               return Array.from({ length: mapBounds.maxX - mapBounds.minX + 1 }, (_, colIndex) => {
                 const x = mapBounds.minX + colIndex;
                 const tile = map[y]?.[x];
-                const isExplored = tile?.discovered && tile?.room?.floor === floor;
+                // Issue #156-fix: 移除 tile?.room?.floor === floor 檢查
+                // 房間的 floor 屬性是原始樓層分類，不是實際放置的樓層
+                const isExplored = tile?.discovered && tile?.room;
                 const reachable = isReachable(x, y) && floor === activeFloor;
                 const hasPlayer = hasPlayerAt(x, y) && floor === activeFloor;
 
@@ -576,20 +611,21 @@ export function MiniGameBoard({
   className = '',
 }: MiniGameBoardProps) {
   // 只顯示當前樓層的探索房間
+  // Issue #156-fix: 移除 tile.room?.floor === currentFloor 檢查
   const visibleRooms = useMemo(() => {
     const rooms: { tile: Tile; x: number; y: number }[] = [];
-    
+
     for (let y = 0; y < map.length; y++) {
       for (let x = 0; x < map[y].length; x++) {
         const tile = map[y][x];
-        if (tile.discovered && tile.room?.floor === currentFloor) {
+        if (tile.discovered && tile.room) {
           rooms.push({ tile, x, y });
         }
       }
     }
-    
+
     return rooms;
-  }, [map, currentFloor]);
+  }, [map]);
 
   if (visibleRooms.length === 0) {
     return (

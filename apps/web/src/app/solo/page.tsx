@@ -1494,7 +1494,13 @@ export default function SoloGamePage() {
                 rotation: rotation as 0 | 90 | 180 | 270,
               };
               
-              // 更新多樓層地圖
+              // Issue #156: 更新多樓層地圖，添加除錯日誌
+              console.log('[AI Room Discovery] Updating multiFloorMap:', {
+                floor,
+                position: roomPosition,
+                roomName: placedRoom.name,
+                roomFloor: placedRoom.floor,
+              });
               setMultiFloorMap(prev => {
                 const newMap = { ...prev };
                 newMap[floor] = [...prev[floor]];
@@ -1505,6 +1511,7 @@ export default function SoloGamePage() {
                   room: placedRoom,
                   rotation: placedRoom.rotation,
                 };
+                console.log('[AI Room Discovery] multiFloorMap updated, new tile:', newMap[floor][roomPosition.y][roomPosition.x]);
                 return newMap;
               });
               
@@ -1686,12 +1693,21 @@ export default function SoloGamePage() {
   }, [player, position, currentFloor, multiFloorMap]);
 
   // Issue #122: 創建帶有最新位置的 AI 玩家列表（用於 GameBoard）
+  // Issue #155: 添加除錯日誌
   // 注意：這個 useMemo 必須在所有 early returns 之前調用，以符合 React Hooks 規則
   const aiPlayersWithLatestPositions = useMemo(() => {
-    return aiPlayers.map(aiPlayer => ({
-      ...aiPlayer,
-      position: aiPlayerPositions.get(aiPlayer.id) || aiPlayer.position || { x: 7, y: 7, floor: 'ground' as Floor },
-    }));
+    console.log('[aiPlayersWithLatestPositions] Recalculating, aiPlayers count:', aiPlayers.length);
+    console.log('[aiPlayersWithLatestPositions] aiPlayerPositions:', Array.from(aiPlayerPositions.entries()));
+    const result = aiPlayers.map(aiPlayer => {
+      const position = aiPlayerPositions.get(aiPlayer.id) || aiPlayer.position || { x: 7, y: 7, floor: 'ground' as Floor };
+      console.log('[aiPlayersWithLatestPositions] AI:', aiPlayer.id, 'position:', position);
+      return {
+        ...aiPlayer,
+        position,
+      };
+    });
+    console.log('[aiPlayersWithLatestPositions] Result:', result.map(p => ({ id: p.id, position: p.position })));
+    return result;
   }, [aiPlayers, aiPlayerPositions]);
 
   // Issue #127 & #134 & #141: 監聽回合結束，顯示確認後切換到下一個玩家
@@ -1958,10 +1974,15 @@ export default function SoloGamePage() {
   };
 
   // Issue #119: 更新 AI 玩家位置（當 AI 行動時）
+  // Issue #155: 添加除錯日誌追蹤 AI 位置更新
   const updateAIPlayerPosition = (playerId: string, newPosition: { x: number; y: number; floor: Floor }) => {
+    console.log('[updateAIPlayerPosition] Called:', { playerId, newPosition });
     setAiPlayerPositions(prev => {
+      const oldPosition = prev.get(playerId);
+      console.log('[updateAIPlayerPosition] Old position:', oldPosition);
       const newMap = new Map(prev);
       newMap.set(playerId, newPosition);
+      console.log('[updateAIPlayerPosition] New aiPlayerPositions size:', newMap.size);
       return newMap;
     });
   };
