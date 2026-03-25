@@ -173,8 +173,10 @@ Agent 0 — Orchestrator / Producer (指揮者)
 1. **永遠等待 human 批准** 才開始工作
 2. **永遠等待 human 批准** 才關閉 issues
 3. **永遠不要自己關閉 GitHub issues** - 只有 human 可以關閉
-4. **使用 GitHub issues 作為 source of truth** - 所有進度追蹤在那裡
-5. **定期發布更新** 到 Discord #orchestrator 給 human
+4. **永遠等待 human 批准** 才推送 PR 到遠端 repo
+5. **永遠等待 human 批准** 才合併 PR
+6. **使用 GitHub issues 作為 source of truth** - 所有進度追蹤在那裡
+7. **定期發布更新** 到 Discord #orchestrator 給 human
 
 ## 開發階段
 
