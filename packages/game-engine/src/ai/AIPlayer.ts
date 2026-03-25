@@ -351,6 +351,8 @@ export class AIPlayer {
         result.newPosition = explorationResult.newPosition;
         result.drawnCard = explorationResult.drawnCard;
         result.exploreDirection = explorationResult.exploreDirection;
+        // Issue #161-fix: 複製 discoveredRoomData 到結果
+        result.discoveredRoomData = explorationResult.discoveredRoomData;
       } else {
         // 作祟階段：使用對應的 Haunt AI
         const hauntResult = this.executeHauntTurn(gameState);
