@@ -1103,8 +1103,16 @@ export default function SoloGamePage() {
   };
 
   // 從牌堆抽取房間（使用 drawRoomForExploration 確保棋盤不會封閉）
-  const drawRoomFromDeck = (floor: Floor, entryDirection: Direction): { room: Room; rotation: number; wasModified: boolean } | null => {
+  // Issue #151-fix: 接受 sourcePosition 參數，支持 AI 和人類玩家
+  const drawRoomFromDeck = (
+    floor: Floor, 
+    entryDirection: Direction, 
+    sourcePosition?: { x: number; y: number; floor: Floor }
+  ): { room: Room; rotation: number; wasModified: boolean } | null => {
     console.log('[RoomDiscovery] Drawing room for exploration, floor:', floor, 'entryDirection:', entryDirection);
+    
+    // 使用提供的位置或默認使用人類玩家位置
+    const playerPos = sourcePosition || { x: position.x, y: position.y, floor: currentFloor };
     
     // 構建符合 drawRoomForExploration 需要的 gameState 格式
     const explorationGameState = {
@@ -1132,11 +1140,7 @@ export default function SoloGamePage() {
       placedRoomIds: gameState.placedRoomIds,
       players: [{
         id: 'solo-player',
-        position: {
-          x: position.x,
-          y: position.y,
-          floor: currentFloor,
-        },
+        position: playerPos,
       }],
       turn: {
         currentPlayerId: 'solo-player',
@@ -1469,6 +1473,64 @@ export default function SoloGamePage() {
             console.log('[AI Debug] New position:', result.newPosition);
             console.log('[AI Debug] Discovered room:', result.discoveredRoom);
             
+            // Issue #151-fix: 處理 AI 房間發現並更新地圖
+            // AI 已經在 game-engine 中抽取了房間，使用返回的 discoveredRoomData 更新地圖
+            if (result.discoveredRoom && result.discoveredRoomData) {
+              const { room, position: roomPosition, rotation, floor } = result.discoveredRoomData;
+              
+              // 旋轉門方向
+              const rotationMap: Record<number, Record<Direction, Direction>> = {
+                0: { north: 'north', south: 'south', east: 'east', west: 'west' },
+                90: { north: 'east', south: 'west', east: 'south', west: 'north' },
+                180: { north: 'south', south: 'north', east: 'west', west: 'east' },
+                270: { north: 'west', south: 'east', east: 'north', west: 'south' },
+              };
+              
+              const rotatedDoors = room.doors.map((door: Direction) => rotationMap[rotation][door]);
+              
+              const placedRoom = {
+                ...room,
+                doors: rotatedDoors,
+                rotation: rotation as 0 | 90 | 180 | 270,
+              };
+              
+              // 更新多樓層地圖
+              setMultiFloorMap(prev => {
+                const newMap = { ...prev };
+                newMap[floor] = [...prev[floor]];
+                newMap[floor][roomPosition.y] = [...prev[floor][roomPosition.y]];
+                newMap[floor][roomPosition.y][roomPosition.x] = {
+                  ...prev[floor][roomPosition.y][roomPosition.x],
+                  discovered: true,
+                  room: placedRoom,
+                  rotation: placedRoom.rotation,
+                };
+                return newMap;
+              });
+              
+              // 更新已放置房間 ID
+              setGameState(prev => {
+                const newDrawn = new Set(prev.roomDecks.drawn);
+                newDrawn.add(room.id);
+                
+                const newPlacedIds = new Set(prev.placedRoomIds);
+                newPlacedIds.add(room.id);
+                
+                return {
+                  ...prev,
+                  placedRoomIds: newPlacedIds,
+                  roomDecks: {
+                    ...prev.roomDecks,
+                    drawn: newDrawn,
+                  },
+                };
+              });
+              
+              // 記錄房間發現
+              const timeStr = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+              setLog(prev => [...prev, `[${timeStr}] 🤖 ${aiPlayer.name} 發現新房間: ${placedRoom.name}`]);
+            }
+            
             // 將 AI 行動轉換為結構化日誌
             for (const logEntry of result.logs) {
               const actionLog: AIActionLog = {
@@ -1490,31 +1552,10 @@ export default function SoloGamePage() {
             if (result.newPosition) {
               console.log('[AI Debug] Updating AI position:', aiPlayer.id, result.newPosition);
               updateAIPlayerPosition(aiPlayer.id, result.newPosition);
-
-              // 如果有新房間發現，更新地圖
-              if (result.discoveredRoom) {
-                const discoverLog: AIActionLog = {
-                  timestamp: Date.now(),
-                  turn: turn,
-                  playerId: aiPlayer.id,
-                  playerName: aiPlayer.name,
-                  action: `探索並發現新房間`,
-                  details: `位置: (${result.newPosition.x}, ${result.newPosition.y})`,
-                };
-                setAiActionLogs(prev => [...prev, discoverLog]);
-                setLog(prev => [...prev, `🤖 ${aiPlayer.name} 發現了新房間！`]);
-              }
             }
 
-            // 添加回合結束日誌
-            const turnEndLog: AIActionLog = {
-              timestamp: Date.now(),
-              turn: turn,
-              playerId: aiPlayer.id,
-              playerName: aiPlayer.name,
-              action: '結束回合',
-            };
-            setAiActionLogs(prev => [...prev, turnEndLog]);
+            // Issue #151-fix: 移除重複的回合結束日誌
+            // 回合結束日誌已經包含在 result.logs 中，不需要額外添加
           }
         }
       );

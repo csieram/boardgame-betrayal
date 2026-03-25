@@ -24,6 +24,7 @@ import {
   Character,
   StatType,
   Tile,
+  Floor,
 } from '../types';
 import { Room } from '@betrayal/shared';
 import {
@@ -37,7 +38,7 @@ import {
 import { TraitorAI } from './TraitorAI';
 import { HeroAI } from './HeroAI';
 import { PathFinder } from '../rules/movement';
-import { RoomDiscoveryManager } from '../rules/roomDiscovery';
+import { RoomDiscoveryManager, drawRoomForExploration, RoomDiscoveryResult } from '../rules/roomDiscovery';
 
 // ==================== 類型定義 ====================
 
@@ -156,6 +157,13 @@ export interface TurnExecutionResult {
   drawnCard?: Card;
   /** 探索方向（Issue #148: 用於前端更新地圖） */
   exploreDirection?: Direction;
+  /** Issue #151: 發現的新房間資料（用於前端更新地圖） */
+  discoveredRoomData?: {
+    room: Room;
+    position: Position3D;
+    rotation: 0 | 90 | 180 | 270;
+    floor: Floor;
+  };
 }
 
 // ==================== 個性權重配置 ====================
@@ -382,6 +390,8 @@ export class AIPlayer {
    */
   private executeExplorationTurn(gameState: GameState): TurnExecutionResult {
     const result: TurnExecutionResult = {
+      playerId: this.state.playerId,
+      playerName: this.state.playerName,
       decisions: [],
       completed: false,
       logs: [],
@@ -509,6 +519,35 @@ export class AIPlayer {
         this.state.position = newPosition;
         result.newPosition = newPosition;
         result.exploreDirection = decision.exploreDirection; // 添加探索方向資訊
+        
+        // Issue #151: 抽取新房間並返回房間資訊給前端
+        // 創建臨時 gameState，確保玩家位置正確
+        const tempGameState = {
+          ...gameState,
+          players: gameState.players.map(p =>
+            p.id === this.state.playerId
+              ? { ...p, position: this.state.position }
+              : p
+          ),
+        };
+        const discoveryResult = drawRoomForExploration(
+          tempGameState,
+          this.state.position.floor,
+          decision.exploreDirection,
+          10
+        );
+        
+        if (discoveryResult.success && discoveryResult.room) {
+          result.discoveredRoomData = {
+            room: discoveryResult.room,
+            position: newPosition,
+            rotation: discoveryResult.rotation || 0,
+            floor: this.state.position.floor,
+          };
+          this.log(`Discovered room: ${discoveryResult.room.name} at (${newPosition.x}, ${newPosition.y})`);
+        } else {
+          this.log(`Failed to discover room: ${discoveryResult.error}`);
+        }
         
         break;
       } else if (decision.action === 'move' && decision.targetPosition) {
@@ -836,6 +875,8 @@ export class AIPlayer {
    */
   private executeHauntTurn(gameState: GameState): TurnExecutionResult {
     const result: TurnExecutionResult = {
+      playerId: this.state.playerId,
+      playerName: this.state.playerName,
       decisions: [],
       completed: false,
       logs: [],
