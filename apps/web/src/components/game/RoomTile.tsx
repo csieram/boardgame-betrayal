@@ -51,6 +51,10 @@ interface RoomTileProps {
   showStairIcon?: boolean;
   /** Issue #118: 子元素（用於渲染 AI 標記） */
   children?: React.ReactNode;
+  /** Issue #159: 是否由 AI 發現（用於視覺區分） */
+  discoveredByAI?: boolean;
+  /** Issue #159: 是否顯示探索動畫（首次發現時） */
+  showDiscoveryAnimation?: boolean;
 }
 
 /**
@@ -79,9 +83,21 @@ export function RoomTile({
   isHighlighted = false,
   showStairIcon = true,
   children,
+  discoveredByAI = false,
+  showDiscoveryAnimation = true,
 }: RoomTileProps) {
   const [svgContent, setSvgContent] = useState<string>('');
   const [isLoaded, setIsLoaded] = useState(false);
+
+  // Issue #160-debug: 添加調試日誌追蹤 RoomTile 渲染
+  console.log('[Debug #160] RoomTile render:', {
+    roomName: room?.name,
+    roomId: room?.id,
+    isExplored,
+    isReachable,
+    rotation,
+    timestamp: Date.now(),
+  });
 
   // 載入 SVG 內容
   useEffect(() => {
@@ -90,8 +106,22 @@ export function RoomTile({
         ? room.gallerySvg 
         : `/betrayal${room.gallerySvg}`;
       
+      console.log('[Debug #160] RoomTile fetching SVG:', {
+        roomName: room?.name,
+        svgPath,
+        timestamp: Date.now(),
+      });
+      
       fetch(svgPath)
-        .then(res => res.text())
+        .then(res => {
+          console.log('[Debug #160] RoomTile SVG fetch response:', {
+            roomName: room?.name,
+            status: res.status,
+            ok: res.ok,
+            timestamp: Date.now(),
+          });
+          return res.text();
+        })
         .then(svg => {
           // 提取 SVG 內容
           const match = svg.match(/<svg[^>]*>([\s\S]*)<\/svg>/);
@@ -100,7 +130,12 @@ export function RoomTile({
           }
           setIsLoaded(true);
         })
-        .catch(() => {
+        .catch((err) => {
+          console.error('[Debug #160] RoomTile SVG fetch error:', {
+            roomName: room?.name,
+            error: err.message,
+            timestamp: Date.now(),
+          });
           // 載入失敗時使用預設 icon
           setSvgContent(room.icon || '');
           setIsLoaded(true);
@@ -160,20 +195,24 @@ export function RoomTile({
         transition-all duration-200
         ${isReachable ? 'ring-2 ring-green-500 ring-offset-2 ring-offset-gray-900' : ''}
         ${isHighlighted ? 'ring-2 ring-yellow-500 ring-offset-2 ring-offset-gray-900' : ''}
+        ${isExplored ? 'opacity-100' : 'opacity-90'}
       `}
       style={{ 
         backgroundColor: room.color + '20',
         border: `2px solid ${room.color}`,
+        // Issue #159: 已探索房間有較亮的邊框，未探索（剛發現）的有較暗邊框
+        boxShadow: isExplored ? `0 0 8px ${room.color}40` : 'none',
       }}
       onClick={onClick}
-      initial={{ opacity: 0, scale: 0.8 }}
+      // Issue #159: 只有首次發現時顯示縮放動畫，已探索房間直接顯示
+      initial={showDiscoveryAnimation ? { opacity: 0, scale: 0.8 } : { opacity: 1, scale: 1 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ 
+      transition={showDiscoveryAnimation ? { 
         type: 'spring',
         stiffness: 400,
         damping: 25,
         duration: 0.3
-      }}
+      } : { duration: 0 }}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.98 }}
     >
@@ -219,6 +258,16 @@ export function RoomTile({
           title={symbolNames[room.symbol] || ''}
         >
           {room.symbol}
+        </div>
+      )}
+
+      {/* Issue #159: 已探索標記 - 顯示小眼睛圖標表示此房間已被探索過 */}
+      {isExplored && (
+        <div 
+          className="absolute bottom-5 right-1 w-4 h-4 rounded-full flex items-center justify-center text-[8px] bg-blue-500/80 text-white shadow-md z-10"
+          title="已探索"
+        >
+          ✓
         </div>
       )}
 

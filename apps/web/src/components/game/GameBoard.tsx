@@ -123,8 +123,16 @@ export function GameBoard({
   // Issue #156-fix: 移除 tile.room?.floor === activeFloor 檢查
   // 房間的 floor 屬性是原始樓層分類（用於牌堆），不是實際放置的樓層
   // 實際放置的樓層由 map 參數決定（multiFloorMap.ground/upper/basement）
+  // Issue #157-fix: 添加更詳細的日誌追蹤，確保 AI 發現的房間被正確計入
+  // Issue #160-debug: 添加調試日誌追蹤 exploredRooms useMemo
   const exploredRooms = useMemo(() => {
     const rooms: { tile: Tile; x: number; y: number }[] = [];
+    
+    console.log('[Debug #160] exploredRooms useMemo - map prop:', {
+      mapLength: map.length,
+      activeFloor,
+      timestamp: Date.now(),
+    });
     
     for (let y = 0; y < map.length; y++) {
       for (let x = 0; x < map[y].length; x++) {
@@ -137,8 +145,23 @@ export function GameBoard({
       }
     }
     
+    // Issue #160-debug: 詳細記錄計算結果
+    console.log('[Debug #160] exploredRooms useMemo - result:', {
+      count: rooms.length,
+      activeFloor,
+      rooms: rooms.map(r => ({
+        name: r.tile.room?.name,
+        id: r.tile.room?.id,
+        x: r.x,
+        y: r.y,
+        discovered: r.tile.discovered,
+        floor: r.tile.room?.floor,
+      })),
+      timestamp: Date.now(),
+    });
+    
     return rooms;
-  }, [map]);
+  }, [map, activeFloor]);
 
   // 計算地圖邊界
   const mapBounds = useMemo(() => {
@@ -341,11 +364,14 @@ export function GameBoard({
                 const aiPlayersAtPosition = getAIPlayersAt(x, y, floor);
                 const hasAI = aiPlayersAtPosition.length > 0;
 
+                // Issue #159: 檢查房間是否已探索（用於視覺區分）
+                const tileExplored = tile?.discovered ?? false;
+
                 return (
                   <RoomTile
                     key={`${x}-${y}`}
                     room={tile.room}
-                    isExplored={true}
+                    isExplored={tileExplored}
                     isReachable={movable}
                     rotation={tile.rotation}
                     onClick={() => tile.room && handleRoomClick(tile.room, x, y)}
@@ -354,6 +380,8 @@ export function GameBoard({
                     size="md"
                     showDoors={true}
                     isHighlighted={selectedRoom?.x === x && selectedRoom?.y === y}
+                    // Issue #159: 已探索的房間不顯示發現動畫
+                    showDiscoveryAnimation={false}
                   >
                     {/* Issue #122: 渲染 AI 標記 */}
                     {hasAI && (

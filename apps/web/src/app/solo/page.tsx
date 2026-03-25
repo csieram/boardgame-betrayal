@@ -305,7 +305,18 @@ export default function SoloGamePage() {
   });
 
   // 當前樓層的地圖（向後兼容）
+  // Issue #160-debug: 添加調試日誌追蹤 map 變數
   const map = multiFloorMap[currentFloor];
+  
+  // Issue #160-debug: 追蹤 map 變數的變化
+  useEffect(() => {
+    console.log('[Debug #160] map variable updated:', {
+      currentFloor,
+      mapLength: map.length,
+      discoveredRooms: map.flat().filter(t => t.discovered && t.room).length,
+      timestamp: Date.now(),
+    });
+  }, [map, currentFloor]);
 
   // 從 sessionStorage 讀取選擇的角色和 AI 設置
   useEffect(() => {
@@ -1176,6 +1187,83 @@ export default function SoloGamePage() {
     };
   };
 
+  /**
+   * Issue #2-fix: 更新房間狀態
+   * 
+   * 統一處理房間更新的邏輯，包括：
+   * 1. 更新多樓層地圖
+   * 2. 更新已放置房間 ID
+   * 3. 更新已抽取集合
+   * 
+   * @param floor 樓層
+   * @param x X 座標
+   * @param y Y 座標
+   * @param room 房間資料
+   * @param rotation 旋轉角度
+   */
+  const updateRoom = useCallback((
+    floor: Floor,
+    x: number,
+    y: number,
+    room: Room,
+    rotation: 0 | 90 | 180 | 270
+  ) => {
+    // 旋轉門方向（從房間座標系轉換到地圖座標系）
+    const rotationMap: Record<number, Record<Direction, Direction>> = {
+      0: { north: 'north', south: 'south', east: 'east', west: 'west' },
+      90: { north: 'east', south: 'west', east: 'south', west: 'north' },
+      180: { north: 'south', south: 'north', east: 'west', west: 'east' },
+      270: { north: 'west', south: 'east', east: 'north', west: 'south' },
+    };
+    
+    const rotatedDoors = room.doors.map((door: Direction) => rotationMap[rotation][door]);
+    
+    const placedRoom = {
+      ...room,
+      doors: rotatedDoors,
+      rotation,
+    };
+
+    // 更新多樓層地圖 - 使用深拷貝確保 React 檢測到變化
+    setMultiFloorMap(prev => {
+      const newMap: MultiFloorMap = {
+        ground: prev.ground.map(row => row.map(tile => ({ ...tile }))),
+        upper: prev.upper.map(row => row.map(tile => ({ ...tile }))),
+        basement: prev.basement.map(row => row.map(tile => ({ ...tile }))),
+      };
+      
+      newMap[floor][y][x] = {
+        x,
+        y,
+        discovered: true,
+        room: placedRoom,
+        rotation: placedRoom.rotation,
+      };
+      
+      return newMap;
+    });
+    
+    // 更新已放置房間 ID 和已抽取集合
+    setGameState(prev => {
+      const newDrawn = new Set(prev.roomDecks.drawn);
+      newDrawn.add(room.id);
+      
+      const newPlacedIds = new Set(prev.placedRoomIds);
+      newPlacedIds.add(room.id);
+      
+      return {
+        ...prev,
+        placedRoomIds: newPlacedIds,
+        roomDecks: {
+          ...prev.roomDecks,
+          drawn: newDrawn,
+        },
+      };
+    });
+
+    return placedRoom;
+  }, []);
+
   // 移動到指定位置
   const moveToPosition = useCallback((x: number, y: number) => {
     if (discovered || moves <= 0 || !player) return;
@@ -1215,65 +1303,12 @@ export default function SoloGamePage() {
       console.log('[moveToPosition] Room from drawResult:', room.name, 'doors:', room.doors, 'wasModified:', wasModified);
       console.log('[moveToPosition] Rotation:', rotation);
       
-      // 應用旋轉到房間
-      const rotatedRoom = {
-        ...room,
-        rotation: rotation as 0 | 90 | 180 | 270,
-      };
-      
-      // 旋轉門方向（從房間座標系轉換到地圖座標系）
-      const rotationMap: Record<number, Record<Direction, Direction>> = {
-        0: { north: 'north', south: 'south', east: 'east', west: 'west' },
-        90: { north: 'east', south: 'west', east: 'south', west: 'north' },
-        180: { north: 'south', south: 'north', east: 'west', west: 'east' },
-        270: { north: 'west', south: 'east', east: 'north', west: 'south' },
-      };
-      
-      const rotatedDoors = room.doors.map((door: Direction) => rotationMap[rotation][door]);
-      console.log('[moveToPosition] Rotated doors:', rotatedDoors);
-      
-      const placedRoom = {
-        ...rotatedRoom,
-        doors: rotatedDoors,
-      };
-      
-      console.log('[moveToPosition] Final placedRoom doors:', placedRoom.doors);
+      // Issue #2-fix: 使用 updateRoom 函數統一處理房間更新
+      const placedRoom = updateRoom(currentFloor, x, y, room, rotation as 0 | 90 | 180 | 270);
       
       if (wasModified) {
         console.log('[RoomDiscovery] Room was modified to prevent board closure:', room.name);
-        console.log('[RoomDiscovery] Original doors would have been:', room.doors.filter((d: Direction) => !placedRoom.doors.includes(rotationMap[rotation][d])));
       }
-
-      // 更新多樓層地圖
-      const newMultiFloorMap = { ...multiFloorMap };
-      newMultiFloorMap[currentFloor] = [...currentMap];
-      newMultiFloorMap[currentFloor][y] = [...currentMap[y]];
-      newMultiFloorMap[currentFloor][y][x] = {
-        ...currentMap[y][x],
-        discovered: true,
-        room: placedRoom,
-        rotation: placedRoom.rotation,
-      };
-      
-      // 更新已放置房間 ID 和已抽取集合
-      setGameState(prev => {
-        const newDrawn = new Set(prev.roomDecks.drawn);
-        newDrawn.add(room.id);
-        
-        const newPlacedIds = new Set(prev.placedRoomIds);
-        newPlacedIds.add(room.id);
-        
-        return {
-          ...prev,
-          placedRoomIds: newPlacedIds,
-          roomDecks: {
-            ...prev.roomDecks,
-            drawn: newDrawn,
-          },
-        };
-      });
-      
-      setMultiFloorMap(newMultiFloorMap);
       setPosition({ x, y });
       setDiscovered(true);
       
@@ -1473,64 +1508,21 @@ export default function SoloGamePage() {
             console.log('[AI Debug] New position:', result.newPosition);
             console.log('[AI Debug] Discovered room:', result.discoveredRoom);
             
-            // Issue #151-fix: 處理 AI 房間發現並更新地圖
-            // AI 已經在 game-engine 中抽取了房間，使用返回的 discoveredRoomData 更新地圖
+            // Issue #2-fix & #151-fix: 處理 AI 房間發現並更新地圖
+            // AI 已經在 game-engine 中抽取了房間，使用 updateRoom 統一更新地圖
             if (result.discoveredRoom && result.discoveredRoomData) {
               const { room, position: roomPosition, rotation, floor } = result.discoveredRoomData;
               
-              // 旋轉門方向
-              const rotationMap: Record<number, Record<Direction, Direction>> = {
-                0: { north: 'north', south: 'south', east: 'east', west: 'west' },
-                90: { north: 'east', south: 'west', east: 'south', west: 'north' },
-                180: { north: 'south', south: 'north', east: 'west', west: 'east' },
-                270: { north: 'west', south: 'east', east: 'north', west: 'south' },
-              };
+              // Issue #2-fix: 使用 updateRoom 函數統一處理房間更新
+              const placedRoom = updateRoom(floor, roomPosition.x, roomPosition.y, room, rotation as 0 | 90 | 180 | 270);
               
-              const rotatedDoors = room.doors.map((door: Direction) => rotationMap[rotation][door]);
-              
-              const placedRoom = {
-                ...room,
-                doors: rotatedDoors,
-                rotation: rotation as 0 | 90 | 180 | 270,
-              };
-              
-              // Issue #156: 更新多樓層地圖，添加除錯日誌
-              console.log('[AI Room Discovery] Updating multiFloorMap:', {
+              // Issue #160-debug: 添加詳細調試日誌
+              console.log('[Debug #160] AI Room Discovery - updateRoom called:', {
                 floor,
                 position: roomPosition,
                 roomName: placedRoom.name,
-                roomFloor: placedRoom.floor,
-              });
-              setMultiFloorMap(prev => {
-                const newMap = { ...prev };
-                newMap[floor] = [...prev[floor]];
-                newMap[floor][roomPosition.y] = [...prev[floor][roomPosition.y]];
-                newMap[floor][roomPosition.y][roomPosition.x] = {
-                  ...prev[floor][roomPosition.y][roomPosition.x],
-                  discovered: true,
-                  room: placedRoom,
-                  rotation: placedRoom.rotation,
-                };
-                console.log('[AI Room Discovery] multiFloorMap updated, new tile:', newMap[floor][roomPosition.y][roomPosition.x]);
-                return newMap;
-              });
-              
-              // 更新已放置房間 ID
-              setGameState(prev => {
-                const newDrawn = new Set(prev.roomDecks.drawn);
-                newDrawn.add(room.id);
-                
-                const newPlacedIds = new Set(prev.placedRoomIds);
-                newPlacedIds.add(room.id);
-                
-                return {
-                  ...prev,
-                  placedRoomIds: newPlacedIds,
-                  roomDecks: {
-                    ...prev.roomDecks,
-                    drawn: newDrawn,
-                  },
-                };
+                roomId: placedRoom.id,
+                timestamp: Date.now(),
               });
               
               // 記錄房間發現
@@ -1570,7 +1562,7 @@ export default function SoloGamePage() {
       // Issue #148: 添加調試日誌
       console.log('[AI Debug] executeAllAITurns completed, results count:', results.length);
       console.log('[AI Debug] All results:', results);
-      
+
       setCurrentTurnPlayer('solo-player');
       setIsProcessingAITurn(false);
       setLog(prev => [...prev, '👤 你的回合']);
@@ -1583,7 +1575,11 @@ export default function SoloGamePage() {
       setMoves(player.stats.speed[0]);
       // Issue #144: 記錄新回合開始
       setLog(prev => [...prev, `回合 ${turn + 1}`]);
-      updateReachablePositions(multiFloorMap[currentFloor], position, player.stats.speed[0], false);
+
+      // Issue #157-fix: 延遲更新可達位置，確保 multiFloorMap 已更新
+      setTimeout(() => {
+        updateReachablePositions(multiFloorMap[currentFloor], position, player.stats.speed[0], false);
+      }, 100);
 
       // 完成回合切換
       setIsProcessingTurnSwitch(false);
