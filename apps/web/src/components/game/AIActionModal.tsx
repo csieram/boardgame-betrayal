@@ -60,7 +60,7 @@ export function AIActionModal({
 
     // 找出新的日誌
     const newLogs = actionLogs.filter(
-      log => !displayedLogs.some(d => d.timestamp === log.timestamp)
+      log => log != null && !displayedLogs.some(d => d != null && d.timestamp === log.timestamp)
     );
 
     if (newLogs.length > 0) {

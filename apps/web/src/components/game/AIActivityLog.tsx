@@ -326,10 +326,19 @@ function groupLogsByTurn(logs: AIActionLog[]): Array<{
     .sort((a, b) => a[0] - b[0])
     .map(([turn, turnLogs]) => {
       const firstLog = turnLogs[0];
+      // 防禦性檢查：確保 firstLog 存在
+      if (!firstLog) {
+        return {
+          turn,
+          playerName: 'Unknown',
+          playerId: 'unknown',
+          logs: turnLogs,
+        };
+      }
       return {
         turn,
-        playerName: firstLog.playerName,
-        playerId: firstLog.playerId,
+        playerName: firstLog.playerName || 'Unknown',
+        playerId: firstLog.playerId || 'unknown',
         logs: turnLogs,
       };
     });

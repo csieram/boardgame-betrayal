@@ -1627,12 +1627,15 @@ export default function SoloGamePage() {
   // 注意：這個 useEffect 必須在所有 early returns 之前調用，以符合 React Hooks 規則
   // Issue #141: 只有當前玩家是 AI 時才自動切換回合，避免人類玩家的回合被自動跳過
   // Issue #144: 使用 ref 來避免無限循環和閉包問題
+  // Issue #146-fix: 修復 useEffect 和 executeEndTurn 之間的競態條件
   const executeEndTurnRef = useRef(executeEndTurn);
   executeEndTurnRef.current = executeEndTurn;
-  
+
   useEffect(() => {
+    // 只有當前是 AI 玩家回合時才自動切換
+    // 人類玩家回合（包括發現房間後）需要手動點擊 End Turn 按鈕
     if (turnState.hasEnded && !isProcessingTurnSwitch && !isProcessingAITurn && currentTurnPlayer !== 'solo-player') {
-      setIsProcessingTurnSwitch(true);
+      // 注意：不要在此處設置 isProcessingTurnSwitch，讓 executeEndTurn 內部處理
       // Issue #138: 直接執行結束回合（無確認彈窗）
       // Issue #144: 使用 setTimeout 避免在渲染過程中調用 setState
       setTimeout(() => executeEndTurnRef.current(), 0);
@@ -2059,30 +2062,18 @@ export default function SoloGamePage() {
                 <Button
                   onClick={() => {
                     console.log('[EndTurn] Button clicked!');
-                    console.log('[EndTurn] Button disabled conditions:', {
-                      isProcessingTurnSwitch,
-                      isProcessingAITurn,
-                      turnStateHasEnded: turnState.hasEnded,
-                      discovered,
-                      currentTurnPlayerNotSolo: currentTurnPlayer !== 'solo-player',
-                      currentTurnPlayer,
-                    });
                     showEndTurnConfirmation(false);
                   }}
                   variant="secondary"
                   size="sm"
-                  className={`h-10 sm:h-12 text-xs sm:text-sm ${
-                    discovered ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
+                  className="h-10 sm:h-12 text-xs sm:text-sm"
                   disabled={
                     isProcessingTurnSwitch ||
                     isProcessingAITurn ||
-                    turnState.hasEnded ||
-                    discovered ||
                     currentTurnPlayer !== 'solo-player'
                   }
                 >
-                  {discovered ? '回合已結束' : '結束回合'}
+                  結束回合
                 </Button>
               </div>
             </div>
@@ -2217,7 +2208,7 @@ export default function SoloGamePage() {
             {/* Issue #118: AI 活動日誌面板 */}
             {aiPlayers.length > 0 && (
               <AIActivityLog
-                actionLogs={aiActionLogs}
+                actionLogs={aiActionLogs.filter((log): log is AIActionLog => log != null && typeof log.timestamp === 'number')}
                 currentAIPlayerId={currentTurnPlayer !== 'solo-player' ? currentTurnPlayer : null}
                 maxDisplay={20}
                 autoScroll={true}
@@ -2322,13 +2313,13 @@ export default function SoloGamePage() {
 
       {/* AI 行動通知氣泡 (Issue #111) */}
       <AIActionNotification
-        latestLog={aiActionLogs.length > 0 ? aiActionLogs[aiActionLogs.length - 1] : null}
+        latestLog={aiActionLogs.length > 0 && aiActionLogs[aiActionLogs.length - 1] != null ? aiActionLogs[aiActionLogs.length - 1] : null}
         autoHideDelay={3000}
       />
 
       {/* Issue #118: AI 活動通知氣泡 */}
       <AIActivityNotification
-        latestLog={aiActionLogs.length > 0 ? aiActionLogs[aiActionLogs.length - 1] : null}
+        latestLog={aiActionLogs.length > 0 && aiActionLogs[aiActionLogs.length - 1] != null ? aiActionLogs[aiActionLogs.length - 1] : null}
         autoHideDelay={4000}
       />
 
