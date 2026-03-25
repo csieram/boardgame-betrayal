@@ -150,6 +150,8 @@ export interface TurnExecutionResult {
   discoveredRoom: boolean;
   /** 抽到的卡牌 */
   drawnCard?: Card;
+  /** 探索方向（Issue #148: 用於前端更新地圖） */
+  exploreDirection?: Direction;
 }
 
 // ==================== 個性權重配置 ====================
@@ -309,6 +311,8 @@ export class AIPlayer {
   /**
    * 執行完整回合
    * 根據當前遊戲階段選擇適當的行為
+   * 
+   * Issue #148: 添加 try-catch 包裝，確保始終返回有效的結果
    */
   executeTurn(gameState: GameState): TurnExecutionResult {
     this.state.turnCount++;
@@ -323,30 +327,52 @@ export class AIPlayer {
       discoveredRoom: false,
     };
 
-    if (phase === 'exploration') {
-      // 探索階段：使用探索引擎
-      const explorationResult = this.executeExplorationTurn(gameState);
-      result.decisions = explorationResult.decisions;
-      result.logs = explorationResult.logs;
-      result.discoveredRoom = explorationResult.discoveredRoom;
-      result.newPosition = explorationResult.newPosition;
-      result.drawnCard = explorationResult.drawnCard;
-    } else {
-      // 作祟階段：使用對應的 Haunt AI
-      const hauntResult = this.executeHauntTurn(gameState);
-      result.decisions = hauntResult.decisions;
-      result.logs = hauntResult.logs;
-      result.discoveredRoom = false;
-    }
+    try {
+      if (phase === 'exploration') {
+        // 探索階段：使用探索引擎
+        const explorationResult = this.executeExplorationTurn(gameState);
+        result.decisions = explorationResult.decisions;
+        result.logs = explorationResult.logs;
+        result.discoveredRoom = explorationResult.discoveredRoom;
+        result.newPosition = explorationResult.newPosition;
+        result.drawnCard = explorationResult.drawnCard;
+        result.exploreDirection = explorationResult.exploreDirection;
+      } else {
+        // 作祟階段：使用對應的 Haunt AI
+        const hauntResult = this.executeHauntTurn(gameState);
+        result.decisions = hauntResult.decisions;
+        result.logs = hauntResult.logs;
+        result.discoveredRoom = false;
+      }
 
-    result.completed = true;
-    this.log('Turn execution completed', { decisionCount: result.decisions.length });
+      // Issue #148: 確保始終至少有一條日誌
+      if (result.logs.length === 0) {
+        result.logs.push(`${this.state.playerName} 完成回合`);
+      }
+
+      result.completed = true;
+      this.log('Turn execution completed', { decisionCount: result.decisions.length });
+    } catch (error) {
+      // Issue #148: 捕獲異常，確保不會卡住
+      const errorMessage = error instanceof Error ? error.message : '未知錯誤';
+      this.log('Error executing turn', { error: errorMessage });
+      
+      result.logs.push(`${this.state.playerName} 回合執行出錯: ${errorMessage}`);
+      result.decisions.push({
+        action: 'endTurn',
+        score: 0,
+        reason: '因錯誤而結束回合',
+      });
+      result.completed = true;
+    }
     
     return result;
   }
 
   /**
    * 執行探索階段回合
+   * 
+   * Issue #148: 改進錯誤處理，確保始終返回有效的結果
    */
   private executeExplorationTurn(gameState: GameState): TurnExecutionResult {
     const result: TurnExecutionResult = {
@@ -358,7 +384,14 @@ export class AIPlayer {
 
     const player = this.getPlayer(gameState);
     if (!player) {
-      result.logs.push('錯誤：找不到玩家');
+      // Issue #148: 確保返回錯誤日誌和結束決策
+      result.logs.push(`錯誤：找不到玩家 ${this.state.playerId}`);
+      result.decisions.push({
+        action: 'endTurn',
+        score: 0,
+        reason: '找不到玩家，強制結束回合',
+      });
+      result.completed = true;
       return result;
     }
 
@@ -370,6 +403,23 @@ export class AIPlayer {
       gameState,
       this.state.playerId
     );
+
+    // Issue #148: 檢查是否有任何可行動
+    const hasAnyAction = legalActions.explorableDirections.length > 0 || 
+                         legalActions.movablePositions.length > 0 ||
+                         legalActions.usableItems.length > 0;
+    
+    if (!hasAnyAction && !gameState.turn.hasDiscoveredRoom) {
+      // 沒有任何可行動，直接結束回合
+      result.logs.push(`${this.state.playerName} 沒有可執行的行動`);
+      result.decisions.push({
+        action: 'endTurn',
+        score: 0,
+        reason: '沒有可執行的行動',
+      });
+      result.completed = true;
+      return result;
+    }
 
     // 執行回合直到結束
     let movesRemaining = gameState.turn.movesRemaining;
@@ -383,6 +433,18 @@ export class AIPlayer {
         legalActions,
         movesRemaining
       );
+
+      // Issue #148: 確保決策有效
+      if (!decision) {
+        this.log('No valid decision returned, forcing end turn');
+        result.decisions.push({
+          action: 'endTurn',
+          score: 0,
+          reason: '無法做出有效決策',
+        });
+        result.logs.push(`${this.state.playerName} 無法做出決策，結束回合`);
+        break;
+      }
 
       result.decisions.push(decision);
       result.logs.push(this.formatDecisionLog(decision));
@@ -411,10 +473,20 @@ export class AIPlayer {
           continue;
         }
         break;
-      } else if (decision.action === 'explore') {
+      } else if (decision.action === 'explore' && decision.exploreDirection) {
         hasDiscoveredRoom = true;
         result.discoveredRoom = true;
         this.state.experience.roomsDiscovered++;
+        
+        // Issue #148: 計算並設置新房間位置
+        const newPosition = this.calculateNewPositionFromDirection(
+          this.state.position,
+          decision.exploreDirection
+        );
+        this.state.position = newPosition;
+        result.newPosition = newPosition;
+        result.exploreDirection = decision.exploreDirection; // 添加探索方向資訊
+        
         break;
       } else if (decision.action === 'move' && decision.targetPosition) {
         movesRemaining--;
@@ -431,21 +503,25 @@ export class AIPlayer {
       }
     }
 
-    // 如果還沒結束回合，添加結束決策
-    if (!hasDiscoveredRoom && result.decisions[result.decisions.length - 1]?.action !== 'endTurn') {
+    // Issue #148: 確保始終有結束決策
+    const lastDecision = result.decisions[result.decisions.length - 1];
+    if (!lastDecision || lastDecision.action !== 'endTurn') {
       result.decisions.push({
         action: 'endTurn',
         score: 0,
         reason: '移動點數用完或無可行動',
       });
-      result.logs.push('結束回合');
+      result.logs.push(`${this.state.playerName} 結束回合`);
     }
 
+    result.completed = true;
     return result;
   }
 
   /**
    * 決定探索階段的行動
+   * 
+   * Issue #148: 確保始終返回有效的決策，不會返回 null
    */
   private decideExplorationAction(
     gameState: GameState,
@@ -455,6 +531,12 @@ export class AIPlayer {
     const player = this.getPlayer(gameState);
     if (!player) {
       return { action: 'endTurn', score: 0, reason: '找不到玩家' };
+    }
+
+    // Issue #148: 防禦性檢查 legalActions
+    if (!legalActions) {
+      this.log('Legal actions is null, returning end turn');
+      return { action: 'endTurn', score: 0, reason: '無法獲取合法行動' };
     }
 
     const personality = PERSONALITY_WEIGHTS[this.state.config.personality];
@@ -521,6 +603,12 @@ export class AIPlayer {
       reason: '結束回合',
     });
 
+    // Issue #148: 確保至少有一個決策選項
+    if (decisions.length === 0) {
+      this.log('No decisions available, returning end turn');
+      return { action: 'endTurn', score: 0, reason: '沒有可用的決策選項' };
+    }
+
     // 根據難度選擇決策
     const selectedDecision = selectDecisionByDifficulty(
       decisions,
@@ -528,7 +616,15 @@ export class AIPlayer {
       this.rng
     );
 
-    return selectedDecision || { action: 'endTurn', score: 0, reason: '預設結束回合' };
+    // Issue #148: 確保始終返回有效的決策
+    if (!selectedDecision) {
+      this.log('selectDecisionByDifficulty returned null, using fallback');
+      // 返回分數最高的決策，或預設結束回合
+      const bestDecision = decisions.sort((a, b) => b.score - a.score)[0];
+      return bestDecision || { action: 'endTurn', score: 0, reason: '預設結束回合' };
+    }
+
+    return selectedDecision;
   }
 
   /**
@@ -712,6 +808,8 @@ export class AIPlayer {
 
   /**
    * 執行作祟階段回合
+   *
+   * Issue #148: 改進錯誤處理，確保始終返回有效的結果
    */
   private executeHauntTurn(gameState: GameState): TurnExecutionResult {
     const result: TurnExecutionResult = {
@@ -721,21 +819,52 @@ export class AIPlayer {
       discoveredRoom: false,
     };
 
-    // 使用對應的 Haunt AI
-    if (this.state.isTraitor && this.traitorAI) {
-      result.decisions = this.traitorAI.executeTurn(gameState);
-      result.logs.push(`叛徒 AI 執行 ${result.decisions.length} 個決策`);
-    } else if (!this.state.isTraitor && this.heroAI) {
-      result.decisions = this.heroAI.executeTurn(gameState);
-      result.logs.push(`英雄 AI 執行 ${result.decisions.length} 個決策`);
-    } else {
-      // 如果 Haunt AI 未初始化，使用基礎決策引擎
-      result.logs.push('警告：Haunt AI 未初始化');
+    try {
+      // 使用對應的 Haunt AI
+      if (this.state.isTraitor && this.traitorAI) {
+        result.decisions = this.traitorAI.executeTurn(gameState);
+        result.logs.push(`叛徒 AI 執行 ${result.decisions.length} 個決策`);
+      } else if (!this.state.isTraitor && this.heroAI) {
+        result.decisions = this.heroAI.executeTurn(gameState);
+        result.logs.push(`英雄 AI 執行 ${result.decisions.length} 個決策`);
+      } else {
+        // 如果 Haunt AI 未初始化，使用基礎決策引擎
+        result.logs.push('警告：Haunt AI 未初始化');
+        result.decisions.push({
+          action: 'endTurn',
+          score: 0,
+          reason: 'Haunt AI 未初始化',
+        });
+      }
+
+      // Issue #148: 確保始終至少有一條日誌
+      if (result.logs.length === 0) {
+        result.logs.push(`${this.state.playerName} 完成作祟階段回合`);
+      }
+
+      // Issue #148: 確保始終有結束決策
+      const lastDecision = result.decisions[result.decisions.length - 1];
+      if (!lastDecision || lastDecision.action !== 'endTurn') {
+        result.decisions.push({
+          action: 'endTurn',
+          score: 0,
+          reason: '結束作祟階段回合',
+        });
+      }
+
+      result.completed = true;
+    } catch (error) {
+      // Issue #148: 捕獲異常
+      const errorMessage = error instanceof Error ? error.message : '未知錯誤';
+      this.log('Error executing haunt turn', { error: errorMessage });
+
+      result.logs.push(`${this.state.playerName} 作祟階段回合出錯: ${errorMessage}`);
       result.decisions.push({
         action: 'endTurn',
         score: 0,
-        reason: 'Haunt AI 未初始化',
+        reason: '因錯誤而結束回合',
       });
+      result.completed = true;
     }
 
     return result;
@@ -922,6 +1051,28 @@ export class AIPlayer {
       return Math.abs(from.x - to.x) + Math.abs(from.y - to.y) + 10;
     }
     return Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
+  }
+
+  /**
+   * 根據方向計算新位置
+   * Issue #148: 用於計算探索新房間後的位置
+   */
+  private calculateNewPositionFromDirection(
+    currentPosition: Position3D,
+    direction: Direction
+  ): Position3D {
+    const deltas = {
+      north: { x: 0, y: -1 },
+      south: { x: 0, y: 1 },
+      east: { x: 1, y: 0 },
+      west: { x: -1, y: 0 },
+    };
+
+    return {
+      x: currentPosition.x + deltas[direction].x,
+      y: currentPosition.y + deltas[direction].y,
+      floor: currentPosition.floor,
+    };
   }
 
   /**

@@ -9,11 +9,15 @@ import {
   createAIPlayer,
   getRandomPersonality,
   getPersonalityDescription,
+} from '../AIPlayer';
+import {
   AIPlayerManager,
   createAIPlayerManager,
+} from '../AIPlayerManager';
+import {
   AIExplorationEngine,
   createExplorationEngine,
-} from '../AIPlayer';
+} from '../AIExplorationEngine';
 import { GameState, Player, Character } from '../../types';
 import { CHARACTERS } from '@betrayal/shared';
 
@@ -152,14 +156,58 @@ describe('AIPlayer', () => {
     });
 
     it('應該根據個性做出不同決策', () => {
+      // 創建包含玩家的 gameState
+      const gameStateWithPlayers = {
+        ...mockGameState,
+        players: [
+          {
+            id: 'ai-1',
+            name: 'Explorer AI',
+            character: CHARACTERS[0],
+            position: { x: 7, y: 7, floor: 'ground' as const },
+            currentStats: { speed: 4, might: 4, sanity: 4, knowledge: 4 },
+            items: [],
+            omens: [],
+            isTraitor: false,
+            isDead: false,
+            usedItemsThisTurn: [],
+          },
+          {
+            id: 'ai-2',
+            name: 'Cautious AI',
+            character: CHARACTERS[1],
+            position: { x: 7, y: 7, floor: 'ground' as const },
+            currentStats: { speed: 4, might: 4, sanity: 4, knowledge: 4 },
+            items: [],
+            omens: [],
+            isTraitor: false,
+            isDead: false,
+            usedItemsThisTurn: [],
+          },
+        ],
+        turn: {
+          ...mockGameState.turn,
+          currentPlayerId: 'ai-1',
+        },
+      };
+      
       const explorerAI = createAIPlayer('ai-1', 'medium', 'explorer', 'seed1');
       const cautiousAI = createAIPlayer('ai-2', 'medium', 'cautious', 'seed1');
       
       explorerAI.setCharacter(CHARACTERS[0]);
       cautiousAI.setCharacter(CHARACTERS[1]);
       
-      const explorerResult = explorerAI.executeTurn(mockGameState);
-      const cautiousResult = cautiousAI.executeTurn(mockGameState);
+      const explorerResult = explorerAI.executeTurn(gameStateWithPlayers);
+      
+      // 切換當前玩家為 cautiousAI
+      const gameStateForCautious = {
+        ...gameStateWithPlayers,
+        turn: {
+          ...gameStateWithPlayers.turn,
+          currentPlayerId: 'ai-2',
+        },
+      };
+      const cautiousResult = cautiousAI.executeTurn(gameStateForCautious);
       
       // 兩者應該有不同的決策模式
       expect(explorerResult.decisions.length).toBeGreaterThan(0);

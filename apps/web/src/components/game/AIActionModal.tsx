@@ -18,6 +18,8 @@ interface AIActionModalProps {
   onContinue: () => void;
   /** 是否自動顯示（當有新房間發現時） */
   autoShowOnDiscovery?: boolean;
+  /** 超時時間（毫秒），預設 30 秒 */
+  timeoutMs?: number;
 }
 
 /**
@@ -47,15 +49,39 @@ export function AIActionModal({
   onClose,
   onContinue,
   autoShowOnDiscovery = true,
+  timeoutMs = 30000, // Issue #148: 預設 30 秒超時
 }: AIActionModalProps) {
   const [displayedLogs, setDisplayedLogs] = useState<AIActionLog[]>([]);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [hasTimedOut, setHasTimedOut] = useState(false); // Issue #148: 超時狀態
+
+  // Issue #148: 超時計時器
+  useEffect(() => {
+    if (!isOpen) {
+      setHasTimedOut(false);
+      return;
+    }
+
+    // 啟動超時計時器
+    const timeoutTimer = setTimeout(() => {
+      if (actionLogs.length === 0 || isAnimating) {
+        setHasTimedOut(true);
+      }
+    }, timeoutMs);
+
+    return () => clearTimeout(timeoutTimer);
+  }, [isOpen, actionLogs, isAnimating, timeoutMs]);
 
   // 當有新的日誌時，逐步顯示
   useEffect(() => {
     if (!isOpen || actionLogs.length === 0) {
       setDisplayedLogs([]);
       return;
+    }
+
+    // Issue #148: 重置超時狀態當收到新日誌
+    if (actionLogs.length > 0) {
+      setHasTimedOut(false);
     }
 
     // 找出新的日誌
@@ -220,7 +246,7 @@ export function AIActionModal({
 
             {/* 行動列表 */}
             <div className="p-6 max-h-[400px] overflow-y-auto">
-              {displayedLogs.length === 0 ? (
+              {displayedLogs.length === 0 && !hasTimedOut ? (
                 <div className="text-center py-8">
                   <motion.div
                     className="w-12 h-12 border-3 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"
@@ -228,6 +254,13 @@ export function AIActionModal({
                     transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                   />
                   <p className="text-gray-400">AI 正在思考...</p>
+                </div>
+              ) : displayedLogs.length === 0 && hasTimedOut ? (
+                // Issue #148: 超時錯誤顯示
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-4">⚠️</div>
+                  <p className="text-yellow-400 font-medium mb-2">AI 回應超時</p>
+                  <p className="text-gray-400 text-sm">AI 似乎遇到了問題，請點擊繼續按鈕繼續遊戲</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -297,11 +330,11 @@ export function AIActionModal({
             <div className="px-6 py-4 border-t border-gray-600 bg-gray-700/30">
               <Button
                 onClick={onContinue}
-                variant="primary"
+                variant={hasTimedOut ? "secondary" : "primary"}
                 className="w-full"
-                disabled={isAnimating}
+                disabled={isAnimating && !hasTimedOut} // Issue #148: 超時時允許點擊
               >
-                {isAnimating ? (
+                {isAnimating && !hasTimedOut ? (
                   <span className="flex items-center gap-2">
                     <motion.span
                       animate={{ rotate: 360 }}
@@ -310,6 +343,12 @@ export function AIActionModal({
                       ⏳
                     </motion.span>
                     等待 AI...
+                  </span>
+                ) : hasTimedOut ? (
+                  // Issue #148: 超時時顯示跳過按鈕
+                  <span className="flex items-center gap-2">
+                    <span>⚠️</span>
+                    跳過並繼續
                   </span>
                 ) : (
                   '繼續遊戲'
