@@ -237,7 +237,7 @@ export function AIActionModal({
 
                     return (
                       <motion.div
-                        key={`${log.timestamp}-${index}`}
+                        key={`${log?.timestamp ?? 'no-ts'}-${index}`}
                         className={`
                           flex items-start gap-3 p-3 rounded-lg
                           ${isLatest ? 'bg-gray-700/50' : 'bg-gray-800/30'}
@@ -248,7 +248,7 @@ export function AIActionModal({
                       >
                         {/* 時間 */}
                         <span className="text-xs text-gray-500 whitespace-nowrap mt-0.5">
-                          {formatTime(log.timestamp)}
+                          {log?.timestamp ? formatTime(log.timestamp) : '--:--'}
                         </span>
 
                         {/* 圖標 */}
@@ -264,7 +264,7 @@ export function AIActionModal({
                           <p className="text-sm text-gray-200">
                             {formatted.text}
                           </p>
-                          {log.details && (
+                          {log?.details && (
                             <p className="text-xs text-gray-500 mt-1">
                               {log.details}
                             </p>

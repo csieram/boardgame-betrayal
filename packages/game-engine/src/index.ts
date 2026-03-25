@@ -154,3 +154,80 @@ export type {
 
 // Legacy exports (for backward compatibility)
 export { GameEngine as GameEngineLegacy } from './core/GameEngine';
+
+// AI System (Issue #95, #109, #110)
+export {
+  // Traitor AI
+  TraitorAI,
+  createTraitorAI,
+  createTraitorAIs,
+  isAIControlled,
+  getAIControlledPlayers,
+  // Hero AI
+  HeroAI,
+  createHeroAI,
+  createHeroAIs,
+  isAIControlledHero,
+  getAIControlledHeroes,
+  coordinateHeroAIs,
+  // Decision Engine
+  AIDecisionEngine,
+  createDecisionEngine,
+  selectBestDecision,
+  selectDecisionByDifficulty,
+  compareDecisions,
+  DEFAULT_WEIGHTS,
+  DIFFICULTY_WEIGHTS,
+  // Full AI Player System (Issue #110)
+  AIPlayer,
+  createAIPlayer,
+  getRandomPersonality,
+  getPersonalityDescription,
+  AIExplorationEngine,
+  createExplorationEngine,
+  analyzeExplorationProgress,
+  AIPlayerManager,
+  createAIPlayerManager,
+  generateGameSetupOptions,
+  getPersonalityIcon,
+  getPersonalityColor,
+} from './ai';
+export type {
+  // Traitor AI Types
+  TraitorAIConfig,
+  TraitorObjectiveType,
+  TraitorObjectiveState,
+  AIActionHistory,
+  TraitorAIState,
+  // Hero AI Types
+  HeroAIConfig,
+  HeroObjectiveType,
+  HeroObjectiveState,
+  HeroAIState,
+  // Decision Engine Types
+  AIDifficulty,
+  AIActionType,
+  AIDecision,
+  LegalActions,
+  GameSituation,
+  AIWeights,
+  // Full AI Player Types (Issue #110)
+  AIPersonality,
+  AIPlayerConfig,
+  AIPlayerState,
+  AIPlayerActionHistory,
+  AIExperience,
+  ExplorationDecision,
+  TurnExecutionResult,
+  ExplorationTargetType,
+  ExplorationTarget,
+  RoomEvaluation,
+  MovementPlan,
+  ExplorationStrategy,
+  CardHandlingDecision,
+  AIPlayerManagerConfig,
+  AIPlayerInfo,
+  TurnOrder,
+  AIActionLog,
+  GameSetupOptions,
+} from './ai';

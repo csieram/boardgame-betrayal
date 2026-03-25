@@ -2057,10 +2057,23 @@ export default function SoloGamePage() {
               {/* End Turn Button (Issue #135) - 移至狀態訊息下方 */}
               <div className="flex justify-center mt-3">
                 <Button
-                  onClick={() => showEndTurnConfirmation(false)}
+                  onClick={() => {
+                    console.log('[EndTurn] Button clicked!');
+                    console.log('[EndTurn] Button disabled conditions:', {
+                      isProcessingTurnSwitch,
+                      isProcessingAITurn,
+                      turnStateHasEnded: turnState.hasEnded,
+                      discovered,
+                      currentTurnPlayerNotSolo: currentTurnPlayer !== 'solo-player',
+                      currentTurnPlayer,
+                    });
+                    showEndTurnConfirmation(false);
+                  }}
                   variant="secondary"
                   size="sm"
-                  className="h-10 sm:h-12 text-xs sm:text-sm"
+                  className={`h-10 sm:h-12 text-xs sm:text-sm ${
+                    discovered ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                   disabled={
                     isProcessingTurnSwitch ||
                     isProcessingAITurn ||
@@ -2069,7 +2082,7 @@ export default function SoloGamePage() {
                     currentTurnPlayer !== 'solo-player'
                   }
                 >
-                  結束回合
+                  {discovered ? '回合已結束' : '結束回合'}
                 </Button>
               </div>
             </div>

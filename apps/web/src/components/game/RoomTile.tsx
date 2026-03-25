@@ -239,25 +239,27 @@ export function RoomTile({
         </p>
       </div>
 
-      {/* Issue #126: 玩家和 AI 標記容器 - 使用更大的區域避免重疊 */}
+      {/* Issue #122: 玩家和 AI 標記容器 */}
       <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-        {/* 玩家標記 */}
-        {players.length > 0 && (
-          <div className="pointer-events-auto">
-            <PlayerTokenGroup
-              characters={players}
-              currentPlayerIndex={currentPlayerIndex}
-              size="sm"
-            />
-          </div>
-        )}
+        <div className="flex items-center gap-1">
+          {/* 玩家標記 */}
+          {players.length > 0 && (
+            <div className="pointer-events-auto">
+              <PlayerTokenGroup
+                characters={players}
+                currentPlayerIndex={currentPlayerIndex}
+                size="sm"
+              />
+            </div>
+          )}
 
-        {/* Issue #118: 渲染子元素（AI 標記） */}
-        {children && (
-          <div className="pointer-events-auto ml-1">
-            {children}
-          </div>
-        )}
+          {/* Issue #122: 渲染 AI 標記 */}
+          {children && (
+            <div className="pointer-events-auto">
+              {children}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* 可達指示器 */}

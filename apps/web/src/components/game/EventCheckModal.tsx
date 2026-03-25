@@ -391,16 +391,6 @@ interface DiceFaceProps {
 }
 
 function DiceFace({ value }: DiceFaceProps) {
-  // 骰子點數配置（Betrayal 使用 0,0,1,1,2,2 的骰子）
-  const getDots = (val: number | undefined): number[] => {
-    if (val === undefined) return [];
-    // 0 = 無點, 1 = 2點, 2 = 4點
-    const dotCount = val === 0 ? 0 : val === 1 ? 2 : 4;
-    return Array.from({ length: dotCount }, (_, i) => i);
-  };
-
-  const dots = getDots(value);
-
   return (
     <div className="relative w-14 h-14 sm:w-16 sm:h-16">
       {/* 骰子外框 */}
@@ -412,23 +402,10 @@ function DiceFace({ value }: DiceFaceProps) {
         }
         shadow-lg
       `}>
-        {/* 點數 */}
+        {/* 骰子數值 */}
         {value !== undefined ? (
           <div className="absolute inset-0 flex items-center justify-center">
-            {dots.length === 0 ? (
-              <span className="text-2xl font-bold text-gray-400">0</span>
-            ) : (
-              <div className={`grid gap-1 ${
-                dots.length === 2 ? 'grid-cols-2' : 'grid-cols-2 grid-rows-2'
-              }`}>
-                {dots.map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-gray-800"
-                  />
-                ))}
-              </div>
-            )}
+            <span className="text-3xl font-bold text-gray-800">{value}</span>
           </div>
         ) : (
           /* 擲骰動畫中的問號 */
