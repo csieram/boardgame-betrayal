@@ -1426,6 +1426,9 @@ export default function SoloGamePage() {
       // Issue #148: 添加調試日誌
       console.log('[AI Debug] Starting executeAllAITurns, aiPlayers count:', aiPlayers.length);
       
+      // Issue #150-fix: 清除之前的 AI 行動日誌，只顯示當前回合
+      setAiActionLogs([]);
+      
       const results = await aiManager.executeAllAITurns(
         mockGameState,
         (aiName) => {
@@ -1457,8 +1460,9 @@ export default function SoloGamePage() {
           // Issue #148: 添加調試日誌
           console.log('[AI Debug] onTurnEnd, result:', result);
           
-          // 從結果中獲取 AI 玩家資訊
-          const aiPlayer = aiPlayers.find(p => p.id === currentTurnPlayer);
+          // Issue #150-fix: 使用 result.playerId 而不是 currentTurnPlayer
+          // 因為 currentTurnPlayer 可能已經被更新為下一個玩家
+          const aiPlayer = aiPlayers.find(p => p.id === result?.playerId);
           if (aiPlayer && result) {
             // Issue #148: 記錄 AI 行動詳情
             console.log('[AI Debug] AI actions:', result.logs);

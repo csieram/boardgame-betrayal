@@ -138,6 +138,10 @@ export interface ExplorationDecision {
 
 /** 回合執行結果 */
 export interface TurnExecutionResult {
+  /** AI 玩家 ID */
+  playerId: string;
+  /** AI 玩家名稱 */
+  playerName: string;
   /** 執行的決策列表 */
   decisions: AIDecision[];
   /** 是否完成回合 */
@@ -321,6 +325,8 @@ export class AIPlayer {
     this.log(`Starting turn ${this.state.turnCount} in ${phase} phase`);
 
     const result: TurnExecutionResult = {
+      playerId: this.state.playerId,
+      playerName: this.state.playerName,
       decisions: [],
       completed: false,
       logs: [],
