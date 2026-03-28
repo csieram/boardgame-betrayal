@@ -67,26 +67,13 @@ interface Room {
 - library_upper - 图书室(二楼) (I)
 - tower_upper - 塔楼(二楼) (null)
 
-### 跨楼层 - 12 个
-
-#### 樓梯類 (Stairs)
-- grand_staircase - 大楼梯 (Ground ↔ Upper)
-- stairs_from_basement - 地下室楼梯 (Basement → Ground)
-- stairs_from_ground - 一楼楼梯(下) (Ground → Basement)
-- stairs_from_upper - 二楼楼梯 (Upper → Ground)
-
-#### 電梯/升降類 (Elevator/Lift)
-- mystic_elevator - 神秘电梯 (任意樓層)
-- dumbwaiter - 升降機 (Ground ↔ Upper)
-- service_elevator - 服務電梯 (Basement ↔ Ground)
-
-#### 特殊通道 (Special Passages)
-- collapsed_room - 坍塌房间 (Upper → Basement, 掉落)
-- secret_chute - 秘密滑道 (Upper → Basement)
-- ventilation_shaft - 通風管道 (Basement ↔ Ground ↔ Upper)
-- mirror_portal - 鏡子傳送門 (任意有鏡子的房間)
-- fireplace_flue - 煙囪通道 (Ground ↔ Upper)
-- rope_ladder - 繩梯 (Ground ↔ Upper, 需物品)
+### 跨楼层 - 6 个
+- grand_staircase - 大楼梯 (null)
+- stairs_from_basement - 地下室楼梯 (null)
+- stairs_from_ground - 一楼楼梯(下) (null)
+- stairs_from_upper - 二楼楼梯 (null)
+- mystic_elevator - 神秘电梯 (null)
+- collapsed_room - 坍塌房间 (null)
 
 ## 符号说明
 
