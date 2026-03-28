@@ -91,8 +91,23 @@ export function EventCheckModal({
   // 如果沒有卡牌，不顯示
   if (!card) return null;
 
-  // 骰子數量
-  const diceCount = Math.max(1, playerStatValue);
+  // 骰子數量：使用 checkResult 中的骰子數量（如果有的話），否則使用 playerStatValue
+  // Issue #164: 必須使用 checkResult.dice.length 來確保失敗時骰子數量正確
+  // 因為失敗時可能會有屬性下降，導致 playerStatValue 改變，但骰子是在屬性變化前擲的
+  const diceCount = checkResult?.dice?.length ?? Math.max(1, playerStatValue);
+
+  // Issue #164 Debug: 追蹤骰子數量計算
+  useEffect(() => {
+    if (checkResult) {
+      console.log('[Debug #164] Check result:', {
+        success: checkResult.success,
+        diceCountFromResult: checkResult.dice?.length,
+        playerStatValue,
+        finalDiceCount: diceCount,
+        dice: checkResult.dice,
+      });
+    }
+  }, [checkResult, playerStatValue, diceCount]);
 
   // 獲取屬性資訊
   const statInfo = getStatInfo(card.rollRequired?.stat);
