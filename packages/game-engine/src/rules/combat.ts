@@ -281,10 +281,18 @@ export class CombatManager {
     const attackerEffectiveMight = Math.max(0, attacker.currentMight + (attacker.weaponBonus || 0));
     const defenderEffectiveMight = Math.max(0, defender.currentMight + (defender.weaponBonus || 0));
 
+    // Debug logging for Issue #166
+    console.log('[Combat Debug] Attacker:', attacker.name, 'currentMight:', attacker.currentMight, 'weaponBonus:', attacker.weaponBonus, 'effectiveMight:', attackerEffectiveMight);
+    console.log('[Combat Debug] Defender:', defender.name, 'currentMight:', defender.currentMight, 'weaponBonus:', defender.weaponBonus, 'effectiveMight:', defenderEffectiveMight);
+
     // 雙方擲骰
     // Rulebook Page 15: "Both sides roll dice equal to their Might."
     const attackerRoll = this.rng.rollDice(attackerEffectiveMight);
     const defenderRoll = this.rng.rollDice(defenderEffectiveMight);
+
+    // Debug logging for dice rolls
+    console.log('[Combat Debug] Attacker roll:', attackerRoll.results, 'total:', attackerRoll.total);
+    console.log('[Combat Debug] Defender roll:', defenderRoll.results, 'total:', defenderRoll.total);
 
     // 決定勝負
     // Rulebook Page 15: "The higher total wins."

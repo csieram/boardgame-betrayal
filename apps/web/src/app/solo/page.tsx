@@ -941,6 +941,16 @@ export default function SoloGamePage() {
   const initiateCombat = useCallback((targetId: string) => {
     if (!playerState || !hauntState.isActive) return;
 
+    // 查找目標 AI 玩家
+    const targetAIPlayer = aiPlayers.find(p => p.id === targetId);
+    if (!targetAIPlayer) {
+      setLog(prev => [...prev, `❌ 找不到目標玩家: ${targetId}`]);
+      return;
+    }
+
+    // 獲取目標 AI 的最新位置
+    const targetPosition = aiPlayerPositions.get(targetId) || targetAIPlayer.position || { x: 7, y: 7, floor: 'ground' as Floor };
+
     setCombatState(prev => ({
       ...prev,
       showCombatModal: true,
@@ -948,51 +958,86 @@ export default function SoloGamePage() {
       selectedTarget: targetId,
     }));
 
-    // 構建 gameState
+    // 構建 gameState - 包含攻擊者和防守者
     const gameStateForCombat = {
       gameId: 'solo-game',
       version: '1.0.0',
       phase: 'haunt',
       result: 'ongoing',
-      config: { playerCount: 1, enableAI: true, seed: gameState.seed, maxTurns: 100 },
+      config: { playerCount: 2, enableAI: true, seed: gameState.seed, maxTurns: 100 },
       map: {
         ground: multiFloorMap.ground,
         upper: multiFloorMap.upper,
         basement: multiFloorMap.basement,
         placedRoomCount: gameState.placedRoomIds.size,
       },
-      players: [{
-        id: 'solo-player',
-        name: player?.name || '玩家',
-        character: {
-          id: player?.id || '',
-          name: player?.name || '',
-          nameEn: player?.nameEn || '',
-          age: player?.age || 30,
-          description: player?.description || '',
-          color: player?.color || '#000',
-          stats: {
-            speed: player?.stats.speed || [0, 0, 0, 0, 0, 0, 0, 0],
-            might: player?.stats.might || [0, 0, 0, 0, 0, 0, 0, 0],
-            sanity: player?.stats.sanity || [0, 0, 0, 0, 0, 0, 0, 0],
-            knowledge: player?.stats.knowledge || [0, 0, 0, 0, 0, 0, 0, 0],
+      players: [
+        // 攻擊者（玩家）
+        {
+          id: 'solo-player',
+          name: player?.name || '玩家',
+          character: {
+            id: player?.id || '',
+            name: player?.name || '',
+            nameEn: player?.nameEn || '',
+            age: player?.age || 30,
+            description: player?.description || '',
+            color: player?.color || '#000',
+            stats: {
+              speed: player?.stats.speed || [0, 0, 0, 0, 0, 0, 0, 0],
+              might: player?.stats.might || [0, 0, 0, 0, 0, 0, 0, 0],
+              sanity: player?.stats.sanity || [0, 0, 0, 0, 0, 0, 0, 0],
+              knowledge: player?.stats.knowledge || [0, 0, 0, 0, 0, 0, 0, 0],
+            },
+            statTrack: player?.statTrack || { speed: [], might: [], sanity: [], knowledge: [] },
           },
-          statTrack: player?.statTrack || { speed: [], might: [], sanity: [], knowledge: [] },
+          position: { x: position.x, y: position.y, floor: currentFloor },
+          currentStats: {
+            speed: playerState.stats.speed,
+            might: playerState.stats.might,
+            sanity: playerState.stats.sanity,
+            knowledge: playerState.stats.knowledge,
+          },
+          items: playerState.items,
+          omens: playerState.omens,
+          isTraitor: false,
+          isDead: false,
+          usedItemsThisTurn: [],
         },
-        position: { x: position.x, y: position.y, floor: currentFloor },
-        currentStats: {
-          speed: playerState.stats.speed,
-          might: playerState.stats.might,
-          sanity: playerState.stats.sanity,
-          knowledge: playerState.stats.knowledge,
+        // 防守者（AI 玩家）
+        {
+          id: targetAIPlayer.id,
+          name: targetAIPlayer.name,
+          character: {
+            id: targetAIPlayer.character?.id || '',
+            name: targetAIPlayer.character?.name || targetAIPlayer.name,
+            nameEn: targetAIPlayer.character?.nameEn || '',
+            age: targetAIPlayer.character?.age || 30,
+            description: targetAIPlayer.character?.description || '',
+            color: targetAIPlayer.character?.color || '#000',
+            stats: {
+              speed: targetAIPlayer.character?.stats?.speed || [0, 0, 0, 0, 0, 0, 0, 0],
+              might: targetAIPlayer.character?.stats?.might || [0, 0, 0, 0, 0, 0, 0, 0],
+              sanity: targetAIPlayer.character?.stats?.sanity || [0, 0, 0, 0, 0, 0, 0, 0],
+              knowledge: targetAIPlayer.character?.stats?.knowledge || [0, 0, 0, 0, 0, 0, 0, 0],
+            },
+            statTrack: targetAIPlayer.character?.statTrack || { speed: [], might: [], sanity: [], knowledge: [] },
+          },
+          position: targetPosition,
+          currentStats: {
+            speed: targetAIPlayer.character?.stats?.speed?.[0] || 4,
+            might: targetAIPlayer.character?.stats?.might?.[0] || 4,
+            sanity: targetAIPlayer.character?.stats?.sanity?.[0] || 4,
+            knowledge: targetAIPlayer.character?.stats?.knowledge?.[0] || 4,
+          },
+          items: [],
+          omens: [],
+          isTraitor: hauntState.revelation?.traitorId === targetAIPlayer.id,
+          isDead: !targetAIPlayer.isAlive,
+          usedItemsThisTurn: [],
         },
-        items: playerState.items,
-        omens: playerState.omens,
-        isTraitor: false,
-        isDead: false,
-        usedItemsThisTurn: [],
-      }],
-      playerOrder: ['solo-player'],
+      ],
+      playerOrder: ['solo-player', targetId],
       turn: {
         currentPlayerId: 'solo-player',
         turnNumber: turn,
@@ -1018,7 +1063,7 @@ export default function SoloGamePage() {
         isActive: hauntState.isActive,
         type: 'single_traitor',
         hauntNumber: null,
-        traitorPlayerId: null,
+        traitorPlayerId: hauntState.revelation?.traitorId || null,
         omenCount: cardManager.getDeckStatus().omenCount,
         heroObjective: null,
         traitorObjective: null,
@@ -1094,7 +1139,7 @@ export default function SoloGamePage() {
         setLog(prev => [...prev, `❌ 戰鬥失敗: ${result.error}`]);
       }
     }, 2000);
-  }, [playerState, hauntState.isActive, gameState, player, position, currentFloor, turn, moves, discovered, combatManager, cardManager]);
+  }, [playerState, hauntState.isActive, gameState, player, position, currentFloor, turn, moves, discovered, combatManager, cardManager, aiPlayers, aiPlayerPositions, hauntState.revelation]);
 
   // 關閉戰鬥模態框
   const handleCloseCombat = useCallback(() => {
@@ -2124,18 +2169,37 @@ export default function SoloGamePage() {
             {/* 移動控制 */}
             <div className="mt-4 bg-gray-800/50 rounded-xl p-3 sm:p-4 border border-gray-700">
               <h3 className="text-sm font-bold text-gray-400 mb-3 text-center">移動控制</h3>
-              <div className="flex justify-center gap-3">
-                {/* 戰鬥按鈕 (Issue #103) - 只在作祟階段顯示 */}
-                {hauntState.isActive && (
-                  <Button
-                    onClick={() => initiateCombat('ai-enemy-1')}
-                    variant="danger"
-                    size="sm"
-                    className="h-10 sm:h-12 text-xs sm:text-sm bg-red-600 hover:bg-red-700"
-                    disabled={combatState.isCombatAnimating}
-                  >
-                    {combatState.isCombatAnimating ? '戰鬥中...' : '⚔️ 攻擊'}
-                  </Button>
+              <div className="flex justify-center gap-3 flex-wrap">
+                {/* 戰鬥按鈕 (Issue #103) - 只在作祟階段顯示，為每個可攻擊的 AI 玩家顯示一個按鈕 */}
+                {hauntState.isActive && aiPlayers
+                  .filter(aiPlayer => {
+                    // 只顯示與玩家在同一房間且存活的 AI
+                    const aiPos = aiPlayerPositions.get(aiPlayer.id) || aiPlayer.position;
+                    return aiPlayer.isAlive && 
+                           aiPos?.x === position.x && 
+                           aiPos?.y === position.y && 
+                           aiPos?.floor === currentFloor;
+                  })
+                  .map(aiPlayer => (
+                    <Button
+                      key={aiPlayer.id}
+                      onClick={() => initiateCombat(aiPlayer.id)}
+                      variant="danger"
+                      size="sm"
+                      className="h-10 sm:h-12 text-xs sm:text-sm bg-red-600 hover:bg-red-700"
+                      disabled={combatState.isCombatAnimating}
+                    >
+                      {combatState.isCombatAnimating ? '戰鬥中...' : `⚔️ 攻擊 ${aiPlayer.name}`}
+                    </Button>
+                  ))}
+                {hauntState.isActive && aiPlayers.filter(aiPlayer => {
+                  const aiPos = aiPlayerPositions.get(aiPlayer.id) || aiPlayer.position;
+                  return aiPlayer.isAlive && 
+                         aiPos?.x === position.x && 
+                         aiPos?.y === position.y && 
+                         aiPos?.floor === currentFloor;
+                }).length === 0 && (
+                  <p className="text-gray-500 text-sm">附近沒有可攻擊的目標</p>
                 )}
                 
                 {/* Hero AI 測試按鈕 (Issue #109) */}
