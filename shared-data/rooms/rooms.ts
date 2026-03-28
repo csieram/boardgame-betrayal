@@ -94,12 +94,24 @@ export const UPPER_ROOMS: Room[] = [
 
 // ==================== MULTI-FLOOR ROOMS ====================
 export const MULTI_FLOOR_ROOMS: Room[] = [
+  // 樓梯類 (Stairs)
   { id: 'grand_staircase', name: '大樓梯', nameEn: 'Grand Staircase', floor: 'ground', symbol: null, doors: ['north', 'south'], description: '連接一樓和二樓', color: '#8B7355', icon: `${floor('#6B5344')}${doorN}${doorS}`, isOfficial: true, gallerySvg: '/gallery/rooms/grand_staircase.svg', notes: 'connects Ground <-> Upper' },
   { id: 'stairs_from_basement', name: '地下室樓梯', nameEn: 'Stairs from Basement', floor: 'basement', symbol: null, doors: ['north'], description: '通往一樓', color: '#4A4A3A', icon: `${floor('#5A5A4A')}${doorN}`, gallerySvg: '/gallery/rooms/stairs_from_basement.svg', isOfficial: true },
   { id: 'stairs_from_ground', name: '一樓樓梯(下)', nameEn: 'Stairs from Ground', floor: 'ground', symbol: null, doors: ['north'], description: '通往地下室', color: '#6B5344', icon: `${floor('#5A4334')}${doorN}`, gallerySvg: '/gallery/rooms/stairs_from_ground.svg', isOfficial: true },
   { id: 'stairs_from_upper', name: '二樓樓梯', nameEn: 'Stairs from Upper', floor: 'upper', symbol: null, doors: ['north'], description: '通往一樓', color: '#5A4A4A', icon: `${floor('#4A3A3A')}${doorN}`, gallerySvg: '/gallery/rooms/stairs_from_upper.svg', isOfficial: true },
+  
+  // 電梯/升降類 (Elevator/Lift)
   { id: 'mystic_elevator', name: '神秘電梯', nameEn: 'Mystic Elevator', floor: 'ground', symbol: null, doors: ['north'], description: '可移動到任何樓層', color: '#4A4A6A', icon: `${floor('#5A5A7A')}${doorN}`, isOfficial: true, gallerySvg: '/gallery/rooms/mystic_elevator.svg', notes: 'moves to any floor' },
+  { id: 'dumbwaiter', name: '升降機', nameEn: 'Dumbwaiter', floor: 'ground', symbol: null, doors: ['north'], description: '連接廚房和餐廳的小型升降機', color: '#5A5A4A', icon: `${floor('#6A6A6A')}${doorN}`, gallerySvg: '/gallery/rooms/dumbwaiter.svg', isOfficial: true, notes: 'connects Ground <-> Upper' },
+  { id: 'service_elevator', name: '服務電梯', nameEn: 'Service Elevator', floor: 'basement', symbol: null, doors: ['north'], description: '僕人使用的服務電梯', color: '#4A4A3A', icon: `${floor('#5A5A4A')}${doorN}`, gallerySvg: '/gallery/rooms/service_elevator.svg', isOfficial: true, notes: 'connects Basement <-> Ground' },
+  
+  // 特殊通道 (Special Passages)
   { id: 'collapsed_room', name: '坍塌房間', nameEn: 'Collapsed Room', floor: 'upper', symbol: null, doors: ['north'], description: '會掉到地下室', color: '#5A5A4A', icon: `${floor('#6A6A5A')}${doorN}`, isOfficial: true, gallerySvg: '/gallery/rooms/collapsed_room.svg', notes: 'drop to B' },
+  { id: 'secret_chute', name: '秘密滑道', nameEn: 'Secret Chute', floor: 'upper', symbol: null, doors: ['north'], description: '通往地下室的秘密滑道', color: '#4A4A3A', icon: `${floor('#5A5A5A')}${doorN}`, gallerySvg: '/gallery/rooms/secret_chute.svg', isOfficial: true, notes: 'slide to Basement' },
+  { id: 'ventilation_shaft', name: '通風管道', nameEn: 'Ventilation Shaft', floor: 'basement', symbol: null, doors: ['north', 'east'], description: '連接所有樓層的通風系統', color: '#3A3A3A', icon: `${floor('#4A4A4A')}${doorN}${doorE}`, gallerySvg: '/gallery/rooms/ventilation_shaft.svg', isOfficial: true, notes: 'connects all floors, requires small size' },
+  { id: 'mirror_portal', name: '鏡子傳送門', nameEn: 'Mirror Portal', floor: 'ground', symbol: 'O', doors: ['north'], description: '通往鏡中世界的傳送門', color: '#4A4A5A', icon: `${floor('#5A5A6A')}${doorN}${symO}`, gallerySvg: '/gallery/rooms/mirror_portal.svg', isOfficial: true, notes: 'teleport to any room with mirror' },
+  { id: 'fireplace_flue', name: '煙囪通道', nameEn: 'Fireplace Flue', floor: 'ground', symbol: null, doors: ['north'], description: '從壁爐通往屋頂的煙囪', color: '#3A2A2A', icon: `${floor('#4A3A3A')}${doorN}`, gallerySvg: '/gallery/rooms/fireplace_flue.svg', isOfficial: true, notes: 'connects Ground <-> Upper' },
+  { id: 'rope_ladder', name: '繩梯', nameEn: 'Rope Ladder', floor: 'ground', symbol: null, doors: ['north'], description: '臨時的繩梯，需要繩索才能使用', color: '#5A4A3A', icon: `${floor('#6A5A4A')}${doorN}`, gallerySvg: '/gallery/rooms/rope_ladder.svg', isOfficial: true, notes: 'connects Ground <-> Upper, requires rope item' },
 ];
 
 // 所有官方房間（用於遊戲）
