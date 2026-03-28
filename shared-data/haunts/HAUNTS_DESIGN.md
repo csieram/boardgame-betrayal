@@ -1,10 +1,20 @@
 # 作祟劇本設計 (Haunt Scenarios Design)
 
+> **🎨 原創作祟 (Custom Haunts)**
+> 
+> 此文件包含我們為此專案設計的 **99 個原創作祟劇本**。
+> 
+> 如需查看官方 Betrayal at House on the Hill 的作祟劇本，請參見：
+> - [`HAUNTS_REFERENCE.md`](./HAUNTS_REFERENCE.md)
+
+---
+
 ## 設計原則
 
 - 每個作祟對應一個 **預兆卡 + O 符號房間** 組合
 - 總計：11 預兆卡 × 9 房間 = 99 個作祟劇本
 - 參考官方風格：單叛徒、隱藏叛徒、合作模式
+- **全部為原創設計**，非來自官方遊戲
 
 ---
 
@@ -202,10 +212,31 @@
 
 ## 統計
 
-- **總作祟數**: 99 個
+| 類別 | 數量 | 說明 |
+|------|------|------|
+| 🎨 **原創作祟** | **99 個** | 本文件設計的作祟 |
+| 🏛️ **官方作祟** | 15+ 個 | 參見 `HAUNTS_REFERENCE.md` |
+
+**類型分佈：**
 - **單叛徒**: 大部分
 - **隱藏叛徒**: 少數（如 O1-R7 隱藏的殺手）
 - **合作模式**: 可根據需要設計
+
+---
+
+## 識別碼規範
+
+在程式碼實作中，請使用以下命名規則：
+
+```typescript
+// 原創作祟 ID 格式：custom_{omen}_{room}
+const hauntId = 'custom_dagger_abandoned';  // 染血的匕首 + 廢棄房間
+const hauntId = 'custom_mirror_bedroom';    // 破碎的鏡子 + 臥室
+
+// 官方作祟 ID 格式：official_{name}
+const hauntId = 'official_mummy';   // 木乃伊
+const hauntId = 'official_vampire'; // 吸血鬼
+```
 
 ---
 

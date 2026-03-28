@@ -1,6 +1,12 @@
 # 作祟劇本列表 (Haunt Scenarios)
 
-## 官方作祟劇本參考 (Official Haunts Reference)
+> **分類標籤說明：**
+> - 🏛️ **官方 (Official)** - 來自 Betrayal at House on the Hill 官方遊戲的作祟劇本
+> - 🎨 **原創 (Custom)** - 我們為此專案設計的原創作祟劇本
+
+---
+
+## 🏛️ 官方作祟劇本參考 (Official Haunts Reference)
 
 根據網路搜尋找到的官方 Betrayal at House on the Hill 作祟劇本：
 
@@ -48,9 +54,30 @@
 
 ---
 
-## 我們的目標
+## 🎨 我們的原創作祟劇本 (Custom Haunts)
 
-設計 **99 個作祟劇本** 對應：
-- 11 張預兆卡 × 9 個 O 符號房間 = 99 種組合
+我們設計的原創作祟劇本請參見：
+- [`HAUNTS_DESIGN.md`](./HAUNTS_DESIGN.md) - 完整的 99 個原創作祟設計矩陣
 
-參考資料來源：網路搜尋 (BoardGameGeek, Reddit, Fandom Wiki)
+### 原創作祟統計
+
+| 類別 | 數量 | 說明 |
+|------|------|------|
+| 🎨 **原創作祟** | 99 個 | 我們設計的作祟（11 預兆 × 9 房間）|
+| 🏛️ **官方作祟** | 15+ 個 | 參考官方遊戲的作祟（僅供參考）|
+
+### 區分方式
+
+在程式碼和資料檔案中，我們使用以下前綴區分：
+
+| 前綴 | 類型 | 範例 |
+|------|------|------|
+| `official_` | 官方作祟 | `official_mummy`, `official_vampire` |
+| `custom_` | 原創作祟 | `custom_blood_ritual`, `custom_revenge_fire` |
+
+---
+
+## 參考資料來源
+
+- 官方作祟：網路搜尋 (BoardGameGeek, Reddit, Fandom Wiki)
+- 原創作祟：專案團隊設計
