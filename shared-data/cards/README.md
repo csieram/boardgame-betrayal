@@ -68,10 +68,13 @@ interface Card {
 | omen-dagger | 匕首 | 武器 |
 | omen-dog | 狗 | 伙伴 |
 | omen-ghostcandle | 鬼烛 | 见鬼 |
+| omen-holysymbol | 圣徽 | 对抗邪恶 |
+| omen-madman | 疯子 | 力量+2，理智-1 |
 | omen-mirror | 镜子 | 反射 |
 | omen-necklace | 项链 | 保护 |
 | omen-portrait | 肖像 | 灵魂 |
 | omen-ring | 戒指 | 力量 |
+| omen-robe | 长袍 | 魔法抗性 |
 | omen-talisman | 护身符 | 防御 |
 
 ## 抽卡规则

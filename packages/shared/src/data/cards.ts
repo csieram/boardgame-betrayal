@@ -281,26 +281,41 @@ export const OMEN_CARDS: Card[] = [
   {
     id: 'omen_8',
     type: 'omen',
-    name: '染血的匕首',
-    description: '一把沾滿血跡的古老匕首。',
-    icon: `<rect x="45" y="20" width="10" height="40" fill="#C0C0C0"/>
-           <rect x="42" y="60" width="16" height="8" fill="#8B4513"/>
-           <path d="M48 25 L50 20 L52 25" fill="#8B0000"/>`,
-    effect: '攻擊時可以額外造成 1 點傷害。',
+    name: '聖徽',
+    description: '一個散發著微弱光芒的古老聖徽。',
+    icon: `<rect x="20" y="20" width="60" height="60" fill="#3A3A2A"/>
+           <circle cx="50" cy="45" r="15" fill="none" stroke="#FFD700" stroke-width="3"/>
+           <rect x="46" y="32" width="8" height="26" fill="#FFD700"/>
+           <rect x="38" y="40" width="24" height="8" fill="#FFD700"/>
+           <circle cx="50" cy="45" r="4" fill="#FFF" opacity="0.8"/>`,
+    effect: '對抗邪惡生物時，所有檢定 +2。',
   },
   {
     id: 'omen_9',
     type: 'omen',
-    name: '破碎的鏡子',
-    description: '一面破碎的鏡子，碎片中似乎映出另一個世界。',
-    icon: `<rect x="25" y="20" width="40" height="50" fill="#E0E0E0"/>
-           <line x1="25" y1="45" x2="65" y2="35" stroke="#000" stroke-width="1"/>
-           <line x1="35" y1="20" x2="45" y2="70" stroke="#000" stroke-width="1"/>
-           <line x1="25" y1="60" x2="65" y2="50" stroke="#000" stroke-width="1"/>`,
-    effect: '可以查看一個隨機的未發現房間。',
+    name: '瘋子',
+    description: '一個衣衫襤褸的瘋子跟著你，嘴裡喃喃自語著可怕的預言。',
+    icon: `<rect x="20" y="20" width="60" height="60" fill="#2A1A1A"/>
+           <circle cx="50" cy="38" r="10" fill="#D2B48C"/>
+           <circle cx="47" cy="36" r="2" fill="#333"/>
+           <circle cx="53" cy="36" r="2" fill="#333"/>
+           <path d="M45 42 Q50 38 55 42" stroke="#333" stroke-width="1" fill="none"/>
+           <ellipse cx="50" cy="55" rx="12" ry="15" fill="#4A3728"/>`,
+    effect: '你的力量 +2，但理智檢定 -1。',
   },
   {
     id: 'omen_10',
+    type: 'omen',
+    name: '神秘長袍',
+    description: '一件繡滿神秘符號的黑色長袍。',
+    icon: `<rect x="20" y="20" width="60" height="60" fill="#1A1A2A"/>
+           <path d="M35 30 L50 70 L65 30 L60 25 L50 35 L40 25 Z" fill="#2A1A3A"/>
+           <text x="45" y="50" font-size="8" fill="#8B008B">✦</text>
+           <text x="50" y="45" font-size="6" fill="#4B0082">☾</text>`,
+    effect: '對抗魔法效果時，所有檢定 +2。',
+  },
+  {
+    id: 'omen_11',
     type: 'omen',
     name: '黑暗蠟燭',
     description: '一支燃燒著黑色火焰的蠟燭。',
