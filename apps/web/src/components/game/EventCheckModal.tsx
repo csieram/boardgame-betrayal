@@ -96,19 +96,6 @@ export function EventCheckModal({
   // 因為失敗時可能會有屬性下降，導致 playerStatValue 改變，但骰子是在屬性變化前擲的
   const diceCount = checkResult?.dice?.length ?? Math.max(1, playerStatValue);
 
-  // Issue #164 Debug: 追蹤骰子數量計算
-  useEffect(() => {
-    if (checkResult) {
-      console.log('[Debug #164] Check result:', {
-        success: checkResult.success,
-        diceCountFromResult: checkResult.dice?.length,
-        playerStatValue,
-        finalDiceCount: diceCount,
-        dice: checkResult.dice,
-      });
-    }
-  }, [checkResult, playerStatValue, diceCount]);
-
   // 獲取屬性資訊
   const statInfo = getStatInfo(card.rollRequired?.stat);
 
