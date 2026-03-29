@@ -77,4 +77,11 @@
     <circle cx="55" cy="94" r="2.5" fill="url(#goldTrim)"/>
     <circle cx="55" cy="94" r="1.5" fill="#B8860B"/>
   </g>
+  
+  <!-- Symbol O -->
+  <g filter="url(#softShadow)">
+    <circle cx="85" cy="15" r="8" fill="#8B4DA8" stroke="#6B2D88" stroke-width="1"/>
+    <circle cx="85" cy="15" r="6" fill="#AB6DC8" opacity="0.5"/>
+    <text x="85" y="19" text-anchor="middle" font-size="11" fill="#FFF" font-weight="bold" font-family="serif">O</text>
+  </g>
 </svg>
