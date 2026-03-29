@@ -63,10 +63,18 @@
     <circle cx="55" cy="6" r="1.5" fill="#B8860B"/>
   </g>
   
-  <!-- Symbol I -->
+  <!-- Symbol E (Event) -->
   <g filter="url(#softShadow)">
-    <circle cx="85" cy="15" r="8" fill="#3D7AB8" stroke="#2D5A98" stroke-width="1"/>
-    <circle cx="85" cy="15" r="6" fill="#5A9AD8" opacity="0.5"/>
-    <text x="85" y="19" text-anchor="middle" font-size="11" fill="#FFF" font-weight="bold" font-family="serif">I</text>
+    <circle cx="85" cy="15" r="8" fill="#4A9A4A" stroke="#2A7A2A" stroke-width="1"/>
+    <circle cx="85" cy="15" r="6" fill="#5ABA5A" opacity="0.5"/>
+    <text x="85" y="19" text-anchor="middle" font-size="11" fill="#FFF" font-weight="bold" font-family="serif">E</text>
+  </g>
+  
+  <!-- Mental damage indicator - brain icon -->
+  <g transform="translate(12, 82)">
+    <ellipse cx="6" cy="6" rx="5" ry="4" fill="#9370DB" stroke="#7B68EE" stroke-width="1"/>
+    <path d="M4,4 Q6,2 8,4" fill="none" stroke="#7B68EE" stroke-width="0.5"/>
+    <circle cx="5" cy="6" r="1" fill="#4B0082"/>
+    <circle cx="7" cy="6" r="1" fill="#4B0082"/>
   </g>
 </svg>
