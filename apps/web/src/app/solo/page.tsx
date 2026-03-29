@@ -63,6 +63,7 @@ const FLOOR_NAMES: Record<Floor, string> = {
   upper: '二樓',
   ground: '一樓',
   basement: '地下室',
+  roof: '屋頂',
 };
 
 /** 單人模式遊戲狀態 */
@@ -177,6 +178,7 @@ interface MultiFloorMap {
   ground: Tile[][];
   upper: Tile[][];
   basement: Tile[][];
+  roof: Tile[][];
 }
 
 /**
@@ -187,6 +189,7 @@ function createEmptyMultiFloorMap(): MultiFloorMap {
     ground: createEmptyMap(),
     upper: createEmptyMap(),
     basement: createEmptyMap(),
+    roof: createEmptyMap(),
   };
 }
 
@@ -1242,6 +1245,7 @@ export default function SoloGamePage() {
         ground: prev.ground.map(row => row.map(tile => ({ ...tile }))),
         upper: prev.upper.map(row => row.map(tile => ({ ...tile }))),
         basement: prev.basement.map(row => row.map(tile => ({ ...tile }))),
+        roof: prev.roof.map(row => row.map(tile => ({ ...tile }))),
       };
 
       newMap[floor][y][x] = {
