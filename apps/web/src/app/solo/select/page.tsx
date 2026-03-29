@@ -39,6 +39,7 @@ export default function SoloCharacterSelectPage() {
     difficulty: 'medium',
     personalities: ['explorer', 'cautious'],
   });
+  const [includeWidowsWalk, setIncludeWidowsWalk] = useState(false);
   const [showAISetup, setShowAISetup] = useState(false);
 
   /**
@@ -62,6 +63,7 @@ export default function SoloCharacterSelectPage() {
       const gameSetup = {
         character: selectedCharacter,
         aiSetup,
+        includeWidowsWalk,
         seed: Date.now().toString(),
       };
       sessionStorage.setItem('solo-game-setup', JSON.stringify(gameSetup));
@@ -280,6 +282,21 @@ export default function SoloCharacterSelectPage() {
                 </div>
               </div>
             )}
+
+            {/* Widow's Walk 擴展選項 */}
+            <div className="mt-6">
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={includeWidowsWalk}
+                  onChange={(e) => setIncludeWidowsWalk(e.target.checked)}
+                  className="w-5 h-5 text-blue-600 rounded"
+                />
+                <span className="text-lg">
+                  Include Widow&apos;s Walk expansion (20 additional rooms)
+                </span>
+              </label>
+            </div>
 
             {/* 按鈕 */}
             <div className="flex gap-4">

@@ -106,6 +106,8 @@ export interface GameSetupOptions {
   difficulty: AIDifficulty;
   /** AI 個性 */
   personalities: AIPersonality[];
+  /** 是否包含 Widow's Walk 擴展 */
+  includeWidowsWalk: boolean;
   /** 隨機種子 */
   seed?: string;
 }
@@ -615,13 +617,14 @@ export function generateGameSetupOptions(
   humanCharacter: Character,
   aiCount: number,
   difficulty: AIDifficulty,
+  includeWidowsWalk: boolean = false,
   seed?: string
 ): GameSetupOptions {
   const personalities: AIPersonality[] = [];
   const personalityOptions: AIPersonality[] = ['explorer', 'cautious', 'aggressive'];
-  
+
   const rng = seed ? createSeededRng(seed) : Math.random;
-  
+
   for (let i = 0; i < aiCount; i++) {
     personalities.push(personalityOptions[Math.floor(rng() * personalityOptions.length)]);
   }
@@ -631,6 +634,7 @@ export function generateGameSetupOptions(
     aiCount,
     difficulty,
     personalities,
+    includeWidowsWalk,
     seed,
   };
 }
