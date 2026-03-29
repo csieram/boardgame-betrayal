@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Character, CHARACTERS, Room, Floor, Tile, Direction, Card } from '@betrayal/shared';
+import { Character, CHARACTERS, Room, Floor, Tile, Direction, Card, ALL_ROOMS } from '@betrayal/shared';
 import { Button } from '@betrayal/ui';
 import { GameBoard } from '@/components/game/GameBoard';
 import { CardDisplay } from '@/components/game/CardDisplay';
@@ -75,6 +75,8 @@ interface SoloGameState {
     basement: Room[];
     drawn: Set<string>;
   };
+  // 使用 ALL_ROOMS 和 drawn 集合來追蹤已抽取的房間
+  drawn: Set<string>;
   seed: string;
 }
 
@@ -116,18 +118,24 @@ const STARTING_ROOMS: Record<string, Array<{ roomId: string; position: { x: numb
       position: { x: 7, y: 7 },
       rotation: 0,
     },
-    // stairs_from_ground removed - must be discovered
   ],
   upper: [
     {
-      roomId: 'stairs_from_upper',
-      position: { x: 7, y: 5 },
+      roomId: 'upper_landing',
+      position: { x: 7, y: 7 },
       rotation: 0,
     },
   ],
   basement: [
     {
-      roomId: 'stairs_from_basement',
+      roomId: 'basement_landing',
+      position: { x: 7, y: 7 },
+      rotation: 0,
+    },
+  ],
+  roof: [
+    {
+      roomId: 'roof_landing',
       position: { x: 7, y: 7 },
       rotation: 0,
     },
@@ -139,13 +147,14 @@ const STARTING_ROOMS: Record<string, Array<{ roomId: string; position: { x: numb
  */
 function createInitialGameState(seed: string): SoloGameState {
   return {
-    placedRoomIds: new Set(['entrance_hall', 'stairs_from_upper', 'stairs_from_basement']),
+    placedRoomIds: new Set(['entrance_hall', 'upper_landing', 'basement_landing']),
     roomDecks: {
       ground: [],
       upper: [],
       basement: [],
       drawn: new Set(),
     },
+    drawn: new Set(),
     seed,
   };
 }
@@ -266,6 +275,7 @@ export default function SoloGamePage() {
     aiCount: number;
     difficulty: AIDifficulty;
     personalities: AIPersonality[];
+    includeWidowsWalk: boolean;
     seed: string;
   } | null>(null);
 
@@ -333,6 +343,7 @@ export default function SoloGamePage() {
           aiCount: setup.aiSetup?.count || 0,
           difficulty: setup.aiSetup?.difficulty || 'medium',
           personalities: setup.aiSetup?.personalities || [],
+          includeWidowsWalk: setup.includeWidowsWalk || false,
           seed: setup.seed || Date.now().toString(),
         });
         const character: Character = setup.character;
@@ -369,32 +380,37 @@ export default function SoloGamePage() {
     // 初始化多樓層地圖
     const initialMultiFloorMap = createEmptyMultiFloorMap();
     
-    // 從 ROOMS 獲取房間資料
-    import('@betrayal/shared').then(({ ROOMS }) => {
+    // 從 @betrayal/shared 獲取房間資料
+    import('@betrayal/shared').then(({ ALL_ROOMS }) => {
       try {
         const rng = new SeededRng(seed);
         const newGameState = createInitialGameState(seed);
 
-        // 過濾並洗牌各樓層牌堆（排除起始房間）
-        const groundRooms = ROOMS.filter(r => r.floor === 'ground' && r.id !== 'entrance_hall');
-        const upperRooms = ROOMS.filter(r => r.floor === 'upper' && r.id !== 'stairs_from_upper');
-        const basementRooms = ROOMS.filter(r => r.floor === 'basement' && r.id !== 'stairs_from_basement');
+        // 標記起始房間為已抽取
+        const startingRoomIds = ['entrance_hall', 'upper_landing', 'basement_landing', 'roof_landing'];
+        startingRoomIds.forEach(id => newGameState.drawn.add(id));
 
-        newGameState.roomDecks.ground = rng.shuffle(groundRooms);
-        newGameState.roomDecks.upper = rng.shuffle(upperRooms);
-        newGameState.roomDecks.basement = rng.shuffle(basementRooms);
+        // 記錄房間統計資訊
+        const groundRooms = ALL_ROOMS.filter(r => r.floors?.includes('ground') && !startingRoomIds.includes(r.id));
+        const upperRooms = ALL_ROOMS.filter(r => r.floors?.includes('upper') && !startingRoomIds.includes(r.id));
+        const basementRooms = ALL_ROOMS.filter(r => r.floors?.includes('basement') && !startingRoomIds.includes(r.id));
+        const roofRooms = ALL_ROOMS.filter(r => r.floors?.includes('roof') && !startingRoomIds.includes(r.id));
 
-        // 記錄前 5 個房間 ID 用於除錯
-        console.log('First 5 ground room IDs:', newGameState.roomDecks.ground.slice(0, 5).map(r => r.id));
-        console.log('First 5 upper room IDs:', newGameState.roomDecks.upper.slice(0, 5).map(r => r.id));
-        console.log('First 5 basement room IDs:', newGameState.roomDecks.basement.slice(0, 5).map(r => r.id));
+        console.log('Total rooms:', ALL_ROOMS.length);
+        console.log('Ground rooms available:', groundRooms.length);
+        console.log('Upper rooms available:', upperRooms.length);
+        console.log('Basement rooms available:', basementRooms.length);
+        console.log('Roof rooms available:', roofRooms.length);
 
         setGameState(newGameState);
 
         // 放置起始房間
-        // 1. 一樓：入口大廳 (7,7) 和 通往地下室的樓梯 (7,9)
+        // 使用 ALL_ROOMS 查找房間資料
+        const getRoomById = (id: string) => ALL_ROOMS.find(r => r.id === id);
+
+        // 1. 一樓：入口大廳
         STARTING_ROOMS.ground.forEach(({ roomId, position, rotation }) => {
-          const room = ROOMS.find(r => r.id === roomId);
+          const room = getRoomById(roomId);
           if (room) {
             initialMultiFloorMap.ground[position.y][position.x] = {
               ...initialMultiFloorMap.ground[position.y][position.x],
@@ -405,9 +421,9 @@ export default function SoloGamePage() {
           }
         });
 
-        // 2. 二樓：樓梯房間 (7,5)
+        // 2. 二樓：大廳
         STARTING_ROOMS.upper.forEach(({ roomId, position, rotation }) => {
-          const room = ROOMS.find(r => r.id === roomId);
+          const room = getRoomById(roomId);
           if (room) {
             initialMultiFloorMap.upper[position.y][position.x] = {
               ...initialMultiFloorMap.upper[position.y][position.x],
@@ -418,12 +434,25 @@ export default function SoloGamePage() {
           }
         });
 
-        // 3. 地下室：樓梯房間 (7,7)
+        // 3. 地下室：大廳
         STARTING_ROOMS.basement.forEach(({ roomId, position, rotation }) => {
-          const room = ROOMS.find(r => r.id === roomId);
+          const room = getRoomById(roomId);
           if (room) {
             initialMultiFloorMap.basement[position.y][position.x] = {
               ...initialMultiFloorMap.basement[position.y][position.x],
+              discovered: true,
+              room: room,
+              rotation: rotation,
+            };
+          }
+        });
+
+        // 4. 屋頂：大廳（可選，如果有 Widow's Walk 擴充）
+        STARTING_ROOMS.roof?.forEach(({ roomId, position, rotation }) => {
+          const room = getRoomById(roomId);
+          if (room) {
+            initialMultiFloorMap.roof[position.y][position.x] = {
+              ...initialMultiFloorMap.roof[position.y][position.x],
               discovered: true,
               room: room,
               rotation: rotation,
@@ -814,10 +843,7 @@ export default function SoloGamePage() {
         omen: { remaining: [], drawn: [], discarded: [] },
       },
       roomDeck: {
-        ground: gameState.roomDecks.ground,
-        upper: gameState.roomDecks.upper,
-        basement: gameState.roomDecks.basement,
-        drawn: gameState.roomDecks.drawn,
+        drawn: gameState.drawn,
       },
       haunt: {
         isActive: isHauntActive,
@@ -1012,10 +1038,7 @@ export default function SoloGamePage() {
         omen: { remaining: [], drawn: [], discarded: [] },
       },
       roomDeck: {
-        ground: gameState.roomDecks.ground,
-        upper: gameState.roomDecks.upper,
-        basement: gameState.roomDecks.basement,
-        drawn: gameState.roomDecks.drawn,
+        drawn: gameState.drawn,
       },
       haunt: {
         isActive: hauntState.isActive,
@@ -1122,8 +1145,8 @@ export default function SoloGamePage() {
     updateReachablePositions(multiFloorMap[currentFloor], position, player!.stats.speed[0], false);
   };
 
-  // 從牌堆抽取房間（使用 drawRoomForExploration 確保棋盤不會封閉）
-  // Issue #151-fix: 接受 sourcePosition 參數，支持 AI 和人類玩家
+  // 從牌堆抽取房間（使用 ALL_ROOMS 和 floors 陣列過濾）
+  // Issue #179: 支援新的 65 房間多樓層系統
   const drawRoomFromDeck = (
     floor: Floor, 
     entryDirection: Direction, 
@@ -1134,66 +1157,97 @@ export default function SoloGamePage() {
     // 使用提供的位置或默認使用人類玩家位置
     const playerPos = sourcePosition || { x: position.x, y: position.y, floor: currentFloor };
     
-    // 構建符合 drawRoomForExploration 需要的 gameState 格式
-    const explorationGameState = {
-      map: {
-        ground: multiFloorMap.ground.map(row => row.map(tile => ({
-          ...tile,
-          floor: 'ground' as const,
-        }))),
-        upper: multiFloorMap.upper.map(row => row.map(tile => ({
-          ...tile,
-          floor: 'upper' as const,
-        }))),
-        basement: multiFloorMap.basement.map(row => row.map(tile => ({
-          ...tile,
-          floor: 'basement' as const,
-        }))),
-        placedRoomCount: gameState.placedRoomIds.size,
-      },
-      roomDeck: {
-        ground: gameState.roomDecks.ground,
-        upper: gameState.roomDecks.upper,
-        basement: gameState.roomDecks.basement,
-        drawn: gameState.roomDecks.drawn,
-      },
-      placedRoomIds: gameState.placedRoomIds,
-      players: [{
-        id: 'solo-player',
-        position: playerPos,
-      }],
-      turn: {
-        currentPlayerId: 'solo-player',
-        movesRemaining: moves,
-        hasDiscoveredRoom: discovered,
-        hasEnded: false,
-      },
-    };
+    // 從 @betrayal/shared 導入 ALL_ROOMS
+    const { ALL_ROOMS } = require('@betrayal/shared');
     
-    // 使用 drawRoomForExploration 確保棋盤不會封閉
-    const result = drawRoomForExploration(explorationGameState as any, floor, entryDirection, 10);
+    // 過濾可用房間：
+    // 1. 房間的 floors 陣列包含目標樓層
+    // 2. 房間未被抽取過
+    // 3. 排除 landing 類型房間（起始房間）
+    const availableRooms = ALL_ROOMS.filter((room: Room) => {
+      const roomFloors = room.floors || [room.floor];
+      return roomFloors.includes(floor) && 
+             !gameState.drawn.has(room.id) &&
+             room.roomType !== 'landing';
+    });
     
-    console.log('[RoomDiscovery] Result:', result);
+    console.log('[RoomDiscovery] Available rooms for', floor, ':', availableRooms.length);
     
-    if (!result.success || !result.room) {
-      console.log('[RoomDiscovery] Failed to draw room:', result.error);
+    if (availableRooms.length === 0) {
+      console.log('[RoomDiscovery] No available rooms for floor:', floor);
       return null;
     }
     
-    // 更新 gameState 中的 drawn 標記
-    if (result.attempts && result.attempts > 1) {
-      console.log('[RoomDiscovery] Room drawn after', result.attempts, 'attempts');
-    }
+    // 使用 SeededRng 進行隨機選擇
+    const rng = new SeededRng(gameState.seed + gameState.drawn.size);
+    const randomIndex = Math.floor(rng.next() * availableRooms.length);
+    const selectedRoom = availableRooms[randomIndex];
     
-    if (result.wasModified) {
-      console.log('[RoomDiscovery] Room was modified to prevent board closure');
-    }
+    // 計算旋轉角度以匹配進入方向
+    const rotation = calculateRotationForEntry(selectedRoom, entryDirection);
+    
+    console.log('[RoomDiscovery] Selected room:', selectedRoom.name, 'rotation:', rotation);
+    
+    // 標記房間為已抽取
+    setGameState(prev => {
+      const newDrawn = new Set(prev.drawn);
+      newDrawn.add(selectedRoom.id);
+      return { ...prev, drawn: newDrawn };
+    });
     
     return {
-      room: result.room,
-      rotation: result.rotation || 0,
-      wasModified: result.wasModified || false,
+      room: selectedRoom,
+      rotation,
+      wasModified: false,
     };
+  };
+  
+  // 輔助函數：計算房間旋轉角度以匹配進入方向
+  const calculateRotationForEntry = (room: Room, entryDirection: Direction): number => {
+    // 找到房間最適合的門來匹配進入方向
+    const doors = room.doors;
+    
+    // 進入方向的相反方向是房間需要開門的方向
+    const oppositeMap: Record<Direction, Direction> = {
+      north: 'south',
+      south: 'north',
+      east: 'west',
+      west: 'east',
+    };
+    const neededDoor = oppositeMap[entryDirection];
+    
+    // 如果房間已經有所需的門，不需要旋轉
+    if (doors.includes(neededDoor)) {
+      return 0;
+    }
+    
+    // 嘗試找到最佳旋轉角度
+    const rotationMap: Record<string, Record<string, number>> = {
+      north: { south: 0, west: 90, north: 180, east: 270 },
+      south: { north: 0, east: 90, south: 180, west: 270 },
+      east: { west: 0, north: 90, east: 180, south: 270 },
+      west: { east: 0, south: 90, west: 180, north: 270 },
+    };
+    
+    // 找到第一個可以旋轉到所需方向的門
+    for (const door of doors) {
+      const rotation = rotationMap[door][neededDoor];
+      if (rotation !== undefined) {
+        return rotation;
+      }
+    }
+    
+    return 0;
+  };
+
+  // 保留舊的 drawRoomFromDeck 函數作為向後兼容（實際使用上面的新實現）
+  const drawRoomFromDeckLegacy = (
+    floor: Floor, 
+    entryDirection: Direction, 
+    sourcePosition?: { x: number; y: number; floor: Floor }
+  ): { room: Room; rotation: number; wasModified: boolean } | null => {
+    console.log('[RoomDiscovery] Legacy draw called, delegating to new implementation');
+    return drawRoomFromDeck(floor, entryDirection, sourcePosition);
   };
 
   /**
@@ -1264,7 +1318,7 @@ export default function SoloGamePage() {
     
     // 更新已放置房間 ID 和已抽取集合
     setGameState(prev => {
-      const newDrawn = new Set(prev.roomDecks.drawn);
+      const newDrawn = new Set(prev.drawn);
       newDrawn.add(room.id);
       
       const newPlacedIds = new Set(prev.placedRoomIds);
@@ -1273,10 +1327,7 @@ export default function SoloGamePage() {
       return {
         ...prev,
         placedRoomIds: newPlacedIds,
-        roomDecks: {
-          ...prev.roomDecks,
-          drawn: newDrawn,
-        },
+        drawn: newDrawn,
       };
     });
 
