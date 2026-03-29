@@ -81,6 +81,17 @@
     <circle cx="55" cy="6" r="1.5" fill="#B8860B"/>
   </g>
   
+  <!-- Door East -->
+  <g filter="url(#softShadow)">
+    <rect x="88" y="36" width="16" height="28" fill="#1A0A00"/>
+    <rect x="90" y="38" width="12" height="24" fill="url(#doorWood)"/>
+    <line x1="90" y1="50" x2="102" y2="50" stroke="#2A1A0A" stroke-width="0.5"/>
+    <line x1="96" y1="38" x2="96" y2="62" stroke="#2A1A0A" stroke-width="0.5"/>
+    <rect x="90" y="38" width="12" height="24" fill="none" stroke="url(#goldTrim)" stroke-width="1.5"/>
+    <circle cx="96" cy="55" r="2.5" fill="url(#goldTrim)"/>
+    <circle cx="96" cy="55" r="1.5" fill="#B8860B"/>
+  </g>
+  
   <!-- Symbol O -->
   <g filter="url(#softShadow)">
     <circle cx="85" cy="15" r="8" fill="#8B4DA8" stroke="#6B2D88" stroke-width="1"/>

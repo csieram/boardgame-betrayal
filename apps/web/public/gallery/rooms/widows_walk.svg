@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="300" height="300">
+  <defs>
+    <!-- 天空背景 -->
+    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#87CEEB"/>
+      <stop offset="50%" style="stop-color:#B0E0E6"/>
+      <stop offset="100%" style="stop-color:#E0F6FF"/>
+    </linearGradient>
+    <linearGradient id="doorWood" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#5A3A1A"/>
+      <stop offset="50%" style="stop-color:#7B5B3B"/>
+      <stop offset="100%" style="stop-color:#4A2A0A"/>
+    </linearGradient>
+    <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+      <feOffset dx="2" dy="2"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.3"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- 天空背景 (屋頂房間特色) -->
+  <rect x="8" y="8" width="84" height="84" fill="url(#skyGrad)" stroke="#5A8FA8" stroke-width="2"/>
+  
+  <!-- 地板 (屋頂步道) -->
+  <rect x="10" y="55" width="80" height="30" fill="#7A6A5A" stroke="#5A4A3A" stroke-width="1"/>
+  <line x1="10" y1="62" x2="90" y2="62" stroke="#6A5A4A" stroke-width="1"/>
+  <line x1="10" y1="70" x2="90" y2="70" stroke="#6A5A4A" stroke-width="1"/>
+  <line x1="10" y1="78" x2="90" y2="78" stroke="#6A5A4A" stroke-width="1"/>
+  
+  <!-- 門: 南 -->
+  <g filter="url(#softShadow)">
+    <rect x="36" y="88" width="28" height="16" fill="#1A0A00"/>
+    <rect x="38" y="90" width="24" height="14" fill="url(#doorWood)"/>
+    <line x1="50" y1="90" x2="50" y2="104" stroke="#2A1A0A" stroke-width="0.5"/>
+    <circle cx="55" cy="94" r="2" fill="#8B7355"/>
+  </g>
+  
+  <!-- 門: 東 -->
+  <g filter="url(#softShadow)">
+    <rect x="88" y="36" width="16" height="28" fill="#1A0A00"/>
+    <rect x="90" y="38" width="12" height="24" fill="url(#doorWood)"/>
+    <line x1="90" y1="50" x2="102" y2="50" stroke="#2A1A0A" stroke-width="0.5"/>
+    <circle cx="96" cy="55" r="2" fill="#8B7355"/>
+  </g>
+  
+  <!-- 門: 西 -->
+  <g filter="url(#softShadow)">
+    <rect x="-4" y="36" width="16" height="28" fill="#1A0A00"/>
+    <rect x="-2" y="38" width="12" height="24" fill="url(#doorWood)"/>
+    <line x1="-2" y1="50" x2="10" y2="50" stroke="#2A1A0A" stroke-width="0.5"/>
+    <circle cx="4" cy="55" r="2" fill="#8B7355"/>
+  </g>
+  
+  <!-- 欄杆 -->
+  <line x1="15" y1="55" x2="15" y2="45" stroke="#5A4A3A" stroke-width="2"/>
+  <line x1="30" y1="55" x2="30" y2="45" stroke="#5A4A3A" stroke-width="2"/>
+  <line x1="45" y1="55" x2="45" y2="45" stroke="#5A4A3A" stroke-width="2"/>
+  <line x1="60" y1="55" x2="60" y2="45" stroke="#5A4A3A" stroke-width="2"/>
+  <line x1="75" y1="55" x2="75" y2="45" stroke="#5A4A3A" stroke-width="2"/>
+  <line x1="10" y1="45" x2="90" y2="45" stroke="#5A4A3A" stroke-width="3"/>
+  
+  <!-- 寡婦剪影 -->
+  <ellipse cx="50" cy="35" rx="6" ry="12" fill="#2A2A3A"/>
+  <circle cx="50" cy="22" r="4" fill="#2A2A3A"/>
+  <line x1="50" y1="30" x2="40" y2="40" stroke="#2A2A3A" stroke-width="2"/>
+  <line x1="50" y1="30" x2="60" y2="40" stroke="#2A2A3A" stroke-width="2"/>
+  
+  <!-- 事件符號 E -->
+  <circle cx="85" cy="15" r="6" fill="#4A9A4A"/>
+  <text x="85" y="18" text-anchor="middle" font-size="8" fill="#FFF" font-family="Arial">E</text>
+  
+  <!-- 太陽 (Outside 標記) -->
+  <circle cx="15" cy="15" r="8" fill="#FFD700" opacity="0.8"/>
+  <circle cx="15" cy="15" r="10" fill="#FFD700" opacity="0.3"/>
+  <line x1="15" y1="2" x2="15" y2="6" stroke="#FFD700" stroke-width="1"/>
+  <line x1="15" y1="24" x2="15" y2="28" stroke="#FFD700" stroke-width="1"/>
+  <line x1="2" y1="15" x2="6" y2="15" stroke="#FFD700" stroke-width="1"/>
+  <line x1="24" y1="15" x2="28" y2="15" stroke="#FFD700" stroke-width="1"/>
+</svg>
