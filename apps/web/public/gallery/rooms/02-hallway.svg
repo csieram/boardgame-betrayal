@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="300" height="300">
+  <!-- 地板 -->
+  <rect x="30" y="8" width="40" height="84" fill="#6A5A4A" stroke="#4A3728" stroke-width="2"/>
+  
+  <!-- 門: 北 -->
+  <rect x="40" y="-2" width="20" height="12" fill="#3D2B1A" stroke="#2A1A0A" stroke-width="2"/>
+  <rect x="42" y="0" width="16" height="10" fill="#7B5B3B" stroke="#A08060" stroke-width="2"/>
+  <rect x="44" y="2" width="12" height="6" fill="#5A4A3A" opacity="0.8"/>
+  
+  <!-- 門: 南 -->
+  <rect x="40" y="90" width="20" height="12" fill="#3D2B1A" stroke="#2A1A0A" stroke-width="2"/>
+  <rect x="42" y="90" width="16" height="10" fill="#7B5B3B" stroke="#A08060" stroke-width="2"/>
+  <rect x="44" y="92" width="12" height="6" fill="#5A4A3A" opacity="0.8"/>
+  
+  <!-- 地毯 -->
+  <rect x="35" y="15" width="30" height="70" fill="#8B0000" opacity="0.3"/>
+  
+  <!-- 掛畫 -->
+  <rect x="32" y="25" width="6" height="10" fill="#D4AF37" stroke="#8B7355"/>
+  <rect x="32" y="45" width="6" height="10" fill="#D4AF37" stroke="#8B7355"/>
+  <rect x="62" y="30" width="6" height="10" fill="#D4AF37" stroke="#8B7355"/>
+  <rect x="62" y="55" width="6" height="10" fill="#D4AF37" stroke="#8B7355"/>
+  
+  <!-- 壁燈 -->
+  <circle cx="35" cy="70" r="3" fill="#FFD700" opacity="0.5"/>
+  <circle cx="65" cy="70" r="3" fill="#FFD700" opacity="0.5"/>
+</svg>

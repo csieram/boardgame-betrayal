@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="400" height="400">
+  <defs>
+    <linearGradient id="floorGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#7B6B6B"/><stop offset="50%" style="stop-color:#4A3A3A"/><stop offset="100%" style="stop-color:#2A1A1A"/></linearGradient>
+    <pattern id="carpetPattern" x="0" y="0" width="12" height="12" patternUnits="userSpaceOnUse"><rect width="12" height="12" fill="url(#floorGrad)"/><circle cx="3" cy="3" r="1.5" fill="#5A4A4A" opacity="0.3"/><circle cx="9" cy="9" r="2" fill="#3A2A2A" opacity="0.4"/></pattern>
+    <linearGradient id="doorWood" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#5A3A1A"/><stop offset="50%" style="stop-color:#7B5B3B"/><stop offset="100%" style="stop-color:#4A2A0A"/></linearGradient>
+    <linearGradient id="goldTrim" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#FFD700"/><stop offset="50%" style="stop-color:#B8860B"/><stop offset="100%" style="stop-color:#D4AF37"/></linearGradient>
+    <linearGradient id="fabricGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#8B0000"/><stop offset="100%" style="stop-color:#4A0000"/></linearGradient>
+    <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/><feOffset in="blur" dx="2" dy="2" result="offsetBlur"/><feComponentTransfer><feFuncA type="linear" slope="0.4"/></feComponentTransfer><feMerge><feMergeNode in="offsetBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect x="8" y="8" width="84" height="84" fill="url(#carpetPattern)" stroke="#1A0A0A" stroke-width="2"/>
+  <rect x="10" y="10" width="80" height="80" fill="none" stroke="#3A2A2A" stroke-width="0.5" opacity="0.3"/>
+  <g filter="url(#softShadow)">
+    <rect x="36" y="-4" width="28" height="16" fill="#1A0A00"/>
+    <rect x="38" y="-2" width="24" height="14" fill="url(#doorWood)"/>
+    <line x1="50" y1="-2" x2="50" y2="12" stroke="#2A1A0A" stroke-width="0.5"/>
+    <line x1="38" y1="5" x2="62" y2="5" stroke="#2A1A0A" stroke-width="0.5"/>
+    <rect x="38" y="-2" width="24" height="14" fill="none" stroke="url(#goldTrim)" stroke-width="1.5"/>
+    <circle cx="55" cy="6" r="2" fill="url(#goldTrim)"/>
+    <circle cx="55" cy="6" r="1" fill="#B8860B"/>
+  </g>
+  <g filter="url(#softShadow)">
+    <rect x="-4" y="36" width="16" height="28" fill="#1A0A00"/>
+    <rect x="-2" y="38" width="12" height="24" fill="url(#doorWood)"/>
+    <line x1="-2" y1="50" x2="10" y2="50" stroke="#2A1A0A" stroke-width="0.5"/>
+    <line x1="4" y1="38" x2="4" y2="62" stroke="#2A1A0A" stroke-width="0.5"/>
+    <rect x="-2" y="38" width="12" height="24" fill="none" stroke="url(#goldTrim)" stroke-width="1.5"/>
+    <circle cx="4" cy="55" r="2" fill="url(#goldTrim)"/>
+    <circle cx="4" cy="55" r="1" fill="#B8860B"/>
+  </g>
+  <rect x="25" y="25" width="50" height="30" fill="#8B7355" stroke="#654321" filter="url(#softShadow)"/>
+  <circle cx="35" cy="40" r="3" fill="#C0C0C0" filter="url(#softShadow)"/>
+  <line x1="35" y1="40" x2="60" y2="40" stroke="#8B0000" stroke-width="2"/>
+  <rect x="30" y="60" width="40" height="20" fill="url(#fabricGrad)" opacity="0.6" filter="url(#softShadow)"/>
+  <circle cx="12" cy="12" r="2" fill="#3A2A2A" opacity="0.4"/>
+  <circle cx="88" cy="12" r="2" fill="#3A2A2A" opacity="0.4"/>
+  <circle cx="12" cy="88" r="2" fill="#3A2A2A" opacity="0.4"/>
+  <circle cx="88" cy="88" r="2" fill="#3A2A2A" opacity="0.4"/>
+</svg>

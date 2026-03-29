@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="400" height="400">
+  <defs>
+    <linearGradient id="floorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#5A5A5A"/>
+      <stop offset="100%" style="stop-color:#3A3A3A"/>
+    </linearGradient>
+    <linearGradient id="doorWood" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#4A2A0A"/>
+      <stop offset="50%" style="stop-color:#6B4B2B"/>
+      <stop offset="100%" style="stop-color:#3A1A00"/>
+    </linearGradient>
+    <linearGradient id="goldTrim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700"/>
+      <stop offset="50%" style="stop-color:#B8860B"/>
+      <stop offset="100%" style="stop-color:#FFD700"/>
+    </linearGradient>
+    <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="3" dy="3" result="offsetblur"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.5"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  
+  <rect x="8" y="8" width="84" height="84" fill="url(#floorGrad)" stroke="#1A0A00" stroke-width="2"/>
+  
+  <!-- Burned walls overlay -->
+  <rect x="15" y="25" width="70" height="55" fill="#2A1A1A" opacity="0.5" rx="2"/>
+  
+  <!-- Fire damage marks -->
+  <path d="M22,38 L30,22 L38,42" fill="none" stroke="#FF4500" stroke-width="4" opacity="0.5" stroke-linecap="round"/>
+  <path d="M55,45 L65,25 L75,48" fill="none" stroke="#FF6B35" stroke-width="4" opacity="0.45" stroke-linecap="round"/>
+  <path d="M35,70 L48,48 L58,72" fill="none" stroke="#FF4500" stroke-width="3" opacity="0.4"/>
+  <path d="M68,60 L78,45 L85,65" fill="none" stroke="#FF6B35" stroke-width="3" opacity="0.35"/>
+  
+  <!-- Burned furniture -->
+  <g filter="url(#softShadow)">
+    <rect x="22" y="50" width="28" height="20" fill="#1A0A0A" opacity="0.8" transform="rotate(5 36 60)" rx="1"/>
+    <line x1="26" y1="70" x2="24" y2="80" stroke="#0A0A0A" stroke-width="2"/>
+    <line x1="46" y1="70" x2="48" y2="78" stroke="#0A0A0A" stroke-width="2"/>
+  </g>
+  
+  <!-- Ash piles -->
+  <ellipse cx="40" cy="78" rx="15" ry="6" fill="#1A1A1A" opacity="0.7"/>
+  <ellipse cx="70" cy="75" rx="10" ry="5" fill="#1A1A1A" opacity="0.6"/>
+  <ellipse cx="55" cy="82" rx="8" ry="4" fill="#1A1A1A" opacity="0.5"/>
+  
+  <!-- Scorched marks -->
+  <path d="M12,28 Q25,35 18,48" fill="none" stroke="#0A0A0A" stroke-width="2" opacity="0.5"/>
+  <path d="M82,30 Q75,40 85,50" fill="none" stroke="#0A0A0A" stroke-width="2" opacity="0.4"/>
+  
+  <!-- Door North -->
+  <g filter="url(#softShadow)">
+    <rect x="36" y="-4" width="28" height="16" fill="#1A0A00"/>
+    <rect x="38" y="-2" width="24" height="14" fill="url(#doorWood)"/>
+    <line x1="50" y1="-2" x2="50" y2="12" stroke="#2A1A0A" stroke-width="0.5"/>
+    <line x1="38" y1="5" x2="62" y2="5" stroke="#2A1A0A" stroke-width="0.5"/>
+    <rect x="38" y="-2" width="24" height="14" fill="none" stroke="url(#goldTrim)" stroke-width="1.5"/>
+    <circle cx="55" cy="6" r="2.5" fill="url(#goldTrim)"/>
+    <circle cx="55" cy="6" r="1.5" fill="#B8860B"/>
+  </g>
+  
+  <!-- Symbol O -->
+  <g filter="url(#softShadow)">
+    <circle cx="85" cy="15" r="8" fill="#8B4DA8" stroke="#6B2D88" stroke-width="1"/>
+    <circle cx="85" cy="15" r="6" fill="#AB6DC8" opacity="0.5"/>
+    <text x="85" y="19" text-anchor="middle" font-size="11" fill="#FFF" font-weight="bold" font-family="serif">O</text>
+  </g>
+</svg>

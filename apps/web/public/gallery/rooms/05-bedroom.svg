@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="300" height="300">
+  <!-- 地板 -->
+  <rect x="8" y="8" width="84" height="84" fill="#7B5B5B" stroke="#4A2A2A" stroke-width="2"/>
+  
+  <!-- 門: 北 -->
+  <rect x="40" y="-2" width="20" height="12" fill="#3D2B1A" stroke="#2A1A0A" stroke-width="2"/>
+  <rect x="42" y="0" width="16" height="10" fill="#7B5B3B" stroke="#A08060" stroke-width="2"/>
+  <rect x="44" y="2" width="12" height="6" fill="#5A4A3A" opacity="0.8"/>
+  
+  <!-- 門: 南 -->
+  <rect x="40" y="90" width="20" height="12" fill="#3D2B1A" stroke="#2A1A0A" stroke-width="2"/>
+  <rect x="42" y="90" width="16" height="10" fill="#7B5B3B" stroke="#A08060" stroke-width="2"/>
+  <rect x="44" y="92" width="12" height="6" fill="#5A4A3A" opacity="0.8"/>
+  
+  <!-- 床 -->
+  <rect x="25" y="20" width="50" height="35" fill="#8B4513" stroke="#654321"/>
+  
+  <!-- 床頭板 -->
+  <rect x="25" y="15" width="50" height="8" fill="#654321" stroke="#4A3218"/>
+  
+  <!-- 枕頭 -->
+  <rect x="30" y="22" width="18" height="10" fill="#FFF8DC" stroke="#DDD"/>
+  <rect x="52" y="22" width="18" height="10" fill="#FFF8DC" stroke="#DDD"/>
+  
+  <!-- 被子 -->
+  <rect x="25" y="35" width="50" height="20" fill="#8B0000" opacity="0.6" stroke="#600000"/>
+  
+  <!-- 血跡 -->
+  <ellipse cx="45" cy="45" rx="5" ry="3" fill="#8B0000" opacity="0.5"/>
+  
+  <!-- 床頭櫃 -->
+  <rect x="10" y="30" width="12" height="15" fill="#654321" stroke="#4A3218"/>
+  <circle cx="16" cy="35" r="3" fill="#FFD700" opacity="0.4"/>
+  
+  <!-- 衣櫃 -->
+  <rect x="70" y="55" width="18" height="30" fill="#654321" stroke="#4A3218"/>
+  <rect x="72" y="58" width="6" height="24" fill="#4A3218"/>
+  <rect x="80" y="58" width="6" height="24" fill="#4A3218"/>
+</svg>
