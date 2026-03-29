@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="400" height="400">
+  <defs>
+    <linearGradient id="floorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3A3A3A"/>
+      <stop offset="100%" style="stop-color:#1A1A1A"/>
+    </linearGradient>
+    <linearGradient id="doorWood" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#4A2A0A"/>
+      <stop offset="50%" style="stop-color:#6B4B2B"/>
+      <stop offset="100%" style="stop-color:#3A1A00"/>
+    </linearGradient>
+    <linearGradient id="goldTrim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700"/>
+      <stop offset="50%" style="stop-color:#B8860B"/>
+      <stop offset="100%" style="stop-color:#FFD700"/>
+    </linearGradient>
+    <linearGradient id="chuteGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#2A2A2A"/>
+      <stop offset="100%" style="stop-color:#0A0A0A"/>
+    </linearGradient>
+    <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="3" dy="3" result="offsetblur"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.5"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Floor -->
+  <rect x="8" y="8" width="84" height="84" fill="url(#floorGrad)" stroke="#1A0A00" stroke-width="2"/>
+  
+  <!-- INTERIOR: Coal Chute - Slide going down to basement -->
+  <!-- The chute opening -->
+  <g filter="url(#softShadow)">
+    <ellipse cx="50" cy="55" rx="25" ry="20" fill="url(#chuteGrad)" stroke="#0A0A0A" stroke-width="2"/>
+    <ellipse cx="50" cy="52" rx="20" ry="15" fill="#1A1A1A" stroke="#2A2A2A" stroke-width="1"/>
+    
+    <!-- Coal pieces inside -->
+    <circle cx="45" cy="55" r="3" fill="#0A0A0A"/>
+    <circle cx="52" cy="58" r="2.5" fill="#0A0A0A"/>
+    <circle cx="55" cy="52" r="2" fill="#0A0A0A"/>
+    <circle cx="48" cy="60" r="2" fill="#0A0A0A"/>
+  </g>
+  
+  <!-- Chute slide indicator -->
+  <path d="M30,35 L50,55 L70,35" fill="none" stroke="#4A4A4A" stroke-width="3" stroke-dasharray="4,2"/>
+  
+  <!-- Down arrow -->
+  <g filter="url(#softShadow)">
+    <path d="M50,25 L45,32 L55,32 Z" fill="#4A9A4A"/>
+    <text x="50" y="42" text-anchor="middle" font-size="10" fill="#FFF" font-weight="bold">↓</text>
+  </g>
+  
+  <!-- Coal scattered around -->
+  <circle cx="25" cy="75" r="2" fill="#1A1A1A"/>
+  <circle cx="30" cy="78" r="1.5" fill="#0A0A0A"/>
+  <circle cx="75" cy="72" r="2" fill="#1A1A1A"/>
+  <circle cx="80" cy="76" r="1.5" fill="#0A0A0A"/>
+  <circle cx="70" cy="80" r="1" fill="#0A0A0A"/>
+  
+  <!-- Door North only -->
+  <g filter="url(#softShadow)">
+    <rect x="36" y="-4" width="28" height="16" fill="#1A0A00"/>
+    <rect x="38" y="-2" width="24" height="14" fill="url(#doorWood)"/>
+    <line x1="50" y1="-2" x2="50" y2="12" stroke="#2A1A0A" stroke-width="0.5"/>
+    <line x1="38" y1="5" x2="62" y2="5" stroke="#2A1A0A" stroke-width="0.5"/>
+    <rect x="38" y="-2" width="24" height="14" fill="none" stroke="url(#goldTrim)" stroke-width="1.5"/>
+    <circle cx="55" cy="6" r="2.5" fill="url(#goldTrim)"/>
+    <circle cx="55" cy="6" r="1.5" fill="#B8860B"/>
+  </g>
+</svg>
