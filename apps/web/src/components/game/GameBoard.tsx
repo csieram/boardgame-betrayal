@@ -23,6 +23,7 @@ const FLOOR_NAMES: Record<Floor, string> = {
   upper: '二樓',
   ground: '一樓',
   basement: '地下室',
+  roof: '屋頂',
 };
 
 interface GameBoardProps {
@@ -110,6 +111,7 @@ export function GameBoard({
     upper: '二樓 Upper',
     ground: '一樓 Ground',
     basement: '地下室 Basement',
+    roof: '屋頂 Roof',
   };
 
   // 樓層顏色
@@ -117,6 +119,7 @@ export function GameBoard({
     upper: '#8B7355',
     ground: '#7B6354',
     basement: '#4A4A4A',
+    roof: '#5A5A6A',
   };
 
   // 過濾出當前樓層的已探索房間

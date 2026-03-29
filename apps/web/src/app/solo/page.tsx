@@ -2107,6 +2107,10 @@ export default function SoloGamePage() {
                         ...tile,
                         floor: 'basement' as const,
                       }))),
+                      roof: multiFloorMap.roof.map(row => row.map(tile => ({
+                        ...tile,
+                        floor: 'roof' as const,
+                      }))),
                     },
                     turn: {
                       currentPlayerId: 'solo-player',

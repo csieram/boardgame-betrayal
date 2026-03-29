@@ -62,6 +62,7 @@ export function AIPlayerPanel({
     ground: '一樓',
     upper: '二樓',
     basement: '地下室',
+    roof: '屋頂',
   };
 
   return (

@@ -105,11 +105,12 @@ export interface Tile {
 /** 地圖層（每層樓一個 15x15 網格） */
 export type FloorMap = Tile[][];
 
-/** 完整遊戲地圖（三層樓） */
+/** 完整遊戲地圖（四層樓） */
 export interface GameMap {
   ground: FloorMap;
   upper: FloorMap;
   basement: FloorMap;
+  roof: FloorMap;
   /** 已放置房間數量 */
   placedRoomCount: number;
 }
@@ -230,6 +231,8 @@ export interface RoomDeckState {
   upper: Room[];
   /** 地下室牌堆 */
   basement: Room[];
+  /** 屋頂牌堆 */
+  roof: Room[];
   /** 已抽出的房間 ID */
   drawn: Set<string>;
 }

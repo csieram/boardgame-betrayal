@@ -54,6 +54,7 @@ import {
   GROUND_ROOMS,
   UPPER_ROOMS,
   BASEMENT_ROOMS,
+  ROOF_ROOMS,
   MULTI_FLOOR_ROOMS,
 } from '@betrayal/shared';
 
@@ -179,6 +180,7 @@ function initializeGameMap(): GameMap {
     ground: createEmptyFloorMap('ground'),
     upper: createEmptyFloorMap('upper'),
     basement: createEmptyFloorMap('basement'),
+    roof: createEmptyFloorMap('roof'),
     placedRoomCount: 0,
   };
 }
@@ -244,26 +246,31 @@ function initializeRoomDeck(rng: SeededRng): RoomDeckState {
   const groundRooms = GROUND_ROOMS.filter(r => !excludeIds.has(r.id));
   const upperRooms = UPPER_ROOMS.filter(r => !excludeIds.has(r.id));
   const basementRooms = BASEMENT_ROOMS.filter(r => !excludeIds.has(r.id));
+  const roofRooms = ROOF_ROOMS.filter(r => !excludeIds.has(r.id));
   
   // 加入跨樓層房間到對應牌堆
   const multiFloor = MULTI_FLOOR_ROOMS.filter(r => !excludeIds.has(r.id));
   const groundMultiFloor = multiFloor.filter(r => r.floor === 'ground');
   const upperMultiFloor = multiFloor.filter(r => r.floor === 'upper');
   const basementMultiFloor = multiFloor.filter(r => r.floor === 'basement');
+  const roofMultiFloor = multiFloor.filter(r => r.floor === 'roof');
   
   // 合併各樓層房間（包含單門和 2+ 門房間）
   const allGround = [...groundRooms, ...groundMultiFloor];
   const allUpper = [...upperRooms, ...upperMultiFloor];
   const allBasement = [...basementRooms, ...basementMultiFloor];
+  const allRoof = [...roofRooms, ...roofMultiFloor];
   
   console.log('[initializeRoomDeck] Ground:', allGround.length, '(including single-door rooms)');
   console.log('[initializeRoomDeck] Upper:', allUpper.length, '(including single-door rooms)');
   console.log('[initializeRoomDeck] Basement:', allBasement.length, '(including single-door rooms)');
+  console.log('[initializeRoomDeck] Roof:', allRoof.length, '(including single-door rooms)');
   
   return {
     ground: rng.shuffle(allGround),
     upper: rng.shuffle(allUpper),
     basement: rng.shuffle(allBasement),
+    roof: rng.shuffle(allRoof),
     drawn: new Set(),
   };
 }
