@@ -82,4 +82,10 @@
     <circle cx="96" cy="55" r="2.5" fill="url(#goldTrim)"/>
     <circle cx="96" cy="55" r="1.5" fill="#B8860B"/>
   </g>
+
+  <!-- Symbol E -->
+  <g filter="url(#softShadow)">
+    <circle cx="85" cy="15" r="8" fill="#4A9A4A" stroke="#3A7A3A" stroke-width="1"/>
+    <text x="85" y="19" text-anchor="middle" font-size="11" fill="#FFF" font-weight="bold">E</text>
+  </g>
 </svg>

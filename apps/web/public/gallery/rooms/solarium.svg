@@ -21,6 +21,12 @@
     <circle cx="55" cy="6" r="2" fill="url(#goldTrim)"/>
     <circle cx="55" cy="6" r="1" fill="#B8860B"/>
   </g>
+
+  <!-- Symbol I -->
+  <g filter="url(#softShadow)">
+    <circle cx="85" cy="15" r="8" fill="#3D7AB8" stroke="#2D5A98" stroke-width="1"/>
+    <text x="85" y="19" text-anchor="middle" font-size="11" fill="#FFF" font-weight="bold">I</text>
+  </g>
   
   <!-- Plants -->
   <circle cx="30" cy="60" r="15" fill="url(#plantGrad)" filter="url(#softShadow)"/>

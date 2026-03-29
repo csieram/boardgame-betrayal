@@ -48,4 +48,10 @@
     <line x1="78" y1="22" x2="86" y2="22" stroke="#3A2A1A" stroke-width="1"/>
     <text x="82" y="21" text-anchor="middle" font-size="6" fill="#FFD700" font-family="serif">D</text>
   </g>
+
+  <!-- Symbol I -->
+  <g filter="url(#softShadow)">
+    <circle cx="15" cy="15" r="8" fill="#3D7AB8" stroke="#2D5A98" stroke-width="1"/>
+    <text x="15" y="19" text-anchor="middle" font-size="11" fill="#FFF" font-weight="bold">I</text>
+  </g>
 </svg>
