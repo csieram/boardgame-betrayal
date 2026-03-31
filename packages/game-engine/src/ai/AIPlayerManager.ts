@@ -386,6 +386,11 @@ export class AIPlayerManager {
     // 執行回合
     const result = aiPlayer.executeTurn(gameState);
 
+    // Issue #199: Debug logging for statChanges serialization
+    console.log('[AI Manager] AI turn result:', result);
+    console.log('[AI Manager] eventCheckResult:', result.eventCheckResult);
+    console.log('[AI Manager] statChanges:', result.eventCheckResult?.statChanges);
+
     // Issue #150: 恢復原來的 currentPlayerId（可選，取決於後續邏輯需求）
     gameState.turn.currentPlayerId = originalPlayerId;
 

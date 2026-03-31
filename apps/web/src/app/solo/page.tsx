@@ -1787,11 +1787,15 @@ export default function SoloGamePage() {
 
             // Issue #196: 應用事件檢定效果到 AI 玩家屬性
             // Issue #197-fix: 添加詳細除錯日誌追蹤事件檢定結果
-            console.log('[AI Debug] Checking eventCheckResult:', {
+            // Issue #199: 添加更詳細的調試日誌
+            console.log('[Frontend] Received AI turn result:', result);
+            console.log('[Frontend] Checking eventCheckResult:', {
               hasEventCheckResult: !!result.eventCheckResult,
               eventCheckResult: result.eventCheckResult,
               hasStatChanges: !!result.eventCheckResult?.statChanges,
               statChanges: result.eventCheckResult?.statChanges,
+              statChangesKeys: result.eventCheckResult?.statChanges ? Object.keys(result.eventCheckResult.statChanges) : [],
+              statChangesType: typeof result.eventCheckResult?.statChanges,
             });
             
             if (result.eventCheckResult?.statChanges) {

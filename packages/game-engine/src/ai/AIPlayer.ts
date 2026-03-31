@@ -637,6 +637,11 @@ export class AIPlayer {
                   const effect = success ? (card.success || '') : (card.failure || '');
                   const statChanges = parseStatChanges(effect);
 
+                  // Issue #199: Debug logging for statChanges
+                  console.log('[AI Engine] parseStatChanges result:', statChanges);
+                  console.log('[AI Engine] statChanges keys:', Object.keys(statChanges));
+                  console.log('[AI Engine] effect string:', effect);
+
                   // Update player stats based on check result
                   if (statChanges && Object.keys(statChanges).length > 0) {
                     Object.entries(statChanges).forEach(([stat, change]) => {
@@ -655,8 +660,13 @@ export class AIPlayer {
                     dice,
                     success,
                     effect,
-                    statChanges,
+                    statChanges: statChanges ? { ...statChanges } : undefined,
                   };
+
+                  // Issue #199: Debug logging for eventCheckResult
+                  console.log('[AI Engine] eventCheckResult set:', result.eventCheckResult);
+                  console.log('[AI Engine] has statChanges:', !!result.eventCheckResult.statChanges);
+                  console.log('[AI Engine] statChanges content:', result.eventCheckResult.statChanges);
 
                   // Log the result
                   const statNameMap: Record<string, string> = {
