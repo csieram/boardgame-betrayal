@@ -73,6 +73,7 @@ interface SoloGameState {
     ground: Room[];
     upper: Room[];
     basement: Room[];
+    roof: Room[];
     drawn: Set<string>;
   };
   // 使用 ALL_ROOMS 和 drawn 集合來追蹤已抽取的房間
@@ -152,6 +153,7 @@ function createInitialGameState(seed: string): SoloGameState {
       ground: [],
       upper: [],
       basement: [],
+      roof: [],
       drawn: new Set(),
     },
     drawn: new Set(),
