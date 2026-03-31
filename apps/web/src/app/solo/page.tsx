@@ -309,10 +309,21 @@ export default function SoloGamePage() {
     showCard: boolean;
     cardResult: CardDrawResult | null;
     aiPlayerName: string;
+    // Issue #192: AI 事件卡檢定結果
+    eventCheckResult?: {
+      success: boolean;
+      roll: number;
+      dice: number[];
+      stat: 'speed' | 'might' | 'sanity' | 'knowledge';
+      target: number;
+      message: string;
+      effectDescription: string;
+    } | null;
   }>({
     showCard: false,
     cardResult: null,
     aiPlayerName: '',
+    eventCheckResult: null,
   });
 
   // Issue #119: Character Tabs 狀態
@@ -1217,12 +1228,15 @@ export default function SoloGamePage() {
 
   // 從牌堆抽取房間（使用 ALL_ROOMS 和 floors 陣列過濾）
   // Issue #179: 支援新的 65 房間多樓層系統
+  // Issue #191-fix: 同時檢查 drawn 和 placedRoomIds 以防止重複房間
   const drawRoomFromDeck = (
     floor: Floor, 
     entryDirection: Direction, 
     sourcePosition?: { x: number; y: number; floor: Floor }
   ): { room: Room; rotation: number; wasModified: boolean } | null => {
     console.log('[RoomDiscovery] Drawing room for exploration, floor:', floor, 'entryDirection:', entryDirection);
+    console.log('[Issue #191] Current placedRoomIds:', Array.from(gameState.placedRoomIds));
+    console.log('[Issue #191] Current drawn:', Array.from(gameState.drawn));
     
     // 使用提供的位置或默認使用人類玩家位置
     const playerPos = sourcePosition || { x: position.x, y: position.y, floor: currentFloor };
@@ -1232,13 +1246,24 @@ export default function SoloGamePage() {
     
     // 過濾可用房間：
     // 1. 房間的 floors 陣列包含目標樓層
-    // 2. 房間未被抽取過
-    // 3. 排除 landing 類型房間（起始房間）
+    // 2. 房間未被抽取過 (drawn)
+    // 3. 房間未被放置過 (placedRoomIds) - Issue #191-fix
+    // 4. 排除 landing 類型房間（起始房間）
     const availableRooms = ALL_ROOMS.filter((room: Room) => {
       const roomFloors = room.floors || [room.floor];
-      return roomFloors.includes(floor) && 
-             !gameState.drawn.has(room.id) &&
+      const isDrawn = gameState.drawn.has(room.id);
+      const isPlaced = gameState.placedRoomIds.has(room.id);
+      const isAvailable = roomFloors.includes(floor) && 
+             !isDrawn &&
+             !isPlaced &&
              room.roomType !== 'landing';
+      
+      // Issue #191-debug: 記錄過濾結果
+      if (!isAvailable && roomFloors.includes(floor) && room.roomType !== 'landing') {
+        console.log(`[Issue #191] Room ${room.id} (${room.name}) filtered out: drawn=${isDrawn}, placed=${isPlaced}`);
+      }
+      
+      return isAvailable;
     });
     
     console.log('[RoomDiscovery] Available rooms for', floor, ':', availableRooms.length);
@@ -1699,6 +1724,7 @@ export default function SoloGamePage() {
               });
               
               // Issue #184-fix: 同步更新 mockGameState.map，以便後續 AI 可以看到新房間
+              // Issue #191-fix: 同時更新 mockGameState.placedRoomIds，防止重複房間
               // 創建新的 tile 並更新 gameState.map
               const newTile = {
                 x: roomPosition.x,
@@ -1723,6 +1749,12 @@ export default function SoloGamePage() {
                 mockGameState.map.placedRoomCount++;
                 
                 console.log('[Fix #184] Updated mockGameState.map with new room:', placedRoom.name);
+              }
+              
+              // Issue #191-fix: 更新 mockGameState.placedRoomIds，確保後續 AI 不會抽到已放置的房間
+              if (!mockGameState.placedRoomIds.has(room.id)) {
+                mockGameState.placedRoomIds.add(room.id);
+                console.log('[Issue #191] Updated mockGameState.placedRoomIds with room:', room.id);
               }
               
               // 記錄房間發現
@@ -1763,6 +1795,7 @@ export default function SoloGamePage() {
       console.log('[AI Debug] executeAllAITurns completed, results count:', results.length);
 
       // Issue #189: 檢查 AI 是否有抽卡，如果有則顯示卡牌彈窗
+      // Issue #192: 同時處理事件卡檢定結果
       for (const result of results) {
         if (result.drawnCard) {
           const aiPlayer = aiPlayers.find(p => p.id === result.playerId);
@@ -1776,6 +1809,16 @@ export default function SoloGamePage() {
                 type: result.drawnCard.type,
               },
               aiPlayerName: aiPlayer.name,
+              // Issue #192: 如果有事件檢定結果，一併傳遞
+              eventCheckResult: result.eventCheckResult ? {
+                stat: result.eventCheckResult.stat as 'speed' | 'might' | 'sanity' | 'knowledge',
+                target: result.eventCheckResult.target,
+                roll: result.eventCheckResult.roll,
+                dice: result.eventCheckResult.dice,
+                success: result.eventCheckResult.success,
+                effectDescription: result.eventCheckResult.effect,
+                message: `${result.eventCheckResult.success ? '成功' : '失敗'}: ${result.eventCheckResult.effect}`,
+              } : null,
             });
             // 只顯示第一張抽到的卡
             break;
@@ -1824,6 +1867,7 @@ export default function SoloGamePage() {
       showCard: false,
       cardResult: null,
       aiPlayerName: '',
+      eventCheckResult: null,
     });
   };
 
@@ -2693,10 +2737,12 @@ export default function SoloGamePage() {
       />
 
       {/* Issue #189: AI 抽卡顯示 */}
+      {/* Issue #192: 傳遞事件檢定結果給 CardDisplay */}
       <CardDisplay
         card={aiCardDrawState.showCard ? aiCardDrawState.cardResult?.card || null : null}
         onClose={handleAICardDisplayClose}
         animate={true}
+        eventCheckResult={aiCardDrawState.eventCheckResult}
       />
 
       {/* Issue #118: AI 活動通知氣泡 */}

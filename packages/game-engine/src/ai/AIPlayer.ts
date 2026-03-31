@@ -165,6 +165,16 @@ export interface TurnExecutionResult {
     rotation: 0 | 90 | 180 | 270;
     floor: Floor;
   };
+  /** Issue #192: 事件卡檢定結果 */
+  eventCheckResult?: {
+    stat: string;
+    target: number;
+    roll: number;
+    dice: number[];
+    success: boolean;
+    effect: string;
+    statChanges?: Partial<Record<'speed' | 'might' | 'sanity' | 'knowledge', number>>;
+  };
 }
 
 // ==================== 個性權重配置 ====================
@@ -607,6 +617,55 @@ export class AIPlayer {
                     const hauntRoll = cardManager.performHauntRoll();
                     result.logs.push(`${this.state.playerName} 進行作祟檢定: 擲出 ${hauntRoll.roll} (閾值 ${hauntRoll.threshold}) - ${hauntRoll.triggered ? '作祟觸發！' : '作祟未觸發'}`);
                     this.log(`Haunt roll: ${hauntRoll.roll} vs ${hauntRoll.threshold}, triggered: ${hauntRoll.triggered}`);
+                  }
+                }
+
+                // Issue #192: Handle event card stat check
+                if (cardType === 'event' && drawResult.card.rollRequired) {
+                  this.log(`Event card requires stat check: ${drawResult.card.rollRequired.stat} ${drawResult.card.rollRequired.target}+`);
+                  
+                  // Perform the stat check
+                  const checkResult = effectApplier.performEventCheck(
+                    drawResult.card,
+                    playerState
+                  );
+                  
+                  // Update player stats based on check result
+                  if (checkResult.statChanges) {
+                    Object.entries(checkResult.statChanges).forEach(([stat, change]) => {
+                      const statKey = stat as keyof typeof currentPlayer.currentStats;
+                      const newValue = Math.max(0, currentPlayer.currentStats[statKey] + change);
+                      currentPlayer.currentStats[statKey] = newValue;
+                      this.log(`Stat change: ${stat} ${change > 0 ? '+' : ''}${change} (now ${newValue})`);
+                    });
+                  }
+                  
+                  // Record the check result
+                  result.eventCheckResult = {
+                    stat: checkResult.stat,
+                    target: checkResult.target,
+                    roll: checkResult.roll,
+                    dice: checkResult.dice,
+                    success: checkResult.success,
+                    effect: checkResult.effectDescription,
+                    statChanges: checkResult.statChanges,
+                  };
+                  
+                  // Log the result
+                  const statNameMap: Record<string, string> = {
+                    speed: '速度',
+                    might: '力量',
+                    sanity: '理智',
+                    knowledge: '知識',
+                  };
+                  result.logs.push(`檢定: ${statNameMap[checkResult.stat] || checkResult.stat} ${checkResult.target}+ → 擲出 ${checkResult.roll} (${checkResult.success ? '成功' : '失敗'}!)`);
+                  result.logs.push(`效果: ${checkResult.effectDescription}`);
+                  
+                  // Update experience tracking
+                  if (checkResult.success) {
+                    this.state.experience.successfulChecks++;
+                  } else {
+                    this.state.experience.failedChecks++;
                   }
                 }
 

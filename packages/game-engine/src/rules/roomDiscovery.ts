@@ -927,6 +927,11 @@ export function drawRoomForExploration(
       
       console.log(`[RoomDiscovery] Success! Found valid rotation ${rotation} for room: ${room.name}`);
       
+      // Issue #191-fix: 標記房間為已放置，防止重複
+      // 直接修改傳入的 gameState.placedRoomIds，確保更新被保留
+      gameState.placedRoomIds.add(room.id);
+      console.log(`[Issue #191] Added room ${room.id} to placedRoomIds in drawRoomForExploration`);
+      
       return {
         success: true,
         room,
@@ -992,6 +997,11 @@ export function drawRoomForExploration(
   }
   
   const cardDrawRequired = RoomDiscoveryManager.getCardDrawRequirement(modifiedRoom);
+  
+  // Issue #191-fix: 標記房間為已放置，防止重複
+  // 直接修改傳入的 gameState.placedRoomIds，確保更新被保留
+  gameState.placedRoomIds.add(modifiedRoom.id);
+  console.log(`[Issue #191] Added modified room ${modifiedRoom.id} to placedRoomIds in drawRoomForExploration`);
   
   console.log('[drawRoomForExploration] wasModified: true');
   console.log('[drawRoomForExploration] Final doors:', modifiedRoom.doors);
