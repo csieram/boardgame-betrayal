@@ -11,7 +11,6 @@ import { HauntRollModal } from '@/components/game/HauntRollModal';
 import { HauntRevealScreen } from '@/components/game/HauntRevealScreen';
 import { EventCheckModal, EventCheckResult } from '@/components/game/EventCheckModal';
 
-import { AIActionModal, AIActionNotification } from '@/components/game/AIActionModal';
 import { AIActivityLog, AIActivityNotification, AIActivityIndicator } from '@/components/game/AIActivityLog';
 import { CharacterTabs, PlayerInfo } from '@/components/game/CharacterTabs';
 import { CharacterDetailPanel } from '@/components/game/CharacterDetailPanel';
@@ -294,13 +293,15 @@ export default function SoloGamePage() {
     seed: string;
   } | null>(null);
 
-  // AI Action Modal 狀態 (Issue #111)
-  const [aiActionModalState, setAiActionModalState] = useState<{
-    isOpen: boolean;
-    currentAIPlayerName: string;
+  // AI 抽卡顯示狀態 (Issue #189)
+  const [aiCardDrawState, setAiCardDrawState] = useState<{
+    showCard: boolean;
+    cardResult: CardDrawResult | null;
+    aiPlayerName: string;
   }>({
-    isOpen: false,
-    currentAIPlayerName: '',
+    showCard: false,
+    cardResult: null,
+    aiPlayerName: '',
   });
 
   // Issue #119: Character Tabs 狀態
@@ -1605,12 +1606,6 @@ export default function SoloGamePage() {
     if (aiManager && aiPlayers.length > 0) {
       setIsProcessingAITurn(true);
 
-      // 顯示 AI Action Modal
-      setAiActionModalState({
-        isOpen: true,
-        currentAIPlayerName: aiPlayers[0]?.name || 'AI',
-      });
-
       setLog(prev => [...prev, '🤖 AI 玩家回合開始...']);
 
       // Issue #150: 創建遊戲狀態供 AI 使用
@@ -1635,10 +1630,6 @@ export default function SoloGamePage() {
           if (aiPlayer) {
             setCurrentTurnPlayer(aiPlayer.id);
             setSelectedPlayerId(aiPlayer.id);
-            setAiActionModalState(prev => ({
-              ...prev,
-              currentAIPlayerName: aiName,
-            }));
 
             // 添加回合開始日誌
             const turnStartLog: AIActionLog = {
@@ -1759,6 +1750,28 @@ export default function SoloGamePage() {
 
       // Issue #148: 添加調試日誌
       console.log('[AI Debug] executeAllAITurns completed, results count:', results.length);
+
+      // Issue #189: 檢查 AI 是否有抽卡，如果有則顯示卡牌彈窗
+      for (const result of results) {
+        if (result.drawnCard) {
+          const aiPlayer = aiPlayers.find(p => p.id === result.playerId);
+          if (aiPlayer) {
+            setAiCardDrawState({
+              showCard: true,
+              cardResult: {
+                success: true,
+                card: result.drawnCard,
+                message: `${aiPlayer.name} 抽到 ${result.drawnCard.type === 'event' ? '事件' : result.drawnCard.type === 'item' ? '物品' : '預兆'}卡`,
+                type: result.drawnCard.type,
+              },
+              aiPlayerName: aiPlayer.name,
+            });
+            // 只顯示第一張抽到的卡
+            break;
+          }
+        }
+      }
+
       console.log('[AI Debug] All results:', results);
 
       setCurrentTurnPlayer('solo-player');
@@ -1794,12 +1807,13 @@ export default function SoloGamePage() {
     }
   };
 
-  // Issue #111: 處理 AI Action Modal 關閉並繼續遊戲
-  const handleAIActionModalContinue = () => {
-    setAiActionModalState({ isOpen: false, currentAIPlayerName: '' });
-    
-    // Issue #127: 進入下一回合（AI 回合已經在 handleEndTurn 中執行過）
-    // 這裡只需要關閉 Modal，因為 handleEndTurn 已經處理了回合切換
+  // Issue #189: 處理 AI 卡牌顯示關閉
+  const handleAICardDisplayClose = () => {
+    setAiCardDrawState({
+      showCard: false,
+      cardResult: null,
+      aiPlayerName: '',
+    });
   };
 
   // 樓梯連接配置 - 定義每個樓梯房間對應的目標房間
@@ -2592,19 +2606,11 @@ export default function SoloGamePage() {
         onRoll={handleEventCheckRoll}
       />
 
-      {/* AI 行動日誌模態框 (Issue #111) */}
-      <AIActionModal
-        isOpen={aiActionModalState.isOpen}
-        actionLogs={aiActionLogs}
-        currentAIPlayerName={aiActionModalState.currentAIPlayerName}
-        onClose={handleAIActionModalContinue}
-        onContinue={handleAIActionModalContinue}
-      />
-
-      {/* AI 行動通知氣泡 (Issue #111) */}
-      <AIActionNotification
-        latestLog={aiActionLogs.length > 0 && aiActionLogs[aiActionLogs.length - 1] != null ? aiActionLogs[aiActionLogs.length - 1] : null}
-        autoHideDelay={3000}
+      {/* Issue #189: AI 抽卡顯示 */}
+      <CardDisplay
+        card={aiCardDrawState.showCard ? aiCardDrawState.cardResult?.card || null : null}
+        onClose={handleAICardDisplayClose}
+        animate={true}
       />
 
       {/* Issue #118: AI 活動通知氣泡 */}

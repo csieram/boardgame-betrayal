@@ -150,61 +150,7 @@ export function CharacterDetailPanel({
         </div>
       </div>
 
-      {/* 背包 */}
-      <div>
-        <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-          <span>🎒</span>
-          <span>背包</span>
-          <span className="text-xs text-gray-500 ml-auto">
-            {player.items.length + player.omens.length} 個物品
-          </span>
-        </h4>
-
-        {/* 物品列表 */}
-        {player.items.length > 0 && (
-          <div className="mb-2">
-            <p className="text-xs text-gray-500 mb-1">物品</p>
-            <div className="flex flex-wrap gap-1">
-              {player.items.map((item, index) => (
-                <motion.span
-                  key={item.id}
-                  className="px-2 py-1 bg-blue-900/50 border border-blue-500/30 rounded text-xs text-blue-200"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  {item.name}
-                </motion.span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 預兆列表 */}
-        {player.omens.length > 0 && (
-          <div>
-            <p className="text-xs text-gray-500 mb-1">預兆</p>
-            <div className="flex flex-wrap gap-1">
-              {player.omens.map((omen, index) => (
-                <motion.span
-                  key={omen.id}
-                  className="px-2 py-1 bg-purple-900/50 border border-purple-500/30 rounded text-xs text-purple-200"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  {omen.name}
-                </motion.span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 空背包提示 */}
-        {player.items.length === 0 && player.omens.length === 0 && (
-          <p className="text-sm text-gray-500 italic">背包是空的</p>
-        )}
-      </div>
+      {/* Issue #189: 移除重複的背包資訊，由 InventoryPanel 統一顯示 */}
 
       {/* AI 個性資訊（僅 AI 玩家） */}
       {!isHuman && player.personality && (
