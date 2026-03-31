@@ -620,37 +620,44 @@ export class AIPlayer {
                   }
                 }
 
-                // Issue #192: Handle event card stat check
+                // Issue #194: Handle event card stat check with AI event check logic
                 if (cardType === 'event' && drawResult.card.rollRequired) {
-                  this.log(`Event card requires stat check: ${drawResult.card.rollRequired.stat} ${drawResult.card.rollRequired.target}+`);
-                  
-                  // Perform the stat check
-                  const checkResult = effectApplier.performEventCheck(
-                    drawResult.card,
-                    playerState
-                  );
-                  
+                  const eventCheck = drawResult.card.rollRequired;
+                  this.log(`Event card requires stat check: ${eventCheck.stat} ${eventCheck.target}+`);
+
+                  // Issue #194: Implement AI event check logic
+                  const card = drawResult.card;
+                  const statValue = currentPlayer.currentStats[eventCheck.stat];
+                  const dice = rollDice(2); // Roll 2 dice
+                  const roll = dice.reduce((a, b) => a + b, 0);
+                  const total = roll + statValue;
+                  const success = total >= eventCheck.target;
+
+                  // Determine effect based on success/failure
+                  const effect = success ? (card.success || '') : (card.failure || '');
+                  const statChanges = parseStatChanges(effect);
+
                   // Update player stats based on check result
-                  if (checkResult.statChanges) {
-                    Object.entries(checkResult.statChanges).forEach(([stat, change]) => {
+                  if (statChanges && Object.keys(statChanges).length > 0) {
+                    Object.entries(statChanges).forEach(([stat, change]) => {
                       const statKey = stat as keyof typeof currentPlayer.currentStats;
                       const newValue = Math.max(0, currentPlayer.currentStats[statKey] + change);
                       currentPlayer.currentStats[statKey] = newValue;
                       this.log(`Stat change: ${stat} ${change > 0 ? '+' : ''}${change} (now ${newValue})`);
                     });
                   }
-                  
+
                   // Record the check result
                   result.eventCheckResult = {
-                    stat: checkResult.stat,
-                    target: checkResult.target,
-                    roll: checkResult.roll,
-                    dice: checkResult.dice,
-                    success: checkResult.success,
-                    effect: checkResult.effectDescription,
-                    statChanges: checkResult.statChanges,
+                    stat: eventCheck.stat,
+                    target: eventCheck.target,
+                    roll: total,
+                    dice,
+                    success,
+                    effect,
+                    statChanges,
                   };
-                  
+
                   // Log the result
                   const statNameMap: Record<string, string> = {
                     speed: '速度',
@@ -658,11 +665,11 @@ export class AIPlayer {
                     sanity: '理智',
                     knowledge: '知識',
                   };
-                  result.logs.push(`檢定: ${statNameMap[checkResult.stat] || checkResult.stat} ${checkResult.target}+ → 擲出 ${checkResult.roll} (${checkResult.success ? '成功' : '失敗'}!)`);
-                  result.logs.push(`效果: ${checkResult.effectDescription}`);
-                  
+                  result.logs.push(`檢定: ${statNameMap[eventCheck.stat] || eventCheck.stat} ${eventCheck.target}+ → 擲出 ${total} (${dice.join('+')}) + ${statValue}屬性 (${success ? '成功' : '失敗'}!)`);
+                  result.logs.push(`效果: ${effect}`);
+
                   // Update experience tracking
-                  if (checkResult.success) {
+                  if (success) {
                     this.state.experience.successfulChecks++;
                   } else {
                     this.state.experience.failedChecks++;
@@ -1395,6 +1402,94 @@ export class AIPlayer {
 }
 
 // ==================== 輔助函數 ====================
+
+/**
+ * 擲骰子
+ * @param count 骰子數量
+ * @returns 每個骰子的結果陣列（Betrayal 骰子：0, 0, 1, 1, 2, 2）
+ */
+function rollDice(count: number): number[] {
+  const DICE_FACES = [0, 0, 1, 1, 2, 2];
+  const results: number[] = [];
+  for (let i = 0; i < count; i++) {
+    const roll = DICE_FACES[Math.floor(Math.random() * 6)];
+    results.push(roll);
+  }
+  return results;
+}
+
+/**
+ * 解析效果描述中的屬性變化
+ * 例如："+1 Knowledge" → { knowledge: 1 }
+ *       "失去 1 點體力" → { might: -1 }
+ * @param effect 效果描述字串
+ * @returns 屬性變化物件
+ */
+function parseStatChanges(effect: string): { [stat: string]: number } {
+  if (!effect) return {};
+
+  const changes: { [stat: string]: number } = {};
+  const lowerEffect = effect.toLowerCase();
+
+  // 解析體力/力量變化 (might)
+  const mightLossMatch = lowerEffect.match(/失去\s*(\d+)\s*點體力/);
+  const mightGainMatch = lowerEffect.match(/獲得\s*(\d+)\s*點體力/);
+  if (mightLossMatch) {
+    changes.might = -parseInt(mightLossMatch[1]);
+  } else if (mightGainMatch) {
+    changes.might = parseInt(mightGainMatch[1]);
+  }
+
+  // 解析速度變化 (speed)
+  const speedLossMatch = lowerEffect.match(/失去\s*(\d+)\s*點速度/);
+  const speedGainMatch = lowerEffect.match(/獲得\s*(\d+)\s*點速度/);
+  if (speedLossMatch) {
+    changes.speed = -parseInt(speedLossMatch[1]);
+  } else if (speedGainMatch) {
+    changes.speed = parseInt(speedGainMatch[1]);
+  }
+
+  // 解析理智變化 (sanity)
+  const sanityLossMatch = lowerEffect.match(/失去\s*(\d+)\s*點理智/);
+  const sanityGainMatch = lowerEffect.match(/獲得\s*(\d+)\s*點理智/);
+  if (sanityLossMatch) {
+    changes.sanity = -parseInt(sanityLossMatch[1]);
+  } else if (sanityGainMatch) {
+    changes.sanity = parseInt(sanityGainMatch[1]);
+  }
+
+  // 解析知識變化 (knowledge)
+  const knowledgeLossMatch = lowerEffect.match(/失去\s*(\d+)\s*點知識/);
+  const knowledgeGainMatch = lowerEffect.match(/獲得\s*(\d+)\s*點知識/);
+  if (knowledgeLossMatch) {
+    changes.knowledge = -parseInt(knowledgeLossMatch[1]);
+  } else if (knowledgeGainMatch) {
+    changes.knowledge = parseInt(knowledgeGainMatch[1]);
+  }
+
+  // 支援英文格式: "+1 Knowledge", "-1 Might"
+  const mightMatch = lowerEffect.match(/([+-])(\d+)\s*(might|力量|體力)/);
+  if (mightMatch && changes.might === undefined) {
+    changes.might = mightMatch[1] === '+' ? parseInt(mightMatch[2]) : -parseInt(mightMatch[2]);
+  }
+
+  const speedMatch = lowerEffect.match(/([+-])(\d+)\s*(speed|速度)/);
+  if (speedMatch && changes.speed === undefined) {
+    changes.speed = speedMatch[1] === '+' ? parseInt(speedMatch[2]) : -parseInt(speedMatch[2]);
+  }
+
+  const sanityMatch = lowerEffect.match(/([+-])(\d+)\s*(sanity|理智)/);
+  if (sanityMatch && changes.sanity === undefined) {
+    changes.sanity = sanityMatch[1] === '+' ? parseInt(sanityMatch[2]) : -parseInt(sanityMatch[2]);
+  }
+
+  const knowledgeMatch = lowerEffect.match(/([+-])(\d+)\s*(knowledge|知識)/);
+  if (knowledgeMatch && changes.knowledge === undefined) {
+    changes.knowledge = knowledgeMatch[1] === '+' ? parseInt(knowledgeMatch[2]) : -parseInt(knowledgeMatch[2]);
+  }
+
+  return changes;
+}
 
 /**
  * 建立 AI 玩家實例
