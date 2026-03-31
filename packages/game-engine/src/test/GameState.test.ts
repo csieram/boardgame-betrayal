@@ -154,15 +154,15 @@ describe('GameStateManager', () => {
     expect(entranceTile.room).not.toBeNull();
     expect(entranceTile.room?.id).toBe('entrance_hall');
 
-    // 檢查上層樓梯
+    // 檢查上層大廳
     const upperTile = state.map.upper[MAP_CENTER][MAP_CENTER];
     expect(upperTile.discovered).toBe(true);
-    expect(upperTile.room?.id).toBe('stairs_from_upper');
+    expect(upperTile.room?.id).toBe('upper_landing');
 
-    // 檢查地下室樓梯
+    // 檢查地下室大廳
     const basementTile = state.map.basement[MAP_CENTER][MAP_CENTER];
     expect(basementTile.discovered).toBe(true);
-    expect(basementTile.room?.id).toBe('stairs_from_basement');
+    expect(basementTile.room?.id).toBe('basement_landing');
   });
 
   test('should initialize players at starting position', () => {

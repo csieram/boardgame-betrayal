@@ -51,11 +51,7 @@ import {
 import {
   Room,
   OFFICIAL_ROOMS,
-  GROUND_ROOMS,
-  UPPER_ROOMS,
-  BASEMENT_ROOMS,
-  ROOF_ROOMS,
-  MULTI_FLOOR_ROOMS,
+  ALL_ROOMS,
 } from '@betrayal/shared';
 
 import { EVENT_CARDS, ITEM_CARDS, OMEN_CARDS } from '@betrayal/shared';
@@ -204,24 +200,24 @@ function placeStartingRooms(map: GameMap, rooms: Room[]): GameMap {
     };
   }
 
-  // 上層樓梯
-  const upperStairs = roomMap.get('stairs_from_upper');
-  if (upperStairs) {
+  // 上層大廳
+  const upperLanding = roomMap.get('upper_landing');
+  if (upperLanding) {
     newMap.upper[MAP_CENTER][MAP_CENTER] = {
       ...newMap.upper[MAP_CENTER][MAP_CENTER],
-      room: upperStairs,
+      room: upperLanding,
       discovered: true,
       rotation: 0,
       placementOrder: 0,
     };
   }
 
-  // 地下室樓梯
-  const basementStairs = roomMap.get('stairs_from_basement');
-  if (basementStairs) {
+  // 地下室大廳
+  const basementLanding = roomMap.get('basement_landing');
+  if (basementLanding) {
     newMap.basement[MAP_CENTER][MAP_CENTER] = {
       ...newMap.basement[MAP_CENTER][MAP_CENTER],
-      room: basementStairs,
+      room: basementLanding,
       discovered: true,
       rotation: 0,
       placementOrder: 0,
@@ -237,40 +233,30 @@ function placeStartingRooms(map: GameMap, rooms: Room[]): GameMap {
 /**
  * 初始化房間牌堆
  * Issue #72: 所有房間都在主牌堆，單門房間也包含在內
+ * Issue #182: 使用新的 floors 陣列系統
  */
 function initializeRoomDeck(rng: SeededRng): RoomDeckState {
   // 過濾掉起始房間
-  const excludeIds = new Set(['entrance_hall', 'stairs_from_upper', 'stairs_from_basement']);
+  const excludeIds = new Set(['entrance_hall', 'upper_landing', 'basement_landing']);
   
-  // 取得各樓層房間（排除起始房間）
-  const groundRooms = GROUND_ROOMS.filter(r => !excludeIds.has(r.id));
-  const upperRooms = UPPER_ROOMS.filter(r => !excludeIds.has(r.id));
-  const basementRooms = BASEMENT_ROOMS.filter(r => !excludeIds.has(r.id));
-  const roofRooms = ROOF_ROOMS.filter(r => !excludeIds.has(r.id));
+  // 從 ALL_ROOMS 過濾出非起始房間，然後按樓層分類
+  const allRooms = ALL_ROOMS.filter(r => !excludeIds.has(r.id));
   
-  // 加入跨樓層房間到對應牌堆
-  const multiFloor = MULTI_FLOOR_ROOMS.filter(r => !excludeIds.has(r.id));
-  const groundMultiFloor = multiFloor.filter(r => r.floor === 'ground');
-  const upperMultiFloor = multiFloor.filter(r => r.floor === 'upper');
-  const basementMultiFloor = multiFloor.filter(r => r.floor === 'basement');
-  const roofMultiFloor = multiFloor.filter(r => r.floor === 'roof');
+  const groundRooms = allRooms.filter(r => r.floors?.includes('ground'));
+  const upperRooms = allRooms.filter(r => r.floors?.includes('upper'));
+  const basementRooms = allRooms.filter(r => r.floors?.includes('basement'));
+  const roofRooms = allRooms.filter(r => r.floors?.includes('roof'));
   
-  // 合併各樓層房間（包含單門和 2+ 門房間）
-  const allGround = [...groundRooms, ...groundMultiFloor];
-  const allUpper = [...upperRooms, ...upperMultiFloor];
-  const allBasement = [...basementRooms, ...basementMultiFloor];
-  const allRoof = [...roofRooms, ...roofMultiFloor];
-  
-  console.log('[initializeRoomDeck] Ground:', allGround.length, '(including single-door rooms)');
-  console.log('[initializeRoomDeck] Upper:', allUpper.length, '(including single-door rooms)');
-  console.log('[initializeRoomDeck] Basement:', allBasement.length, '(including single-door rooms)');
-  console.log('[initializeRoomDeck] Roof:', allRoof.length, '(including single-door rooms)');
+  console.log('[initializeRoomDeck] Ground:', groundRooms.length, '(including single-door rooms)');
+  console.log('[initializeRoomDeck] Upper:', upperRooms.length, '(including single-door rooms)');
+  console.log('[initializeRoomDeck] Basement:', basementRooms.length, '(including single-door rooms)');
+  console.log('[initializeRoomDeck] Roof:', roofRooms.length, '(including single-door rooms)');
   
   return {
-    ground: rng.shuffle(allGround),
-    upper: rng.shuffle(allUpper),
-    basement: rng.shuffle(allBasement),
-    roof: rng.shuffle(allRoof),
+    ground: rng.shuffle(groundRooms),
+    upper: rng.shuffle(upperRooms),
+    basement: rng.shuffle(basementRooms),
+    roof: rng.shuffle(roofRooms),
     drawn: new Set(),
   };
 }
@@ -495,8 +481,8 @@ export class GameStateManager {
     // 初始化已放置房間 ID 集合（包含起始房間）
     const placedRoomIds = new Set<string>([
       'entrance_hall',
-      'stairs_from_upper',
-      'stairs_from_basement'
+      'upper_landing',
+      'basement_landing'
     ]);
 
     const state: GameState = {

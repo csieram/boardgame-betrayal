@@ -128,6 +128,10 @@ const createMockRoomDeck = (): RoomDeckState => ({
     createMockRoom('basement-1', ['north', 'south'], 'basement', 'O'),
     createMockRoom('basement-2', ['north', 'east'], 'basement', null),
   ],
+  roof: [
+    createMockRoom('roof-1', ['north', 'south'], 'roof', 'E'),
+    createMockRoom('roof-2', ['north', 'east'], 'roof', null),
+  ],
   drawn: new Set(),
 });
 
@@ -241,6 +245,7 @@ describe('RoomDiscoveryManager', () => {
           ground: [deckRoom],
           upper: [],
           basement: [],
+          roof: [],
           drawn: new Set(),
         },
       });
