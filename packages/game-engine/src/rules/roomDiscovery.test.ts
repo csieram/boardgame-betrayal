@@ -111,6 +111,7 @@ const createMockMap = (): GameMap => {
     ground: createFloor('ground'),
     upper: createFloor('upper'),
     basement: createFloor('basement'),
+    roof: createFloor('roof'),
     placedRoomCount: 0,
   };
 };
@@ -388,6 +389,7 @@ describe('RoomDiscoveryManager', () => {
           ground: [],
           upper: [],
           basement: [],
+          roof: [],
           drawn: new Set(),
         },
       });
