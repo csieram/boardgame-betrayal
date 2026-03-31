@@ -404,6 +404,12 @@ export default function SoloGamePage() {
         console.log('Basement rooms available:', basementRooms.length);
         console.log('Roof rooms available:', roofRooms.length);
 
+        // Issue #185-fix: Initialize roomDecks with shuffled rooms
+        newGameState.roomDecks.ground = rng.shuffle(groundRooms);
+        newGameState.roomDecks.upper = rng.shuffle(upperRooms);
+        newGameState.roomDecks.basement = rng.shuffle(basementRooms);
+        newGameState.roomDecks.roof = rng.shuffle(roofRooms);
+
         setGameState(newGameState);
 
         // 放置起始房間
@@ -806,6 +812,7 @@ export default function SoloGamePage() {
         ground: multiFloorMap.ground,
         upper: multiFloorMap.upper,
         basement: multiFloorMap.basement,
+        roof: multiFloorMap.roof,
         placedRoomCount: gameState.placedRoomIds.size,
       },
       players: [
