@@ -27,6 +27,14 @@ export function CharacterDetailPanel({
   player,
   animate = true,
 }: CharacterDetailPanelProps) {
+  // Issue #198-debug: 添加調試日誌追蹤重新渲染
+  console.log('[CharacterDetailPanel] Rendering:', {
+    playerId: player?.id,
+    playerName: player?.name,
+    stats: player?.stats,
+    timestamp: Date.now(),
+  });
+  
   if (!player) {
     return (
       <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700 text-center text-gray-400">

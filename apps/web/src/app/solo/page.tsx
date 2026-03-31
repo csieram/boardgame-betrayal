@@ -2261,7 +2261,11 @@ export default function SoloGamePage() {
 
   // Issue #119: 構建所有玩家列表（人類 + AI）
   // Issue #197: 添加除錯日誌追蹤 AI 玩家屬性
+  // Issue #198-fix: 添加 useMemo 依賴項確保正確重新計算
   const buildAllPlayers = (): PlayerInfo[] => {
+    // Issue #198-debug: 添加調試日誌追蹤重新渲染
+    console.log('[buildAllPlayers] Called at:', Date.now());
+    
     const players: PlayerInfo[] = [];
 
     // 添加人類玩家
@@ -2302,6 +2306,7 @@ export default function SoloGamePage() {
         console.error('[buildAllPlayers] ERROR: AI player missing character or stats:', aiPlayer);
       }
       
+      // Issue #198-fix: 確保讀取最新的 stats 值
       const stats = {
         speed: aiPlayer.character?.stats?.speed?.[0] ?? 0,
         might: aiPlayer.character?.stats?.might?.[0] ?? 0,
@@ -2357,8 +2362,18 @@ export default function SoloGamePage() {
   };
 
   // Issue #119: 取得當前選中的玩家資訊
+  // Issue #198-fix: 使用 useMemo 確保 buildAllPlayers 在依賴項變化時重新計算
+  const allPlayers = useMemo(() => buildAllPlayers(), [
+    player,
+    playerState,
+    aiPlayers,
+    aiPlayerPositions,
+    position,
+    currentFloor,
+    hauntState.revelation?.traitorId,
+  ]);
+  
   const getSelectedPlayer = (): PlayerInfo | null => {
-    const allPlayers = buildAllPlayers();
     return allPlayers.find(p => p.id === selectedPlayerId) || allPlayers[0] || null;
   };
 
@@ -2378,6 +2393,7 @@ export default function SoloGamePage() {
 
   // Issue #196: 更新 AI 玩家屬性（當事件檢定有屬性變化時）
   // Issue #197-fix: 添加詳細除錯日誌並確保狀態正確更新
+  // Issue #198-fix: 確保創建新的陣列引用以觸發重新渲染
   const updateAIPlayerStats = (playerId: string, changes: { [stat: string]: number }) => {
     console.log('[updateAIPlayerStats] Called:', { playerId, changes });
     
@@ -2391,7 +2407,8 @@ export default function SoloGamePage() {
     setAiPlayers(prev => {
       console.log('[updateAIPlayerStats] setAiPlayers callback, prev length:', prev.length);
       
-      return prev.map(p => {
+      // Issue #198-fix: 創建全新的陣列引用
+      const newPlayers = prev.map(p => {
         if (p.id !== playerId) return p;
         
         // Issue #197: 檢查 character 和 stats 是否存在
@@ -2417,7 +2434,7 @@ export default function SoloGamePage() {
           changes,
         });
         
-        // Issue #197-fix: 使用類型斷言確保 stats 是元組類型 [number, number]
+        // Issue #198-fix: 創建全新的物件引用，確保每層都是新物件
         const updatedPlayer = {
           ...p,
           character: {
@@ -2439,6 +2456,9 @@ export default function SoloGamePage() {
         
         return updatedPlayer;
       });
+      
+      // Issue #198-fix: 返回全新的陣列引用
+      return [...newPlayers];
     });
   };
 
@@ -2475,10 +2495,11 @@ export default function SoloGamePage() {
       {/* 主要內容區 */}
       <div className="max-w-7xl mx-auto p-4">
         {/* Issue #119: Character Tabs - 顯示所有玩家 */}
+        {/* Issue #198-fix: 使用 allPlayers (useMemo) 替代直接調用 buildAllPlayers() */}
         {aiPlayers.length > 0 && (
           <div className="mb-4">
             <CharacterTabs
-              players={buildAllPlayers()}
+              players={allPlayers}
               selectedPlayerId={selectedPlayerId}
               onSelectPlayer={handleSelectPlayer}
               currentTurnPlayerId={currentTurnPlayer}
@@ -2661,9 +2682,18 @@ export default function SoloGamePage() {
           {/* 右側：玩家面板與日誌 */}
           <div className="space-y-4">
             {/* Issue #119: Character Detail Panel - 顯示選中玩家的詳細資訊 */}
+            {/* Issue #198-fix: 添加 key 屬性強制重新渲染當屬性變化時 */}
             {aiPlayers.length > 0 ? (
               <>
-                <CharacterDetailPanel player={getSelectedPlayer()} />
+                {(() => {
+                  const selectedPlayer = getSelectedPlayer();
+                  return (
+                    <CharacterDetailPanel 
+                      key={`${selectedPlayer?.id}-${selectedPlayer?.stats.speed}-${selectedPlayer?.stats.might}-${selectedPlayer?.stats.sanity}-${selectedPlayer?.stats.knowledge}`}
+                      player={selectedPlayer} 
+                    />
+                  );
+                })()}
                 {/* 背包與預兆面板 - 始終顯示人類玩家的背包 */}
                 {playerState && (
                   <InventoryPanel
