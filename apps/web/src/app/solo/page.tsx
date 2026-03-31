@@ -1805,7 +1805,7 @@ export default function SoloGamePage() {
                 // 更新 AI 玩家屬性
                 updateAIPlayerStats(aiPlayer.id, changes);
                 
-                // 記錄屬性變化到日誌
+                // 記錄屬性變化到日誌（顯示舊值 -> 新值）
                 const statNames: Record<string, string> = {
                   speed: '速度',
                   might: '力量',
@@ -1813,11 +1813,21 @@ export default function SoloGamePage() {
                   knowledge: '知識',
                 };
                 
+                // 獲取當前屬性值（更新前）
+                const currentStats = {
+                  speed: aiPlayer.character?.stats?.speed?.[0] ?? 4,
+                  might: aiPlayer.character?.stats?.might?.[0] ?? 4,
+                  sanity: aiPlayer.character?.stats?.sanity?.[0] ?? 4,
+                  knowledge: aiPlayer.character?.stats?.knowledge?.[0] ?? 4,
+                };
+                
                 Object.entries(changes).forEach(([stat, value]) => {
                   if (value !== 0) {
-                    const sign = value > 0 ? '+' : '';
+                    const oldValue = currentStats[stat as keyof typeof currentStats];
+                    const newValue = Math.max(0, Math.min(8, oldValue + value));
                     const timeStr = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
-                    setLog(prev => [...prev, `[${timeStr}] ${aiPlayer.name} ${statNames[stat]} ${sign}${value}`]);
+                    // 顯示格式：力量 3 -> 4 (+1)
+                    setLog(prev => [...prev, `[${timeStr}] ${aiPlayer.name} ${statNames[stat]} ${oldValue} -> ${newValue} (${value > 0 ? '+' : ''}${value})`]);
                   }
                 });
               }
@@ -2362,18 +2372,9 @@ export default function SoloGamePage() {
   };
 
   // Issue #119: 取得當前選中的玩家資訊
-  // Issue #198-fix: 使用 useMemo 確保 buildAllPlayers 在依賴項變化時重新計算
-  const allPlayers = useMemo(() => buildAllPlayers(), [
-    player,
-    playerState,
-    aiPlayers,
-    aiPlayerPositions,
-    position,
-    currentFloor,
-    hauntState.revelation?.traitorId,
-  ]);
-  
+  // Issue #198-fix: 直接調用 buildAllPlayers 避免 hooks 問題
   const getSelectedPlayer = (): PlayerInfo | null => {
+    const allPlayers = buildAllPlayers();
     return allPlayers.find(p => p.id === selectedPlayerId) || allPlayers[0] || null;
   };
 
@@ -2495,11 +2496,10 @@ export default function SoloGamePage() {
       {/* 主要內容區 */}
       <div className="max-w-7xl mx-auto p-4">
         {/* Issue #119: Character Tabs - 顯示所有玩家 */}
-        {/* Issue #198-fix: 使用 allPlayers (useMemo) 替代直接調用 buildAllPlayers() */}
         {aiPlayers.length > 0 && (
           <div className="mb-4">
             <CharacterTabs
-              players={allPlayers}
+              players={buildAllPlayers()}
               selectedPlayerId={selectedPlayerId}
               onSelectPlayer={handleSelectPlayer}
               currentTurnPlayerId={currentTurnPlayer}
