@@ -317,57 +317,63 @@ function CardContent({ card, onClose, animate, typeConfig, eventCheckResult }: C
           </motion.div>
         )}
 
-        {/* Issue #190: 事件檢定結果顯示 */}
+        {/* Issue #190 & #195: 事件檢定結果顯示 */}
         {eventCheckResult && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.7, type: 'spring', stiffness: 200 }}
             className={`mt-4 rounded-xl p-4 border-2 ${
-              eventCheckResult.success 
-                ? 'bg-green-900/40 border-green-500/50' 
+              eventCheckResult.success
+                ? 'bg-green-900/40 border-green-500/50'
                 : 'bg-red-900/40 border-red-500/50'
             }`}
           >
-            {/* 檢定結果標題 */}
+            {/* 檢定標題 */}
             <div className="text-center mb-3">
-              <div className={`text-3xl mb-1 ${eventCheckResult.success ? 'text-green-400' : 'text-red-400'}`}>
-                {eventCheckResult.success ? '✅ 檢定成功！' : '❌ 檢定失敗！'}
+              <p className="text-white/80 text-sm mb-1">檢定結果</p>
+              <div className={`text-2xl font-bold ${eventCheckResult.success ? 'text-green-400' : 'text-red-400'}`}>
+                {eventCheckResult.success ? '✅ 成功！' : '❌ 失敗！'}
               </div>
             </div>
 
-            {/* 骰子結果 */}
-            <div className="flex justify-center gap-2 mb-3">
-              {eventCheckResult.dice.map((die, index) => (
-                <div 
-                  key={index}
-                  className="w-10 h-10 rounded-lg bg-white/90 flex items-center justify-center shadow-lg"
-                >
-                  <span className="text-xl font-bold text-gray-800">{die}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* 總和與目標 */}
-            <div className="text-center mb-3">
-              <p className="text-white text-lg font-bold">
-                總和: {eventCheckResult.roll} 
-                <span className="text-white/60 text-sm ml-2">
-                  (目標 ≥ {eventCheckResult.target})
+            {/* Issue #195: 檢定屬性與目標 */}
+            <div className="bg-black/20 rounded-lg p-3 mb-3">
+              <p className="text-white/60 text-xs mb-2">檢定屬性</p>
+              <div className="flex items-center justify-between">
+                <span className="text-white text-sm">
+                  {getStatIcon(eventCheckResult.stat)} {getStatName(eventCheckResult.stat)}
                 </span>
-              </p>
+                <span className="px-3 py-1 bg-white/20 rounded-full text-white text-sm font-bold">
+                  目標 ≥ {eventCheckResult.target}
+                </span>
+              </div>
             </div>
 
-            {/* 檢定屬性 */}
-            <div className="text-center mb-3">
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-white/10 rounded-full text-sm text-white/80">
-                {getStatIcon(eventCheckResult.stat)}
-                {getStatName(eventCheckResult.stat)}
-              </span>
+            {/* Issue #195: 擲骰結果顯示 [骰子] = 總和 */}
+            <div className="bg-black/20 rounded-lg p-3 mb-3">
+              <p className="text-white/60 text-xs mb-2">擲骰結果</p>
+              <div className="flex items-center justify-center gap-2 flex-wrap">
+                {/* 骰子 */}
+                {eventCheckResult.dice.map((die, index) => (
+                  <div
+                    key={index}
+                    className="w-8 h-8 rounded-lg bg-white/90 flex items-center justify-center shadow-lg"
+                  >
+                    <span className="text-lg font-bold text-gray-800">{die}</span>
+                  </div>
+                ))}
+                {/* 總和 */}
+                <span className="text-white/60 mx-1">=</span>
+                <span className={`text-xl font-bold ${eventCheckResult.success ? 'text-green-400' : 'text-red-400'}`}>
+                  {eventCheckResult.roll}
+                </span>
+              </div>
             </div>
 
-            {/* 效果描述 */}
-            <div className={`text-center text-sm ${eventCheckResult.success ? 'text-green-300' : 'text-red-300'}`}>
+            {/* Issue #195: 效果描述 */}
+            <div className={`text-center text-sm font-medium py-2 px-3 rounded-lg bg-black/20 ${eventCheckResult.success ? 'text-green-300' : 'text-red-300'}`}>
+              <span className="text-white/60 block text-xs mb-1">效果</span>
               {eventCheckResult.effectDescription}
             </div>
           </motion.div>

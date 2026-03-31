@@ -1796,10 +1796,31 @@ export default function SoloGamePage() {
 
       // Issue #189: 檢查 AI 是否有抽卡，如果有則顯示卡牌彈窗
       // Issue #192: 同時處理事件卡檢定結果
+      // Issue #195: 將 AI 事件檢定結果記錄到遊戲日誌
       for (const result of results) {
         if (result.drawnCard) {
           const aiPlayer = aiPlayers.find(p => p.id === result.playerId);
           if (aiPlayer) {
+            // Issue #195: 記錄 AI 抽卡到遊戲日誌
+            const timeStr = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+            setLog(prev => [...prev, `[${timeStr}] ${aiPlayer.name} 抽到 ${result.drawnCard!.type === 'event' ? '事件' : result.drawnCard!.type === 'item' ? '物品' : '預兆'}卡: ${result.drawnCard!.name}`]);
+
+            // Issue #195: 如果有事件檢定結果，記錄到遊戲日誌
+            if (result.eventCheckResult) {
+              const { stat, target, roll, success, effect } = result.eventCheckResult;
+              const status = success ? '成功' : '失敗';
+              const statNames: Record<string, string> = {
+                speed: '速度',
+                might: '力量',
+                sanity: '理智',
+                knowledge: '知識',
+              };
+              setLog(prev => [...prev,
+                `  檢定: ${statNames[stat]} ${target}+ → 擲出 ${roll} (${status}!)`,
+                `  效果: ${effect}`
+              ]);
+            }
+
             setAiCardDrawState({
               showCard: true,
               cardResult: {
