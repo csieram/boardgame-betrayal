@@ -1785,6 +1785,31 @@ export default function SoloGamePage() {
               updateAIPlayerPosition(aiPlayer.id, result.newPosition);
             }
 
+            // Issue #196: 應用事件檢定效果到 AI 玩家屬性
+            if (result.eventCheckResult?.statChanges) {
+              const changes = result.eventCheckResult.statChanges;
+              console.log('[AI Debug] Applying stat changes to AI:', aiPlayer.id, changes);
+              
+              // 更新 AI 玩家屬性
+              updateAIPlayerStats(aiPlayer.id, changes);
+              
+              // 記錄屬性變化到日誌
+              const statNames: Record<string, string> = {
+                speed: '速度',
+                might: '力量',
+                sanity: '理智',
+                knowledge: '知識',
+              };
+              
+              Object.entries(changes).forEach(([stat, value]) => {
+                if (value !== 0) {
+                  const sign = value > 0 ? '+' : '';
+                  const timeStr = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+                  setLog(prev => [...prev, `[${timeStr}] ${aiPlayer.name} ${statNames[stat]} ${sign}${value}`]);
+                }
+              });
+            }
+
             // Issue #151-fix: 移除重複的回合結束日誌
             // 回合結束日誌已經包含在 result.logs 中，不需要額外添加
           }
@@ -2315,6 +2340,45 @@ export default function SoloGamePage() {
       console.log('[updateAIPlayerPosition] New aiPlayerPositions size:', newMap.size);
       return newMap;
     });
+  };
+
+  // Issue #196: 更新 AI 玩家屬性（當事件檢定有屬性變化時）
+  const updateAIPlayerStats = (playerId: string, changes: { [stat: string]: number }) => {
+    console.log('[updateAIPlayerStats] Called:', { playerId, changes });
+    setAiPlayers(prev => prev.map(p => {
+      if (p.id !== playerId) return p;
+      
+      // 計算新的屬性值
+      const newSpeed = Math.max(0, Math.min(8, (p.character?.stats?.speed?.[0] || 4) + (changes.speed || 0)));
+      const newMight = Math.max(0, Math.min(8, (p.character?.stats?.might?.[0] || 4) + (changes.might || 0)));
+      const newSanity = Math.max(0, Math.min(8, (p.character?.stats?.sanity?.[0] || 4) + (changes.sanity || 0)));
+      const newKnowledge = Math.max(0, Math.min(8, (p.character?.stats?.knowledge?.[0] || 4) + (changes.knowledge || 0)));
+      
+      console.log('[updateAIPlayerStats] Updating stats:', {
+        playerId,
+        oldStats: {
+          speed: p.character?.stats?.speed?.[0],
+          might: p.character?.stats?.might?.[0],
+          sanity: p.character?.stats?.sanity?.[0],
+          knowledge: p.character?.stats?.knowledge?.[0],
+        },
+        newStats: { speed: newSpeed, might: newMight, sanity: newSanity, knowledge: newKnowledge },
+        changes,
+      });
+      
+      return {
+        ...p,
+        character: {
+          ...p.character,
+          stats: {
+            speed: [newSpeed, p.character?.stats?.speed?.[1] || newSpeed],
+            might: [newMight, p.character?.stats?.might?.[1] || newMight],
+            sanity: [newSanity, p.character?.stats?.sanity?.[1] || newSanity],
+            knowledge: [newKnowledge, p.character?.stats?.knowledge?.[1] || newKnowledge],
+          },
+        },
+      };
+    }));
   };
 
   return (
