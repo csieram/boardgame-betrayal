@@ -278,6 +278,7 @@ export default function SoloGamePage() {
     difficulty: AIDifficulty;
     personalities: AIPersonality[];
     includeWidowsWalk: boolean;
+    disableHauntRoll: boolean;
     seed: string;
   } | null>(null);
 
@@ -346,6 +347,7 @@ export default function SoloGamePage() {
           difficulty: setup.aiSetup?.difficulty || 'medium',
           personalities: setup.aiSetup?.personalities || [],
           includeWidowsWalk: setup.includeWidowsWalk || false,
+          disableHauntRoll: setup.disableHauntRoll || false,
           seed: setup.seed || Date.now().toString(),
         });
         const character: Character = setup.character;
@@ -1425,22 +1427,37 @@ export default function SoloGamePage() {
             // 記錄進入房間和抽卡
             setLog(prev => [...prev, `進入 ${placedRoom.name} (${roomSymbol}) → 抽到${symbolName}: "${drawResult.card!.name}"`]);
             
-            // 如果是預兆卡，觸發 Haunt Roll 動畫
+            // 如果是預兆卡，觸發 Haunt Roll 動畫（除非禁用作祟鑒定）
             if (cardType === 'omen') {
-              setLog(prev => [...prev, `預兆 ${currentOmenCount} 🌙（作祟檢定: ${currentOmenCount} 顆骰）`]);
-              
-              // 延遲後顯示 Haunt Roll 模態框
-              setTimeout(() => {
-                performHauntRoll(currentOmenCount);
-              }, 500);
-              
-              // 先顯示卡牌
-              setCardDrawState({
-                showCard: true,
-                cardResult: drawResult,
-                isHauntRoll: false,
-                hauntRollResult: null,
-              });
+              // 檢查是否禁用了作祟鑒定
+              const isHauntRollDisabled = gameSetup?.disableHauntRoll || false;
+
+              if (isHauntRollDisabled) {
+                // 禁用作祟鑒定模式：只顯示卡牌，不進行作祟檢定
+                setLog(prev => [...prev, `預兆 ${currentOmenCount} 🌙（作祟鑒定已禁用）`]);
+                setCardDrawState({
+                  showCard: true,
+                  cardResult: drawResult,
+                  isHauntRoll: false,
+                  hauntRollResult: null,
+                });
+              } else {
+                // 正常模式：進行作祟檢定
+                setLog(prev => [...prev, `預兆 ${currentOmenCount} 🌙（作祟檢定: ${currentOmenCount} 顆骰）`]);
+
+                // 延遲後顯示 Haunt Roll 模態框
+                setTimeout(() => {
+                  performHauntRoll(currentOmenCount);
+                }, 500);
+
+                // 先顯示卡牌
+                setCardDrawState({
+                  showCard: true,
+                  cardResult: drawResult,
+                  isHauntRoll: false,
+                  hauntRollResult: null,
+                });
+              }
             } else {
               // 非預兆卡直接顯示
               setCardDrawState({

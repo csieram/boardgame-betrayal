@@ -40,6 +40,7 @@ export default function SoloCharacterSelectPage() {
     personalities: ['explorer', 'cautious'],
   });
   const [includeWidowsWalk, setIncludeWidowsWalk] = useState(false);
+  const [disableHauntRoll, setDisableHauntRoll] = useState(false);
   const [showAISetup, setShowAISetup] = useState(false);
 
   /**
@@ -64,6 +65,7 @@ export default function SoloCharacterSelectPage() {
         character: selectedCharacter,
         aiSetup,
         includeWidowsWalk,
+        disableHauntRoll,
         seed: Date.now().toString(),
       };
       sessionStorage.setItem('solo-game-setup', JSON.stringify(gameSetup));
@@ -296,6 +298,24 @@ export default function SoloCharacterSelectPage() {
                   Include Widow&apos;s Walk expansion (20 additional rooms)
                 </span>
               </label>
+            </div>
+
+            {/* 禁用作祟鑒定選項 */}
+            <div className="mt-4">
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={disableHauntRoll}
+                  onChange={(e) => setDisableHauntRoll(e.target.checked)}
+                  className="w-5 h-5 text-blue-600 rounded"
+                />
+                <span className="text-lg">
+                  禁用作祟鑒定（專注探索模式）
+                </span>
+              </label>
+              <p className="text-sm text-gray-400 ml-8 mt-1">
+                開啟後，抽取預兆卡時不會觸發作祟鑒定
+              </p>
             </div>
 
             {/* 按鈕 */}
