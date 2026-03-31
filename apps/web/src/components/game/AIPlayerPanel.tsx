@@ -42,6 +42,21 @@ export function AIPlayerPanel({
   difficulty,
   actingPlayerId,
 }: AIPlayerPanelProps) {
+  // Issue #197: 添加除錯日誌追蹤渲染時的屬性值
+  console.log('[AIPlayerPanel] Render:', {
+    aiPlayersCount: aiPlayers.length,
+    currentTurnPlayer,
+    isProcessing,
+    aiPlayersStats: aiPlayers.map(p => ({
+      id: p.id,
+      name: p.name,
+      speed: p.character?.stats?.speed?.[0],
+      might: p.character?.stats?.might?.[0],
+      sanity: p.character?.stats?.sanity?.[0],
+      knowledge: p.character?.stats?.knowledge?.[0],
+    })),
+  });
+  
   if (aiPlayers.length === 0) {
     return null;
   }

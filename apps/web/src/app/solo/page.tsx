@@ -1786,28 +1786,43 @@ export default function SoloGamePage() {
             }
 
             // Issue #196: 應用事件檢定效果到 AI 玩家屬性
+            // Issue #197-fix: 添加詳細除錯日誌追蹤事件檢定結果
+            console.log('[AI Debug] Checking eventCheckResult:', {
+              hasEventCheckResult: !!result.eventCheckResult,
+              eventCheckResult: result.eventCheckResult,
+              hasStatChanges: !!result.eventCheckResult?.statChanges,
+              statChanges: result.eventCheckResult?.statChanges,
+            });
+            
             if (result.eventCheckResult?.statChanges) {
               const changes = result.eventCheckResult.statChanges;
               console.log('[AI Debug] Applying stat changes to AI:', aiPlayer.id, changes);
               
-              // 更新 AI 玩家屬性
-              updateAIPlayerStats(aiPlayer.id, changes);
-              
-              // 記錄屬性變化到日誌
-              const statNames: Record<string, string> = {
-                speed: '速度',
-                might: '力量',
-                sanity: '理智',
-                knowledge: '知識',
-              };
-              
-              Object.entries(changes).forEach(([stat, value]) => {
-                if (value !== 0) {
-                  const sign = value > 0 ? '+' : '';
-                  const timeStr = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
-                  setLog(prev => [...prev, `[${timeStr}] ${aiPlayer.name} ${statNames[stat]} ${sign}${value}`]);
-                }
-              });
+              // Issue #197: 驗證 changes 物件格式
+              if (typeof changes !== 'object' || changes === null) {
+                console.error('[AI Debug] ERROR: statChanges is not an object:', changes);
+              } else {
+                // 更新 AI 玩家屬性
+                updateAIPlayerStats(aiPlayer.id, changes);
+                
+                // 記錄屬性變化到日誌
+                const statNames: Record<string, string> = {
+                  speed: '速度',
+                  might: '力量',
+                  sanity: '理智',
+                  knowledge: '知識',
+                };
+                
+                Object.entries(changes).forEach(([stat, value]) => {
+                  if (value !== 0) {
+                    const sign = value > 0 ? '+' : '';
+                    const timeStr = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+                    setLog(prev => [...prev, `[${timeStr}] ${aiPlayer.name} ${statNames[stat]} ${sign}${value}`]);
+                  }
+                });
+              }
+            } else {
+              console.log('[AI Debug] No stat changes to apply for AI:', aiPlayer.id);
             }
 
             // Issue #151-fix: 移除重複的回合結束日誌
@@ -2245,6 +2260,7 @@ export default function SoloGamePage() {
   };
 
   // Issue #119: 構建所有玩家列表（人類 + AI）
+  // Issue #197: 添加除錯日誌追蹤 AI 玩家屬性
   const buildAllPlayers = (): PlayerInfo[] => {
     const players: PlayerInfo[] = [];
 
@@ -2274,21 +2290,39 @@ export default function SoloGamePage() {
     }
 
     // 添加 AI 玩家 - 使用最新的 aiPlayerPositions
+    // Issue #197: 添加除錯日誌
+    console.log('[buildAllPlayers] Building players, aiPlayers count:', aiPlayers.length);
+    
     aiPlayers.forEach(aiPlayer => {
       // Issue #122: 優先使用 aiPlayerPositions 中的位置，確保顯示最新位置
       const aiPos = aiPlayerPositions.get(aiPlayer.id) || aiPlayer.position || { x: 7, y: 7, floor: 'ground' as Floor };
+      
+      // Issue #197: 檢查 character 和 stats 是否存在
+      if (!aiPlayer.character || !aiPlayer.character.stats) {
+        console.error('[buildAllPlayers] ERROR: AI player missing character or stats:', aiPlayer);
+      }
+      
+      const stats = {
+        speed: aiPlayer.character?.stats?.speed?.[0] ?? 0,
+        might: aiPlayer.character?.stats?.might?.[0] ?? 0,
+        sanity: aiPlayer.character?.stats?.sanity?.[0] ?? 0,
+        knowledge: aiPlayer.character?.stats?.knowledge?.[0] ?? 0,
+      };
+      
+      console.log('[buildAllPlayers] AI player stats:', {
+        id: aiPlayer.id,
+        name: aiPlayer.name,
+        stats,
+        rawStats: aiPlayer.character?.stats,
+      });
+      
       players.push({
         id: aiPlayer.id,
         name: aiPlayer.name,
         type: 'ai',
         character: aiPlayer.character,
         position: aiPos,
-        stats: {
-          speed: aiPlayer.character?.stats?.speed?.[0] || 0,
-          might: aiPlayer.character?.stats?.might?.[0] || 0,
-          sanity: aiPlayer.character?.stats?.sanity?.[0] || 0,
-          knowledge: aiPlayer.character?.stats?.knowledge?.[0] || 0,
-        },
+        stats,
         items: [], // AI 物品暫時不顯示詳細資訊
         omens: [],
         personality: aiPlayer.personality,
@@ -2343,42 +2377,69 @@ export default function SoloGamePage() {
   };
 
   // Issue #196: 更新 AI 玩家屬性（當事件檢定有屬性變化時）
+  // Issue #197-fix: 添加詳細除錯日誌並確保狀態正確更新
   const updateAIPlayerStats = (playerId: string, changes: { [stat: string]: number }) => {
     console.log('[updateAIPlayerStats] Called:', { playerId, changes });
-    setAiPlayers(prev => prev.map(p => {
-      if (p.id !== playerId) return p;
+    
+    // Issue #197: 檢查是否有任何變化
+    const hasChanges = Object.values(changes).some(v => v !== 0);
+    if (!hasChanges) {
+      console.log('[updateAIPlayerStats] No stat changes to apply, skipping');
+      return;
+    }
+    
+    setAiPlayers(prev => {
+      console.log('[updateAIPlayerStats] setAiPlayers callback, prev length:', prev.length);
       
-      // 計算新的屬性值
-      const newSpeed = Math.max(0, Math.min(8, (p.character?.stats?.speed?.[0] || 4) + (changes.speed || 0)));
-      const newMight = Math.max(0, Math.min(8, (p.character?.stats?.might?.[0] || 4) + (changes.might || 0)));
-      const newSanity = Math.max(0, Math.min(8, (p.character?.stats?.sanity?.[0] || 4) + (changes.sanity || 0)));
-      const newKnowledge = Math.max(0, Math.min(8, (p.character?.stats?.knowledge?.[0] || 4) + (changes.knowledge || 0)));
-      
-      console.log('[updateAIPlayerStats] Updating stats:', {
-        playerId,
-        oldStats: {
-          speed: p.character?.stats?.speed?.[0],
-          might: p.character?.stats?.might?.[0],
-          sanity: p.character?.stats?.sanity?.[0],
-          knowledge: p.character?.stats?.knowledge?.[0],
-        },
-        newStats: { speed: newSpeed, might: newMight, sanity: newSanity, knowledge: newKnowledge },
-        changes,
-      });
-      
-      return {
-        ...p,
-        character: {
-          ...p.character,
-          stats: {
-            speed: [newSpeed, p.character?.stats?.speed?.[1] || newSpeed],
-            might: [newMight, p.character?.stats?.might?.[1] || newMight],
-            sanity: [newSanity, p.character?.stats?.sanity?.[1] || newSanity],
-            knowledge: [newKnowledge, p.character?.stats?.knowledge?.[1] || newKnowledge],
+      return prev.map(p => {
+        if (p.id !== playerId) return p;
+        
+        // Issue #197: 檢查 character 和 stats 是否存在
+        if (!p.character || !p.character.stats) {
+          console.error('[updateAIPlayerStats] ERROR: AI player missing character or stats:', p);
+          return p;
+        }
+        
+        // 計算新的屬性值
+        const currentSpeed = p.character.stats.speed?.[0] ?? 4;
+        const currentMight = p.character.stats.might?.[0] ?? 4;
+        const currentSanity = p.character.stats.sanity?.[0] ?? 4;
+        const currentKnowledge = p.character.stats.knowledge?.[0] ?? 4;
+        
+        const newSpeed = Math.max(0, Math.min(8, currentSpeed + (changes.speed || 0)));
+        const newMight = Math.max(0, Math.min(8, currentMight + (changes.might || 0)));
+        const newSanity = Math.max(0, Math.min(8, currentSanity + (changes.sanity || 0)));
+        const newKnowledge = Math.max(0, Math.min(8, currentKnowledge + (changes.knowledge || 0)));
+        
+        console.log('[updateAIPlayerStats] Updating stats for', p.name, ':', {
+          oldStats: { speed: currentSpeed, might: currentMight, sanity: currentSanity, knowledge: currentKnowledge },
+          newStats: { speed: newSpeed, might: newMight, sanity: newSanity, knowledge: newKnowledge },
+          changes,
+        });
+        
+        // Issue #197-fix: 使用類型斷言確保 stats 是元組類型 [number, number]
+        const updatedPlayer = {
+          ...p,
+          character: {
+            ...p.character,
+            stats: {
+              speed: [newSpeed, p.character.stats.speed?.[1] ?? newSpeed] as [number, number],
+              might: [newMight, p.character.stats.might?.[1] ?? newMight] as [number, number],
+              sanity: [newSanity, p.character.stats.sanity?.[1] ?? newSanity] as [number, number],
+              knowledge: [newKnowledge, p.character.stats.knowledge?.[1] ?? newKnowledge] as [number, number],
+            },
           },
-        },
-      };
-    }));
+        };
+        
+        console.log('[updateAIPlayerStats] Updated player object:', {
+          id: updatedPlayer.id,
+          name: updatedPlayer.name,
+          newStats: updatedPlayer.character.stats,
+        });
+        
+        return updatedPlayer;
+      });
+    });
   };
 
   return (
