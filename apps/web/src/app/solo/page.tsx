@@ -843,6 +843,10 @@ export default function SoloGamePage() {
         omen: { remaining: [], drawn: [], discarded: [] },
       },
       roomDeck: {
+        ground: gameState.roomDecks?.ground || [],
+        upper: gameState.roomDecks?.upper || [],
+        basement: gameState.roomDecks?.basement || [],
+        roof: gameState.roomDecks?.roof || [],
         drawn: gameState.drawn,
       },
       haunt: {
@@ -1607,6 +1611,33 @@ export default function SoloGamePage() {
                 roomId: placedRoom.id,
                 timestamp: Date.now(),
               });
+              
+              // Issue #184-fix: 同步更新 mockGameState.map，以便後續 AI 可以看到新房間
+              // 創建新的 tile 並更新 gameState.map
+              const newTile = {
+                x: roomPosition.x,
+                y: roomPosition.y,
+                discovered: true,
+                room: placedRoom,
+                rotation: rotation,
+              };
+              
+              // 更新 mockGameState 中的地圖引用
+              if (floor === 'ground' || floor === 'upper' || floor === 'basement' || floor === 'roof') {
+                // 創建新的地圖行數組
+                const updatedRow = [...mockGameState.map[floor][roomPosition.y]];
+                updatedRow[roomPosition.x] = newTile;
+                
+                // 創建新的地圖樓層數組
+                const updatedFloor = [...mockGameState.map[floor]];
+                updatedFloor[roomPosition.y] = updatedRow;
+                
+                // 更新 mockGameState.map
+                mockGameState.map[floor] = updatedFloor;
+                mockGameState.map.placedRoomCount++;
+                
+                console.log('[Fix #184] Updated mockGameState.map with new room:', placedRoom.name);
+              }
               
               // 記錄房間發現
               const timeStr = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });

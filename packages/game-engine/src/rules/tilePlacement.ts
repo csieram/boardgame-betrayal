@@ -237,7 +237,7 @@ export class TilePlacementValidator {
     room: Room
   ): ValidPlacement[] {
     const placements: ValidPlacement[] = [];
-    const floorMap = state.map[room.floor as 'ground' | 'upper' | 'basement'];
+    const floorMap = state.map[room.floor];
     
     if (!floorMap) return placements;
 

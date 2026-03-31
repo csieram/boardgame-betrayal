@@ -104,6 +104,7 @@ function createTestGameState(
       ground: emptyFloorMap('ground'),
       upper: emptyFloorMap('upper'),
       basement: emptyFloorMap('basement'),
+      roof: emptyFloorMap('roof'),
       placedRoomCount: tiles.filter(t => t.room).length,
     },
     players: [
@@ -164,6 +165,7 @@ function createTestGameState(
       ground: [],
       upper: [],
       basement: [],
+      roof: [],
       drawn: new Set(),
     },
     haunt: {

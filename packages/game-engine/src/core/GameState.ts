@@ -940,7 +940,7 @@ export class GameStateManager {
   // ==================== 輔助方法 ====================
 
   private getFloorMap(floor: Floor): FloorMap {
-    return this.state.map[floor as 'ground' | 'upper' | 'basement'];
+    return this.state.map[floor];
   }
 
   /**
@@ -951,7 +951,11 @@ export class GameStateManager {
    * @returns 抽取的房間，如果牌堆為空則返回 null
    */
   drawRoomFromDeck(floor: Floor): Room | null {
-    const deck = this.state.roomDeck[floor as 'ground' | 'upper' | 'basement'];
+    const deck = this.state.roomDeck[floor];
+    if (!deck) {
+      console.error(`[drawRoomFromDeck] Invalid floor: ${floor}`);
+      return null;
+    }
     const availableRoom = deck.find((r: Room) => !this.state.roomDeck.drawn.has(r.id));
     
     if (availableRoom) {

@@ -546,6 +546,8 @@ export class AIPlayer {
             rotation: discoveryResult.rotation || 0,
             floor: this.state.position.floor,
           };
+          // Issue #185-fix: Set discoveredRoom flag to true
+          result.discoveredRoom = true;
           this.log(`Discovered room: ${discoveryResult.room.name} at (${newPosition.x}, ${newPosition.y})`);
         } else {
           this.log(`Failed to discover room: ${discoveryResult.error}`);

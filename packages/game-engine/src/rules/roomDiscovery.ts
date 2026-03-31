@@ -323,7 +323,11 @@ export class RoomDiscoveryManager {
    */
   static drawRoomFromDeck(state: GameState, floor: Floor): Room | null {
     const deck = state.roomDeck[floor];
-    
+    if (!deck) {
+      console.error(`[drawRoomFromDeck] Invalid floor: ${floor}`);
+      return null;
+    }
+
     // 找到第一個未被抽取且未被放置的房間
     // 同時檢查 roomDeck.drawn 和 placedRoomIds 以確保唯一性
     const availableRoom = deck.find((r: Room) => {
