@@ -79,6 +79,12 @@ interface SoloGameState {
   // 使用 ALL_ROOMS 和 drawn 集合來追蹤已抽取的房間
   drawn: Set<string>;
   seed: string;
+  // Issue #188: 卡牌牌堆狀態
+  cardDecks: {
+    event: { remaining: string[]; drawn: string[]; discarded: string[] };
+    item: { remaining: string[]; drawn: string[]; discarded: string[] };
+    omen: { remaining: string[]; drawn: string[]; discarded: string[] };
+  };
 }
 
 /** 抽卡結果狀態 */
@@ -158,6 +164,12 @@ function createInitialGameState(seed: string): SoloGameState {
     },
     drawn: new Set(),
     seed,
+    // Issue #188: 初始化空的卡牌牌堆狀態
+    cardDecks: {
+      event: { remaining: [], drawn: [], discarded: [] },
+      item: { remaining: [], drawn: [], discarded: [] },
+      omen: { remaining: [], drawn: [], discarded: [] },
+    },
   };
 }
 
@@ -411,6 +423,36 @@ export default function SoloGamePage() {
         newGameState.roomDecks.upper = rng.shuffle(upperRooms);
         newGameState.roomDecks.basement = rng.shuffle(basementRooms);
         newGameState.roomDecks.roof = rng.shuffle(roofRooms);
+
+        // Issue #188: Initialize card decks with shuffled card IDs
+        const { EVENT_CARDS, ITEM_CARDS, OMEN_CARDS } = require('@betrayal/shared');
+        const shuffledEventCards = rng.shuffle([...EVENT_CARDS]);
+        const shuffledItemCards = rng.shuffle([...ITEM_CARDS]);
+        const shuffledOmenCards = rng.shuffle([...OMEN_CARDS]);
+
+        newGameState.cardDecks = {
+          event: {
+            remaining: shuffledEventCards.map((c: Card) => c.id),
+            drawn: [],
+            discarded: [],
+          },
+          item: {
+            remaining: shuffledItemCards.map((c: Card) => c.id),
+            drawn: [],
+            discarded: [],
+          },
+          omen: {
+            remaining: shuffledOmenCards.map((c: Card) => c.id),
+            drawn: [],
+            discarded: [],
+          },
+        };
+
+        console.log('[Issue #188] Card decks initialized:', {
+          event: newGameState.cardDecks.event.remaining.length,
+          item: newGameState.cardDecks.item.remaining.length,
+          omen: newGameState.cardDecks.omen.remaining.length,
+        });
 
         setGameState(newGameState);
 
@@ -848,7 +890,8 @@ export default function SoloGamePage() {
         usedSpecialActions: [],
         usedItems: [],
       },
-      cardDecks: {
+      // Issue #188: 使用 gameState 中的共享牌堆狀態
+      cardDecks: gameState.cardDecks || {
         event: { remaining: [], drawn: [], discarded: [] },
         item: { remaining: [], drawn: [], discarded: [] },
         omen: { remaining: [], drawn: [], discarded: [] },
@@ -1411,8 +1454,20 @@ export default function SoloGamePage() {
         const cardType = symbolToCardType[roomSymbol];
         if (cardType) {
           console.log(`[CardDrawing] Room has symbol ${roomSymbol}, drawing ${cardType} card`);
-          
-          const drawResult = drawAndApplyCard(cardManager, effectApplier, cardType, playerState);
+
+          // Issue #188: 使用共享牌堆狀態創建 CardDrawingManager
+          const initialDecks = gameState.cardDecks;
+          const sharedCardManager = new CardDrawingManager(gameState.seed, initialDecks);
+
+          // Issue #188: 設置牌堆狀態變更回調，將變更同步回 gameState
+          sharedCardManager.setDeckStateChangeCallback((newState) => {
+            setGameState(prev => ({
+              ...prev,
+              cardDecks: newState,
+            }));
+          });
+
+          const drawResult = drawAndApplyCard(sharedCardManager, effectApplier, cardType, playerState);
           
           if (drawResult.success && drawResult.card) {
             cardDrawn = true;
@@ -1424,9 +1479,12 @@ export default function SoloGamePage() {
             const symbolName = roomSymbol === 'E' ? '事件' : roomSymbol === 'I' ? '物品' : '預兆';
             const currentOmenCount = cardManager.getDeckStatus().omenCount;
             
+            // Issue #188: 使用 sharedCardManager 的狀態更新 omenCount
+            const updatedOmenCount = sharedCardManager.getDeckStatus().omenCount;
+
             // 記錄進入房間和抽卡
             setLog(prev => [...prev, `進入 ${placedRoom.name} (${roomSymbol}) → 抽到${symbolName}: "${drawResult.card!.name}"`]);
-            
+
             // 如果是預兆卡，觸發 Haunt Roll 動畫（除非禁用作祟鑒定）
             if (cardType === 'omen') {
               // 檢查是否禁用了作祟鑒定
@@ -1434,7 +1492,7 @@ export default function SoloGamePage() {
 
               if (isHauntRollDisabled) {
                 // 禁用作祟鑒定模式：只顯示卡牌，不進行作祟檢定
-                setLog(prev => [...prev, `預兆 ${currentOmenCount} 🌙（作祟鑒定已禁用）`]);
+                setLog(prev => [...prev, `預兆 ${updatedOmenCount} 🌙（作祟鑒定已禁用）`]);
                 setCardDrawState({
                   showCard: true,
                   cardResult: drawResult,
@@ -1443,11 +1501,11 @@ export default function SoloGamePage() {
                 });
               } else {
                 // 正常模式：進行作祟檢定
-                setLog(prev => [...prev, `預兆 ${currentOmenCount} 🌙（作祟檢定: ${currentOmenCount} 顆骰）`]);
+                setLog(prev => [...prev, `預兆 ${updatedOmenCount} 🌙（作祟檢定: ${updatedOmenCount} 顆骰）`]);
 
                 // 延遲後顯示 Haunt Roll 模態框
                 setTimeout(() => {
-                  performHauntRoll(currentOmenCount);
+                  performHauntRoll(updatedOmenCount);
                 }, 500);
 
                 // 先顯示卡牌

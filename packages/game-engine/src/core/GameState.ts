@@ -262,11 +262,12 @@ function initializeRoomDeck(rng: SeededRng): RoomDeckState {
 }
 
 /**
- * 初始化卡牌堆
+ * 初始化卡牌堆 (Issue #188)
+ * 使用 string[] 存儲卡牌 ID，確保可序列化和跨組件共享
  */
 function initializeCardDecks(rng: SeededRng): CardDecks {
-  const createDeck = (cards: Card[]): CardDeckState => ({
-    remaining: rng.shuffle([...cards]),
+  const createDeck = (cards: Card[]): { remaining: string[]; drawn: string[]; discarded: string[] } => ({
+    remaining: rng.shuffle([...cards]).map(c => c.id),
     drawn: [],
     discarded: [],
   });
@@ -978,14 +979,31 @@ export class GameStateManager {
   }
 
   /**
-   * 從卡牌堆抽一張卡
+   * 從卡牌堆抽一張卡 (Issue #188)
+   * 現在 remaining 存儲的是卡牌 ID，需要查找對應的 Card 物件
    */
   drawCardFromDeck(type: CardType): Card | null {
     const deck = this.state.cardDecks[type];
     if (deck.remaining.length === 0) return null;
 
-    const card = deck.remaining[deck.remaining.length - 1];
-    
+    const cardId = deck.remaining[deck.remaining.length - 1];
+
+    // 根據卡牌類型查找對應的卡牌資料
+    let card: Card | undefined;
+    switch (type) {
+      case 'event':
+        card = EVENT_CARDS.find(c => c.id === cardId);
+        break;
+      case 'item':
+        card = ITEM_CARDS.find(c => c.id === cardId);
+        break;
+      case 'omen':
+        card = OMEN_CARDS.find(c => c.id === cardId);
+        break;
+    }
+
+    if (!card) return null;
+
     this.state = {
       ...this.state,
       cardDecks: {
@@ -993,7 +1011,7 @@ export class GameStateManager {
         [type]: {
           ...deck,
           remaining: deck.remaining.slice(0, -1),
-          drawn: [...deck.drawn, card],
+          drawn: [...deck.drawn, cardId],
         },
       },
     };

@@ -48,6 +48,21 @@ export interface Obstacle {
   moveCost: number; // 移動消耗（通常是 2）
 }
 
+// 卡牌牌堆狀態 (Issue #188)
+// 使用 string[] 存儲卡牌 ID，確保可序列化和跨組件共享
+export interface CardDeckState {
+  remaining: string[];  // 剩餘卡牌 ID 列表
+  drawn: string[];      // 已抽卡牌 ID 列表
+  discarded: string[];  // 已棄置卡牌 ID 列表
+}
+
+// 所有卡牌牌堆狀態 (Issue #188)
+export interface CardDecks {
+  event: { remaining: string[]; drawn: string[]; discarded: string[] };
+  item: { remaining: string[]; drawn: string[]; discarded: string[] };
+  omen: { remaining: string[]; drawn: string[]; discarded: string[] };
+}
+
 // 遊戲狀態
 export interface GameState {
   phase: GamePhase;
@@ -64,6 +79,7 @@ export interface GameState {
   scenario: Scenario | null;   // 當前劇情
   monsters: Monster[];         // 怪物列表
   traitorPowers: TraitorPowers | null;  // 叛徒能力
+  cardDecks: CardDecks;        // 卡牌牌堆狀態（Issue #188）
 }
 
 // 探索方向

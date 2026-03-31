@@ -39,6 +39,7 @@ import { TraitorAI } from './TraitorAI';
 import { HeroAI } from './HeroAI';
 import { PathFinder } from '../rules/movement';
 import { RoomDiscoveryManager, drawRoomForExploration, RoomDiscoveryResult } from '../rules/roomDiscovery';
+import { CardDrawingManager, CardEffectApplier, drawAndApplyCard } from '../rules/cardDrawing';
 
 // ==================== 類型定義 ====================
 
@@ -549,10 +550,77 @@ export class AIPlayer {
           // Issue #185-fix: Set discoveredRoom flag to true
           result.discoveredRoom = true;
           this.log(`Discovered room: ${discoveryResult.room.name} at (${newPosition.x}, ${newPosition.y})`);
+
+          // Issue #187-fix & #188: Handle card draw if required
+          if (discoveryResult.cardDrawRequired) {
+            const cardType = discoveryResult.cardDrawRequired.type;
+            this.log(`Card draw required: ${cardType}`);
+
+            // Issue #188: 使用 gameState 中的共享牌堆狀態
+            const seed = gameState.config?.seed || Date.now().toString();
+
+            // 從 gameState 獲取牌堆狀態，如果沒有則創建新的
+            const initialDecks = gameState.cardDecks || undefined;
+            const cardManager = new CardDrawingManager(seed, initialDecks);
+            const effectApplier = new CardEffectApplier(seed);
+
+            // Issue #188: 設置牌堆狀態變更回調，將變更同步回 gameState
+            cardManager.setDeckStateChangeCallback((newState) => {
+              if (gameState.cardDecks) {
+                gameState.cardDecks = newState;
+              }
+            });
+
+            // Get current player state for card effect
+            const currentPlayer = this.getPlayer(gameState);
+            if (currentPlayer) {
+              const playerState = {
+                id: currentPlayer.id,
+                name: currentPlayer.name,
+                stats: currentPlayer.currentStats,
+                items: currentPlayer.items,
+                omens: currentPlayer.omens,
+              };
+
+              // Draw and apply card
+              const drawResult = drawAndApplyCard(
+                cardManager,
+                effectApplier,
+                cardType,
+                playerState
+              );
+
+              if (drawResult.success && drawResult.card) {
+                result.drawnCard = drawResult.card;
+                result.logs.push(`${this.state.playerName} 抽到 ${cardType === 'event' ? '事件' : cardType === 'item' ? '物品' : '預兆'}卡: ${drawResult.card.name}`);
+                this.log(`Drew ${cardType} card: ${drawResult.card.name}`);
+
+                // Handle haunt roll for omen cards
+                if (cardType === 'omen' && discoveryResult.cardDrawRequired.requiresHauntCheck) {
+                  // Check if haunt roll should be triggered
+                  if (cardManager.shouldTriggerHauntRoll()) {
+                    const hauntRoll = cardManager.performHauntRoll();
+                    result.logs.push(`${this.state.playerName} 進行作祟檢定: 擲出 ${hauntRoll.roll} (閾值 ${hauntRoll.threshold}) - ${hauntRoll.triggered ? '作祟觸發！' : '作祟未觸發'}`);
+                    this.log(`Haunt roll: ${hauntRoll.roll} vs ${hauntRoll.threshold}, triggered: ${hauntRoll.triggered}`);
+                  }
+                }
+
+                // Update player state with drawn card
+                if (cardType === 'item') {
+                  currentPlayer.items.push(drawResult.card);
+                } else if (cardType === 'omen') {
+                  currentPlayer.omens.push(drawResult.card);
+                }
+              } else {
+                result.logs.push(`${this.state.playerName} 無法抽取 ${cardType} 卡: ${drawResult.message}`);
+                this.log(`Failed to draw ${cardType} card: ${drawResult.message}`);
+              }
+            }
+          }
         } else {
           this.log(`Failed to discover room: ${discoveryResult.error}`);
         }
-        
+
         break;
       } else if (decision.action === 'move' && decision.targetPosition) {
         movesRemaining--;

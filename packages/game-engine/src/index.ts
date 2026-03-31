@@ -80,7 +80,7 @@ export type {
   DoorMatchResult,
 } from './rules/tilePlacement';
 
-// Card Drawing System (Issue #36, #104)
+// Card Drawing System (Issue #36, #104, #188)
 export {
   CardDrawingManager,
   CardEffectApplier,
@@ -91,6 +91,7 @@ export type {
   CardEffectResult,
   PlayerState,
   EventCheckResult,
+  DeckState,
 } from './rules/cardDrawing';
 
 // Haunt System (Issue #41)

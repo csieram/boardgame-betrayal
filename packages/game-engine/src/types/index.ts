@@ -201,17 +201,21 @@ export interface Card {
   failure?: string;
 }
 
-/** 卡牌堆狀態 */
+/** 卡牌堆狀態 (Issue #188)
+ * 使用 string[] 存儲卡牌 ID，確保可序列化和跨組件共享
+ */
 export interface CardDecks {
   /** 事件卡牌堆 */
-  event: CardDeckState;
+  event: { remaining: string[]; drawn: string[]; discarded: string[] };
   /** 物品卡牌堆 */
-  item: CardDeckState;
+  item: { remaining: string[]; drawn: string[]; discarded: string[] };
   /** 預兆卡牌堆 */
-  omen: CardDeckState;
+  omen: { remaining: string[]; drawn: string[]; discarded: string[] };
 }
 
-/** 單一卡牌堆狀態 */
+/** 單一卡牌堆狀態 (Legacy - 使用 Card[])
+ * @deprecated 請使用 CardDecks，它使用 string[] 存儲卡牌 ID
+ */
 export interface CardDeckState {
   /** 剩餘卡牌（牌堆頂在陣列尾端） */
   remaining: Card[];

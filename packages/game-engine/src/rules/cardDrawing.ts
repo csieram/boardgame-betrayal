@@ -2,6 +2,16 @@ import { Card, CardType, EVENT_CARDS, ITEM_CARDS, OMEN_CARDS } from '@betrayal/s
 import { SeededRng } from '../core/GameState';
 
 /**
+ * 卡牌牌堆初始狀態
+ * Issue #188: 用於從 gameState 恢復牌堆狀態
+ */
+export interface DeckState {
+  event: { remaining: string[]; drawn: string[]; discarded: string[] };
+  item: { remaining: string[]; drawn: string[]; discarded: string[] };
+  omen: { remaining: string[]; drawn: string[]; discarded: string[] };
+}
+
+/**
  * 卡牌抽牌管理器
  * 
  * 負責管理三種卡牌牌堆的洗牌、抽牌和效果應用
@@ -11,21 +21,115 @@ export class CardDrawingManager {
   private eventDeck: Card[] = [];
   private itemDeck: Card[] = [];
   private omenDeck: Card[] = [];
-  
+
   private eventDiscard: Card[] = [];
   private itemDiscard: Card[] = [];
   private omenDiscard: Card[] = [];
-  
+
   private drawnCards: Set<string> = new Set();
   private rng: SeededRng;
-  
+
   // 作祟相關狀態
   private omenCount: number = 0;
   private hauntTriggered: boolean = false;
 
-  constructor(seed: string) {
+  // Issue #188: 是否使用外部牌堆狀態
+  private useExternalDeckState: boolean = false;
+  private externalDeckState?: DeckState;
+  private onDeckStateChange?: (newState: DeckState) => void;
+
+  constructor(seed: string, initialDecks?: DeckState) {
     this.rng = new SeededRng(seed);
-    this.initializeDecks();
+
+    // Issue #188: 如果有初始牌堆狀態，使用它
+    if (initialDecks) {
+      this.useExternalDeckState = true;
+      this.externalDeckState = initialDecks;
+      this.initializeDecksFromState(initialDecks);
+    } else {
+      this.initializeDecks();
+    }
+  }
+
+  /**
+   * Issue #188: 設置牌堆狀態變更回調
+   * 用於將牌堆狀態同步回 gameState
+   */
+  setDeckStateChangeCallback(callback: (newState: DeckState) => void): void {
+    this.onDeckStateChange = callback;
+  }
+
+  /**
+   * Issue #188: 從外部狀態初始化牌堆
+   */
+  private initializeDecksFromState(deckState: DeckState): void {
+    // 根據 ID 從卡牌資料中查找對應卡牌
+    this.eventDeck = deckState.event.remaining
+      .map(id => EVENT_CARDS.find(c => c.id === id))
+      .filter((c): c is Card => c !== undefined);
+    this.itemDeck = deckState.item.remaining
+      .map(id => ITEM_CARDS.find(c => c.id === id))
+      .filter((c): c is Card => c !== undefined);
+    this.omenDeck = deckState.omen.remaining
+      .map(id => OMEN_CARDS.find(c => c.id === id))
+      .filter((c): c is Card => c !== undefined);
+
+    // 初始化棄牌堆
+    this.eventDiscard = deckState.event.discarded
+      .map(id => EVENT_CARDS.find(c => c.id === id))
+      .filter((c): c is Card => c !== undefined);
+    this.itemDiscard = deckState.item.discarded
+      .map(id => ITEM_CARDS.find(c => c.id === id))
+      .filter((c): c is Card => c !== undefined);
+    this.omenDiscard = deckState.omen.discarded
+      .map(id => OMEN_CARDS.find(c => c.id === id))
+      .filter((c): c is Card => c !== undefined);
+
+    // 記錄已抽卡牌
+    deckState.event.drawn.forEach(id => this.drawnCards.add(id));
+    deckState.item.drawn.forEach(id => this.drawnCards.add(id));
+    deckState.omen.drawn.forEach(id => this.drawnCards.add(id));
+
+    // 計算預兆數量
+    this.omenCount = deckState.omen.drawn.length;
+
+    console.log('[CardDrawingManager] Decks initialized from external state');
+    console.log(`[CardDrawingManager] Event deck: ${this.eventDeck.length} cards`);
+    console.log(`[CardDrawingManager] Item deck: ${this.itemDeck.length} cards`);
+    console.log(`[CardDrawingManager] Omen deck: ${this.omenDeck.length} cards`);
+  }
+
+  /**
+   * Issue #188: 通知牌堆狀態變更
+   */
+  private notifyDeckStateChange(): void {
+    if (this.onDeckStateChange && this.useExternalDeckState) {
+      const newState = this.getDeckState();
+      this.onDeckStateChange(newState);
+    }
+  }
+
+  /**
+   * Issue #188: 獲取當前牌堆狀態
+   */
+  getDeckState(): DeckState {
+    return {
+      event: {
+        remaining: this.eventDeck.map(c => c.id),
+        drawn: Array.from(this.drawnCards).filter(id => EVENT_CARDS.some(c => c.id === id)),
+        discarded: this.eventDiscard.map(c => c.id),
+      },
+      item: {
+        remaining: this.itemDeck.map(c => c.id),
+        drawn: Array.from(this.drawnCards).filter(id => ITEM_CARDS.some(c => c.id === id)),
+        discarded: this.itemDiscard.map(c => c.id),
+      },
+      omen: {
+        remaining: this.omenDeck.map(c => c.id),
+        drawn: Array.from(this.drawnCards).filter(id => OMEN_CARDS.some(c => c.id === id)),
+        discarded: this.omenDiscard.map(c => c.id),
+      },
+    };
   }
 
   /**
@@ -91,7 +195,7 @@ export class CardDrawingManager {
     // 抽牌
     const card = deck.pop()!;
     this.drawnCards.add(card.id);
-    
+
     console.log(`[CardDrawingManager] Drew ${type} card: ${card.name}`);
 
     // 如果是預兆卡，增加預兆計數
@@ -99,6 +203,9 @@ export class CardDrawingManager {
       this.omenCount++;
       console.log(`[CardDrawingManager] Omen count: ${this.omenCount}`);
     }
+
+    // Issue #188: 通知牌堆狀態變更
+    this.notifyDeckStateChange();
 
     return card;
   }
@@ -120,6 +227,9 @@ export class CardDrawingManager {
         break;
     }
     console.log(`[CardDrawingManager] Discarded ${card.type} card: ${card.name}`);
+
+    // Issue #188: 通知牌堆狀態變更
+    this.notifyDeckStateChange();
   }
 
   /**
