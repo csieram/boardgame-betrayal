@@ -564,10 +564,15 @@ export class AIPlayer {
             const cardManager = new CardDrawingManager(seed, initialDecks);
             const effectApplier = new CardEffectApplier(seed);
 
-            // Issue #188: 設置牌堆狀態變更回調，將變更同步回 gameState
+            // Issue #188 & #190-fix: 設置牌堆狀態變更回調，將變更同步回 gameState
+            // 這確保了抽出的卡會被記錄，不會重複抽取
             cardManager.setDeckStateChangeCallback((newState) => {
               if (gameState.cardDecks) {
-                gameState.cardDecks = newState;
+                // 直接修改 gameState.cardDecks 的每個屬性以確保狀態同步
+                gameState.cardDecks.event = newState.event;
+                gameState.cardDecks.item = newState.item;
+                gameState.cardDecks.omen = newState.omen;
+                this.log('Card deck state updated after draw');
               }
             });
 

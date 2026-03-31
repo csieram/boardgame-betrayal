@@ -92,6 +92,16 @@ interface CardDrawState {
   cardResult: CardDrawResult | null;
   isHauntRoll: boolean;
   hauntRollResult: { triggered: boolean; roll: number; threshold: number } | null;
+  // Issue #190: 事件檢定結果
+  eventCheckResult?: {
+    success: boolean;
+    roll: number;
+    dice: number[];
+    stat: 'speed' | 'might' | 'sanity' | 'knowledge';
+    target: number;
+    message: string;
+    effectDescription: string;
+  } | null;
 }
 
 /** Haunt 狀態 */
@@ -247,6 +257,7 @@ export default function SoloGamePage() {
     cardResult: null,
     isHauntRoll: false,
     hauntRollResult: null,
+    eventCheckResult: null,
   });
   
   // 玩家狀態（用於卡牌效果）
@@ -1971,11 +1982,30 @@ export default function SoloGamePage() {
   const handleCloseCardDisplay = () => {
     const card = cardDrawState.cardResult?.card;
     
+    // Issue #190: 如果卡牌已經有檢定結果顯示，直接關閉並結束回合
+    if (cardDrawState.eventCheckResult) {
+      setCardDrawState({
+        showCard: false,
+        cardResult: null,
+        isHauntRoll: false,
+        hauntRollResult: null,
+        eventCheckResult: null,
+      });
+      
+      // Issue #127: 標記回合結束，觸發自動切換
+      setTurnState({
+        hasEnded: true,
+        endedByDiscovery: true,
+      });
+      return;
+    }
+    
     setCardDrawState({
       showCard: false,
       cardResult: null,
       isHauntRoll: false,
       hauntRollResult: null,
+      eventCheckResult: null,
     });
     
     // 如果 Haunt Roll 模態框即將顯示，不要立即開始新回合
@@ -2079,6 +2109,33 @@ export default function SoloGamePage() {
       isRolling: false,
       result,
     }));
+
+    // Issue #190: 檢定完成後，關閉 EventCheckModal 並在 CardDisplay 中顯示結果
+    // 延遲一下讓玩家看到檢定動畫
+    setTimeout(() => {
+      // 關閉 EventCheckModal
+      setEventCheckState({
+        showModal: false,
+        card: null,
+        isRolling: false,
+        result: null,
+      });
+
+      // 重新顯示卡牌彈窗，並帶上檢定結果
+      setCardDrawState(prev => ({
+        ...prev,
+        showCard: true,
+        eventCheckResult: {
+          success: result.success,
+          roll: result.roll,
+          dice: result.dice,
+          stat: result.stat,
+          target: result.target,
+          message: result.message,
+          effectDescription: result.effectDescription,
+        },
+      }));
+    }, 2000); // 給玩家 2 秒時間看到檢定結果
   };
 
   // Issue #104: 處理關閉事件卡檢定模態框
@@ -2311,7 +2368,6 @@ export default function SoloGamePage() {
 
             {/* 移動控制 */}
             <div className="mt-4 bg-gray-800/50 rounded-xl p-3 sm:p-4 border border-gray-700">
-              <h3 className="text-sm font-bold text-gray-400 mb-3 text-center">移動控制</h3>
               <div className="flex justify-center gap-3">
                 {/* 戰鬥按鈕 (Issue #103) - 只在作祟階段顯示 */}
                 {hauntState.isActive && (
@@ -2362,23 +2418,52 @@ export default function SoloGamePage() {
               )}
               
               {/* End Turn Button (Issue #135) - 移至狀態訊息下方 */}
+              {/* Issue #190: 當已發現房間或沒有可移動位置時，高亮結束回合按鈕 */}
               <div className="flex justify-center mt-3">
-                <Button
-                  onClick={() => {
-                    console.log('[EndTurn] Button clicked!');
-                    showEndTurnConfirmation(false);
-                  }}
-                  variant="secondary"
-                  size="sm"
-                  className="h-10 sm:h-12 text-xs sm:text-sm"
-                  disabled={
-                    isProcessingTurnSwitch ||
-                    isProcessingAITurn ||
-                    currentTurnPlayer !== 'solo-player'
+                <motion.div
+                  animate={
+                    discovered || reachablePositions.length === 0
+                      ? {
+                          scale: [1, 1.05, 1],
+                          boxShadow: [
+                            '0 0 0 0 rgba(59, 130, 246, 0)',
+                            '0 0 0 10px rgba(59, 130, 246, 0.3)',
+                            '0 0 0 0 rgba(59, 130, 246, 0)',
+                          ],
+                        }
+                      : {}
+                  }
+                  transition={
+                    discovered || reachablePositions.length === 0
+                      ? {
+                          duration: 1.5,
+                          repeat: Infinity,
+                          ease: 'easeInOut',
+                        }
+                      : {}
                   }
                 >
-                  結束回合
-                </Button>
+                  <Button
+                    onClick={() => {
+                      console.log('[EndTurn] Button clicked!');
+                      showEndTurnConfirmation(false);
+                    }}
+                    variant={discovered || reachablePositions.length === 0 ? 'primary' : 'secondary'}
+                    size="sm"
+                    className={`h-10 sm:h-12 text-xs sm:text-sm ${
+                      discovered || reachablePositions.length === 0
+                        ? 'bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/30 animate-pulse'
+                        : ''
+                    }`}
+                    disabled={
+                      isProcessingTurnSwitch ||
+                      isProcessingAITurn ||
+                      currentTurnPlayer !== 'solo-player'
+                    }
+                  >
+                    {discovered ? '回合結束（已探索）' : '結束回合'}
+                  </Button>
+                </motion.div>
               </div>
             </div>
           </div>
@@ -2572,6 +2657,7 @@ export default function SoloGamePage() {
         card={cardDrawState.showCard ? cardDrawState.cardResult?.card || null : null}
         onClose={handleCloseCardDisplay}
         animate={true}
+        eventCheckResult={cardDrawState.eventCheckResult}
       />
 
       {/* Haunt Roll 模態框 (Issue #97) */}

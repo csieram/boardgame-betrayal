@@ -12,6 +12,16 @@ interface CardDisplayProps {
   onClose: () => void;
   /** 是否顯示動畫（抽卡效果） */
   animate?: boolean;
+  /** Issue #190: 事件檢定結果（用於在卡牌彈窗中顯示檢定結果） */
+  eventCheckResult?: {
+    success: boolean;
+    roll: number;
+    dice: number[];
+    stat: 'speed' | 'might' | 'sanity' | 'knowledge';
+    target: number;
+    message: string;
+    effectDescription: string;
+  } | null;
 }
 
 /**
@@ -31,6 +41,7 @@ export function CardDisplay({
   card,
   onClose,
   animate = true,
+  eventCheckResult,
 }: CardDisplayProps) {
   // ESC 鍵關閉
   useEffect(() => {
@@ -109,6 +120,7 @@ export function CardDisplay({
             onClose={onClose}
             animate={animate}
             typeConfig={getCardTypeConfig(card.type)}
+            eventCheckResult={eventCheckResult}
           />
         </motion.div>
       )}
@@ -137,9 +149,10 @@ interface CardContentProps {
   onClose: () => void;
   animate: boolean;
   typeConfig: CardTypeConfig;
+  eventCheckResult?: CardDisplayProps['eventCheckResult'];
 }
 
-function CardContent({ card, onClose, animate, typeConfig }: CardContentProps) {
+function CardContent({ card, onClose, animate, typeConfig, eventCheckResult }: CardContentProps) {
   const cardVariants = {
     hidden: {
       opacity: 0,
@@ -303,6 +316,62 @@ function CardContent({ card, onClose, animate, typeConfig }: CardContentProps) {
             )}
           </motion.div>
         )}
+
+        {/* Issue #190: 事件檢定結果顯示 */}
+        {eventCheckResult && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.7, type: 'spring', stiffness: 200 }}
+            className={`mt-4 rounded-xl p-4 border-2 ${
+              eventCheckResult.success 
+                ? 'bg-green-900/40 border-green-500/50' 
+                : 'bg-red-900/40 border-red-500/50'
+            }`}
+          >
+            {/* 檢定結果標題 */}
+            <div className="text-center mb-3">
+              <div className={`text-3xl mb-1 ${eventCheckResult.success ? 'text-green-400' : 'text-red-400'}`}>
+                {eventCheckResult.success ? '✅ 檢定成功！' : '❌ 檢定失敗！'}
+              </div>
+            </div>
+
+            {/* 骰子結果 */}
+            <div className="flex justify-center gap-2 mb-3">
+              {eventCheckResult.dice.map((die, index) => (
+                <div 
+                  key={index}
+                  className="w-10 h-10 rounded-lg bg-white/90 flex items-center justify-center shadow-lg"
+                >
+                  <span className="text-xl font-bold text-gray-800">{die}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* 總和與目標 */}
+            <div className="text-center mb-3">
+              <p className="text-white text-lg font-bold">
+                總和: {eventCheckResult.roll} 
+                <span className="text-white/60 text-sm ml-2">
+                  (目標 ≥ {eventCheckResult.target})
+                </span>
+              </p>
+            </div>
+
+            {/* 檢定屬性 */}
+            <div className="text-center mb-3">
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-white/10 rounded-full text-sm text-white/80">
+                {getStatIcon(eventCheckResult.stat)}
+                {getStatName(eventCheckResult.stat)}
+              </span>
+            </div>
+
+            {/* 效果描述 */}
+            <div className={`text-center text-sm ${eventCheckResult.success ? 'text-green-300' : 'text-red-300'}`}>
+              {eventCheckResult.effectDescription}
+            </div>
+          </motion.div>
+        )}
       </div>
 
       {/* 底部裝飾 */}
@@ -322,6 +391,19 @@ function getStatName(stat: string): string {
     knowledge: '知識 Knowledge',
   };
   return names[stat] || stat;
+}
+
+/**
+ * Issue #190: 取得屬性圖示
+ */
+function getStatIcon(stat: string): string {
+  const icons: Record<string, string> = {
+    speed: '⚡',
+    might: '💪',
+    sanity: '🧠',
+    knowledge: '📚',
+  };
+  return icons[stat] || '❓';
 }
 
 export default CardDisplay;
