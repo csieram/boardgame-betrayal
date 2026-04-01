@@ -33,9 +33,11 @@ export default function CardsGalleryPage() {
 
   // 渲染 SVG 圖示
   const renderIcon = (iconSvg: string) => {
+    // 檢查 SVG 是否包含 viewBox="0 0 200 200" (新的大尺寸 SVG)
+    const isLargeSvg = iconSvg.includes('viewBox="0 0 200 200"');
     return (
       <svg 
-        viewBox="0 0 100 100" 
+        viewBox={isLargeSvg ? "0 0 200 200" : "0 0 100 100"}
         className="w-full h-full"
         dangerouslySetInnerHTML={{ __html: iconSvg }}
       />

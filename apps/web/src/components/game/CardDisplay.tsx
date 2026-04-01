@@ -226,7 +226,10 @@ function CardContent({ card, onClose, animate, typeConfig, eventCheckResult }: C
             transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
             className="w-32 h-32 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center shadow-inner"
             dangerouslySetInnerHTML={{
-              __html: `<svg viewBox="0 0 100 100" width="80" height="80">${card.icon}</svg>`,
+              __html: (() => {
+                const isLargeSvg = card.icon.includes('viewBox="0 0 200 200"');
+                return `<svg viewBox="${isLargeSvg ? '0 0 200 200' : '0 0 100 100'}" width="80" height="80">${card.icon}</svg>`;
+              })(),
             }}
           />
         </div>
