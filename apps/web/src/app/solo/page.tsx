@@ -1877,6 +1877,19 @@ export default function SoloGamePage() {
               ]);
             }
 
+            // Issue #201-fix: 更新 AI 玩家物品到前端狀態
+            if (result.drawnCard.type === 'item' || result.drawnCard.type === 'omen') {
+              setAiPlayers(prev => prev.map(p => {
+                if (p.id !== result.playerId) return p;
+                const newItem = { id: result.drawnCard!.id, name: result.drawnCard!.name, type: result.drawnCard!.type };
+                if (result.drawnCard.type === 'item') {
+                  return { ...p, items: [...p.items, newItem] };
+                } else {
+                  return { ...p, omens: [...p.omens, newItem] };
+                }
+              }));
+            }
+
             setAiCardDrawState({
               showCard: true,
               cardResult: {
