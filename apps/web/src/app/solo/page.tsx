@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Character, CHARACTERS, Room, Floor, Tile, Direction, Card, ALL_ROOMS } from '@betrayal/shared';
+import { Character, CHARACTERS, Room, Floor, Tile, Direction, Card, ALL_ROOMS, EVENT_CARDS, ITEM_CARDS, OMEN_CARDS } from '@betrayal/shared';
 import { Button } from '@betrayal/ui';
 import { GameBoard } from '@/components/game/GameBoard';
 import { CardDisplay } from '@/components/game/CardDisplay';
@@ -173,11 +173,11 @@ function createInitialGameState(seed: string): SoloGameState {
     },
     drawn: new Set(),
     seed,
-    // Issue #188: 初始化空的卡牌牌堆狀態
+    // Issue #203-fix: 初始化卡牌牌堆狀態，包含所有卡牌ID
     cardDecks: {
-      event: { remaining: [], drawn: [], discarded: [] },
-      item: { remaining: [], drawn: [], discarded: [] },
-      omen: { remaining: [], drawn: [], discarded: [] },
+      event: { remaining: EVENT_CARDS.map(c => c.id), drawn: [], discarded: [] },
+      item: { remaining: ITEM_CARDS.map(c => c.id), drawn: [], discarded: [] },
+      omen: { remaining: OMEN_CARDS.map(c => c.id), drawn: [], discarded: [] },
     },
   };
 }
