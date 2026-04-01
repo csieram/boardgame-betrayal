@@ -628,11 +628,13 @@ export class AIPlayer {
                   this.log(`Event card requires stat check: ${eventCheck.stat} ${eventCheck.target}+`);
 
                   // Issue #194: Implement AI event check logic
+                  // Issue #200-fix: Use stat value as number of dice (not fixed 2 dice)
                   const card = drawResult.card;
                   const statValue = currentPlayer.currentStats[eventCheck.stat];
-                  const dice = rollDice(2); // Roll 2 dice
+                  const diceCount = statValue; // Use stat value as number of dice
+                  const dice = rollDice(diceCount);
                   const roll = dice.reduce((a, b) => a + b, 0);
-                  const total = roll + statValue;
+                  const total = roll; // Total is just dice sum (no stat added)
                   const success = total >= eventCheck.target;
 
                   // Determine effect based on success/failure

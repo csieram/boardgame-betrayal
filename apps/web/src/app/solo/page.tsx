@@ -2344,8 +2344,8 @@ export default function SoloGamePage() {
         character: aiPlayer.character,
         position: aiPos,
         stats,
-        items: [], // AI 物品暫時不顯示詳細資訊
-        omens: [],
+        items: aiPlayer.items || [], // Issue #201-fix: Show AI player items
+        omens: aiPlayer.omens || [],
         personality: aiPlayer.personality,
         isAlive: aiPlayer.isAlive,
         isTraitor: hauntState.revelation?.traitorId === aiPlayer.id,
