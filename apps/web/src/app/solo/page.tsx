@@ -11,7 +11,7 @@ import { HauntRollModal } from '@/components/game/HauntRollModal';
 import { HauntRevealScreen } from '@/components/game/HauntRevealScreen';
 import { EventCheckModal, EventCheckResult } from '@/components/game/EventCheckModal';
 
-import { AIActivityLog, AIActivityNotification, AIActivityIndicator } from '@/components/game/AIActivityLog';
+import { AIActivityNotification, AIActivityIndicator } from '@/components/game/AIActivityLog';
 import { CharacterTabs, PlayerInfo } from '@/components/game/CharacterTabs';
 import { CharacterDetailPanel } from '@/components/game/CharacterDetailPanel';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -242,7 +242,18 @@ export default function SoloGamePage() {
   const [currentFloor, setCurrentFloor] = useState<Floor>('ground');
   const [multiFloorMap, setMultiFloorMap] = useState<MultiFloorMap>(createEmptyMultiFloorMap());
   const [log, setLog] = useState<string[]>(['遊戲開始']);
+  const logRef = useRef<HTMLDivElement>(null);
   const [discovered, setDiscovered] = useState(false);
+
+  // Auto-scroll game log to latest entries
+  useEffect(() => {
+    if (logRef.current) {
+      logRef.current.scrollTo({ 
+        top: logRef.current.scrollHeight, 
+        behavior: 'smooth' 
+      });
+    }
+  }, [log]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRoom, setSelectedRoom] = useState<{ room: Room | null; x: number; y: number } | null>(null);
   const [reachablePositions, setReachablePositions] = useState<{ x: number; y: number; isExplored?: boolean }[]>([]);
@@ -2792,10 +2803,14 @@ export default function SoloGamePage() {
               </>
             )}
 
-            {/* 遊戲日誌 */}
+            {/* 遊戲日誌 - Auto-scroll */}
             <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
               <h3 className="text-lg font-bold mb-3">遊戲日誌</h3>
-              <div className="h-64 overflow-y-auto space-y-2 pr-2">
+              <div 
+                ref={logRef}
+                className="h-64 overflow-y-auto space-y-2 pr-2 scrollbar-hide"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
                 <AnimatePresence initial={false}>
                   {log.slice(-20).map((entry, i) => (
                     <motion.p 
@@ -2850,16 +2865,6 @@ export default function SoloGamePage() {
                   </div>
                 </div>
               </motion.div>
-            )}
-
-            {/* Issue #118: AI 活動日誌面板 */}
-            {aiPlayers.length > 0 && (
-              <AIActivityLog
-                actionLogs={aiActionLogs.filter((log): log is AIActionLog => log != null && typeof log.timestamp === 'number')}
-                currentAIPlayerId={currentTurnPlayer !== 'solo-player' ? currentTurnPlayer : null}
-                maxDisplay={20}
-                autoScroll={true}
-              />
             )}
 
             {/* Hero AI 狀態面板 (Issue #109) */}

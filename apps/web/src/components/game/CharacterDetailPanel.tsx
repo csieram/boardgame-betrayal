@@ -107,54 +107,24 @@ export function CharacterDetailPanel({
         </div>
       </div>
 
-      {/* 當前位置 */}
-      <div className="mb-4 p-3 bg-gray-700/30 rounded-lg">
-        <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-          <span>📍</span>
-          <span>當前位置</span>
-        </h4>
-        <div className="flex items-center gap-4 text-sm">
+      {/* 當前位置 - Simplified to one line */}
+      <div className="mb-3 p-2 bg-gray-700/30 rounded-lg">
+        <p className="text-sm">
+          <span className="text-gray-400">📍當前位置:</span>{' '}
           <span className="text-white font-medium">
-            {floorNames[player.position.floor]}
+            {floorNames[player.position.floor]} ({player.position.x}, {player.position.y})
           </span>
-          <span className="text-gray-400">
-            ({player.position.x}, {player.position.y})
-          </span>
-        </div>
+        </p>
       </div>
 
-      {/* 屬性面板 */}
-      <div className="mb-4">
-        <h4 className="text-sm font-medium text-gray-300 mb-2">角色屬性</h4>
-        <div className="grid grid-cols-2 gap-2">
-          <StatCard
-            label="速度"
-            value={player.stats.speed}
-            color="#3B82F6"
-            icon="⚡"
-            isHuman={isHuman}
-          />
-          <StatCard
-            label="力量"
-            value={player.stats.might}
-            color="#EF4444"
-            icon="💪"
-            isHuman={isHuman}
-          />
-          <StatCard
-            label="理智"
-            value={player.stats.sanity}
-            color="#8B5CF6"
-            icon="🧠"
-            isHuman={isHuman}
-          />
-          <StatCard
-            label="知識"
-            value={player.stats.knowledge}
-            color="#10B981"
-            icon="📚"
-            isHuman={isHuman}
-          />
+      {/* 屬性面板 - Compact */}
+      <div className="mb-3">
+        <h4 className="text-sm font-medium text-gray-300 mb-1">角色屬性</h4>
+        <div className="flex gap-2">
+          <CompactStat label="速" value={player.stats.speed} color="#3B82F6" />
+          <CompactStat label="力" value={player.stats.might} color="#EF4444" />
+          <CompactStat label="理" value={player.stats.sanity} color="#8B5CF6" />
+          <CompactStat label="知" value={player.stats.knowledge} color="#10B981" />
         </div>
       </div>
 
@@ -179,33 +149,22 @@ export function CharacterDetailPanel({
 }
 
 /**
- * 屬性卡片組件
+ * 緊湊屬性組件
  */
-interface StatCardProps {
+interface CompactStatProps {
   label: string;
   value: number;
   color: string;
-  icon: string;
-  isHuman: boolean;
 }
 
-function StatCard({ label, value, color, icon, isHuman }: StatCardProps) {
+function CompactStat({ label, value, color }: CompactStatProps) {
   return (
-    <motion.div
-      className={`
-        bg-gray-700/50 rounded-lg p-2 flex items-center gap-2
-        border ${isHuman ? 'border-gray-600/30' : 'border-purple-500/20'}
-      `}
-      whileHover={{ scale: 1.02 }}
-    >
-      <span className="text-lg">{icon}</span>
-      <div>
-        <div className="text-xs text-gray-400">{label}</div>
-        <div className="font-bold text-lg" style={{ color }}>
-          {value}
-        </div>
-      </div>
-    </motion.div>
+    <div className="flex-1 bg-gray-700/50 rounded px-2 py-1 text-center">
+      <span className="text-xs text-gray-400">{label}</span>
+      <span className="font-bold text-sm ml-1" style={{ color }}>
+        {value}
+      </span>
+    </div>
   );
 }
 

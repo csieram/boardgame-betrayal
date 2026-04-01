@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Room, Character, Floor, Tile, Direction } from '@betrayal/shared';
 import { RoomTile, EmptyRoomTile } from './RoomTile';
@@ -99,6 +99,7 @@ export function GameBoard({
   const [showStairModal, setShowStairModal] = useState(false);
   const [stairOptions, setStairOptions] = useState<Array<{ to: Floor; description: string }>>([]);
   const [currentStairRoom, setCurrentStairRoom] = useState<Room | null>(null);
+  const boardContainerRef = useRef<HTMLDivElement>(null);
 
   // Issue #84: 同步 activeFloor 與 currentFloor prop
   // 當父組件改變 currentFloor 時，更新內部 activeFloor 狀態
@@ -327,7 +328,7 @@ export function GameBoard({
         </div>
 
         {/* 房間網格 */}
-        <div className="overflow-auto pb-4 max-h-[60vh]">
+        <div className="pb-4">
           <div 
             className="inline-grid gap-1 sm:gap-2 p-2 sm:p-4 bg-gray-900/50 rounded-xl min-w-max"
             style={{
@@ -451,34 +452,51 @@ export function GameBoard({
         ))}
       </div>
 
-      {/* 樓層內容 */}
-      <div className="flex-1 overflow-y-auto">
-        <AnimatePresence mode="wait">
-          {showAllFloors ? (
-            // 顯示所有樓層
-            <motion.div
-              key="all-floors"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              {renderFloor('upper')}
-              {renderFloor('ground')}
-              {renderFloor('basement')}
-            </motion.div>
-          ) : (
-            // 只顯示當前樓層
-            <motion.div
-              key={activeFloor}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-            >
-              {renderFloor(activeFloor)}
-            </motion.div>
-          )}
-        </AnimatePresence>
+      {/* 樓層內容 - Draggable */}
+      <div 
+        ref={boardContainerRef}
+        className="flex-1 overflow-hidden cursor-grab active:cursor-grabbing relative"
+        style={{ touchAction: 'none' }}
+      >
+        <motion.div
+          drag
+          dragConstraints={boardContainerRef}
+          dragElastic={0.1}
+          dragMomentum={false}
+          className="absolute inset-0"
+        >
+          <AnimatePresence mode="wait">
+            {showAllFloors ? (
+              // 顯示所有樓層
+              <motion.div
+                key="all-floors"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                {renderFloor('upper')}
+                {renderFloor('ground')}
+                {renderFloor('basement')}
+              </motion.div>
+            ) : (
+              // 只顯示當前樓層
+              <motion.div
+                key={activeFloor}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.2 }}
+              >
+                {renderFloor(activeFloor)}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+        
+        {/* Drag hint */}
+        <div className="absolute bottom-2 left-2 text-xs text-gray-500 bg-gray-900/80 px-2 py-1 rounded pointer-events-none">
+          拖動以移動地圖
+        </div>
       </div>
 
       {/* 樓梯切換彈窗 */}
