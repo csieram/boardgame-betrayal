@@ -250,18 +250,18 @@ export default function SoloGamePage() {
   const [gameState, setGameState] = useState<SoloGameState>(() => createInitialGameState(Date.now().toString()));
   
   // Issue #202-fix: 使用共享的卡牌抽牌系統
-  // 創建單一的 cardManager 實例，並使用 gameState 中的牌堆狀態
-  const cardManager = useMemo(() => {
-    const manager = new CardDrawingManager(gameState.seed, gameState.cardDecks);
-    // 設置牌堆狀態變更回調，將變更同步回 gameState
-    manager.setDeckStateChangeCallback((newState) => {
+  // Issue #203-fix: 使用 useRef 保持單一實例，避免重新創建導致牌堆重置
+  const cardManagerRef = useRef<CardDrawingManager | null>(null);
+  if (!cardManagerRef.current) {
+    cardManagerRef.current = new CardDrawingManager(gameState.seed, gameState.cardDecks);
+    cardManagerRef.current.setDeckStateChangeCallback((newState) => {
       setGameState(prev => ({
         ...prev,
         cardDecks: newState,
       }));
     });
-    return manager;
-  }, [gameState.seed]); // 只在 seed 變化時重新創建
+  }
+  const cardManager = cardManagerRef.current;
   
   const [effectApplier] = useState(() => new CardEffectApplier(Date.now().toString()));
   const [cardDrawState, setCardDrawState] = useState<CardDrawState>({
