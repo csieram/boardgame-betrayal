@@ -2716,16 +2716,29 @@ export default function SoloGamePage() {
                     />
                   );
                 })()}
-                {/* 背包與預兆面板 - 始終顯示人類玩家的背包 */}
-                {playerState && (
-                  <InventoryPanel
-                    items={playerState.items}
-                    omens={playerState.omens}
-                    omenCount={cardManager.getDeckStatus().omenCount}
-                    hauntTriggered={cardManager.getDeckStatus().hauntTriggered}
-                    defaultExpanded={false}
-                  />
-                )}
+                {/* Issue #201-fix: 背包與預兆面板 - 根據選中的玩家顯示對應的背包 */}
+                {(() => {
+                  const selectedPlayer = getSelectedPlayer();
+                  if (!selectedPlayer) return null;
+                  
+                  // 人類玩家使用 playerState，AI 玩家使用 selectedPlayer
+                  const items = selectedPlayer.type === 'human' 
+                    ? playerState?.items || []
+                    : selectedPlayer.items || [];
+                  const omens = selectedPlayer.type === 'human'
+                    ? playerState?.omens || []
+                    : selectedPlayer.omens || [];
+                  
+                  return (
+                    <InventoryPanel
+                      items={items}
+                      omens={omens}
+                      omenCount={cardManager.getDeckStatus().omenCount}
+                      hauntTriggered={cardManager.getDeckStatus().hauntTriggered}
+                      defaultExpanded={false}
+                    />
+                  );
+                })()}
               </>
             ) : (
               /* 沒有 AI 玩家時顯示原有人類玩家面板 */
