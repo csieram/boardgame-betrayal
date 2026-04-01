@@ -18,88 +18,67 @@ export interface Card {
   failure?: string;
 }
 
-// 事件卡
+// 事件卡 - Betrayal at House on the Hill 2nd Edition (官方事件卡)
 export const EVENT_CARDS: Card[] = [
   {
-    id: 'event_1',
+    id: 'event_burning_figure',
     type: 'event',
-    name: '地板塌陷',
-    description: '你腳下的地板突然塌陷！',
-    icon: `<rect x="20" y="20" width="60" height="60" fill="#5A4A3A"/>
-           <polygon points="50,40 30,70 70,70" fill="#2A1A0A"/>
-           <circle cx="50" cy="55" r="8" fill="#1A0A00"/>`,
-    rollRequired: { stat: 'speed', target: 4 },
-    success: '你及時跳開，安全落地。',
-    failure: '你摔了下去，失去 1 點體力。',
-  },
-  {
-    id: 'event_2',
-    type: 'event',
-    name: '詭異的聲音',
-    description: '牆壁裡傳來低語聲，似乎在呼喚你的名字。',
-    icon: `<rect x="20" y="20" width="60" height="60" fill="#4A3A4A"/>
-           <path d="M30 40 Q40 30 50 40 Q60 50 50 60 Q40 70 30 60" fill="none" stroke="#8B7B8B" stroke-width="2"/>
-           <text x="35" y="50" font-size="20" fill="#A090A0">〰</text>`,
+    name: '燃燒的人影',
+    nameEn: 'Burning Figure',
+    description: '一個人影熊熊燃燒，卻似乎沒有被吞噬。',
+    descriptionEn: 'A figure burns brightly, yet does not seem to be consumed.',
+    icon: `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="fireOuter" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#8B0000"/><stop offset="30%" stop-color="#FF4500"/><stop offset="60%" stop-color="#FF8C00"/><stop offset="100%" stop-color="#FFD700"/></linearGradient><linearGradient id="fireInner" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#FF6347"/><stop offset="50%" stop-color="#FFA500"/><stop offset="100%" stop-color="#FFFFE0"/></linearGradient><linearGradient id="figureGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#2A2A2A"/><stop offset="50%" stop-color="#1A1A1A"/><stop offset="100%" stop-color="#0A0A0A"/></linearGradient><radialGradient id="fireGlow" cx="50%" cy="80%" r="60%"><stop offset="0%" stop-color="#FF4500" stop-opacity="0.6"/><stop offset="50%" stop-color="#FF8C00" stop-opacity="0.3"/><stop offset="100%" stop-color="#FFD700" stop-opacity="0.1"/></radialGradient><filter id="fireShadow"><feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#FF4500" flood-opacity="0.5"/></filter><filter id="fireBlur"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect width="200" height="200" fill="#2A2A1A"/><ellipse cx="100" cy="170" rx="50" ry="15" fill="#1A1A0A" opacity="0.6"/><ellipse cx="100" cy="140" rx="70" ry="50" fill="url(#fireGlow)"/><path d="M100 160 Q70 140 75 100 Q80 70 85 50 Q90 30 100 25 Q110 30 115 50 Q120 70 125 100 Q130 140 100 160" fill="url(#fireOuter)" filter="url(#fireShadow)"/><path d="M100 150 Q80 135 83 105 Q86 80 90 60 Q94 45 100 40 Q106 45 110 60 Q114 80 117 105 Q120 135 100 150" fill="url(#fireInner)" filter="url(#fireBlur)"/><ellipse cx="100" cy="110" rx="18" ry="35" fill="url(#figureGrad)"/><ellipse cx="100" cy="75" rx="12" ry="15" fill="url(#figureGrad)"/><ellipse cx="82" cy="105" rx="8" ry="25" fill="url(#figureGrad)" transform="rotate(-15 82 105)"/><ellipse cx="118" cy="105" rx="8" ry="25" fill="url(#figureGrad)" transform="rotate(15 118 105)"/><ellipse cx="90" cy="145" rx="6" ry="15" fill="url(#figureGrad)" transform="rotate(-5 90 145)"/><ellipse cx="110" cy="145" rx="6" ry="15" fill="url(#figureGrad)" transform="rotate(5 110 145)"/><circle cx="95" cy="72" r="2" fill="#FF4500" opacity="0.8"/><circle cx="105" cy="72" r="2" fill="#FF4500" opacity="0.8"/><path d="M85 55 Q100 45 115 55" stroke="#FF6347" stroke-width="2" fill="none" opacity="0.7"/><path d="M75 80 Q70 100 75 120" stroke="#FF8C00" stroke-width="3" fill="none" opacity="0.6" filter="url(#fireBlur)"/><path d="M125 80 Q130 100 125 120" stroke="#FF8C00" stroke-width="3" fill="none" opacity="0.6" filter="url(#fireBlur)"/><circle cx="70" cy="70" r="8" fill="#FFD700" opacity="0.4" filter="url(#fireBlur)"/><circle cx="130" cy="65" r="6" fill="#FFA500" opacity="0.5" filter="url(#fireBlur)"/></svg>`,
     rollRequired: { stat: 'sanity', target: 5 },
-    success: '你保持冷靜，聲音消失了。',
-    failure: '你嚇壞了，失去 1 點理智。',
+    success: '5+ 獲得 1 點理智',
+    failure: '2-4 承受 1 點精神傷害；0-1 承受 2 點精神傷害',
   },
   {
-    id: 'event_3',
+    id: 'event_funeral',
     type: 'event',
-    name: '隱藏的通道',
-    description: '你發現了一個隱藏的通道！',
-    icon: `<rect x="20" y="20" width="60" height="60" fill="#5A4A3A"/>
-           <rect x="35" y="30" width="30" height="40" fill="#2A1A0A"/>
-           <rect x="40" y="35" width="20" height="30" fill="#1A0A00"/>
-           <path d="M45 50 L55 50 M50 45 L50 55" stroke="#FFD700" stroke-width="2"/>`,
-    effect: '你可以立即移動到相鄰的任何一個已發現的房間。',
+    name: '葬禮',
+    nameEn: 'Funeral',
+    description: '一個陰沉的聚會圍繞著棺材。有些事情感覺不對勁。',
+    descriptionEn: 'A somber gathering surrounds a coffin. Something feels wrong.',
+    icon: `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="coffinWood" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4A3728"/><stop offset="30%" stop-color="#3A2718"/><stop offset="60%" stop-color="#2A1708"/><stop offset="100%" stop-color="#1A0A00"/></linearGradient><linearGradient id="coffinTop" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#5A4738"/><stop offset="50%" stop-color="#4A3728"/><stop offset="100%" stop-color="#3A2718"/></linearGradient><linearGradient id="clothGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#2A2A3A"/><stop offset="50%" stop-color="#1A1A2A"/><stop offset="100%" stop-color="#0A0A1A"/></linearGradient><linearGradient id="candleGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FFF8DC"/><stop offset="50%" stop-color="#F5DEB3"/><stop offset="100%" stop-color="#DEB887"/></linearGradient><radialGradient id="candleGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#FFD700" stop-opacity="0.8"/><stop offset="50%" stop-color="#FF8C00" stop-opacity="0.4"/><stop offset="100%" stop-color="#FF4500" stop-opacity="0.1"/></radialGradient><filter id="coffinShadow"><feDropShadow dx="5" dy="5" stdDeviation="6" flood-opacity="0.5"/></filter><filter id="candleBlur"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect width="200" height="200" fill="#2A2A1A"/><ellipse cx="100" cy="170" rx="60" ry="15" fill="#1A1A0A" opacity="0.6" filter="url(#coffinShadow)"/><ellipse cx="60" cy="140" rx="15" ry="25" fill="url(#clothGrad)"/><ellipse cx="140" cy="140" rx="15" ry="25" fill="url(#clothGrad)"/><ellipse cx="50" cy="130" rx="12" ry="20" fill="url(#clothGrad)"/><ellipse cx="150" cy="130" rx="12" ry="20" fill="url(#clothGrad)"/><path d="M70 150 L130 150 L125 80 L75 80 Z" fill="url(#coffinWood)" stroke="#1A0A00" stroke-width="2" filter="url(#coffinShadow)"/><path d="M75 145 L125 145 L121 85 L79 85 Z" fill="url(#coffinTop)"/><rect x="95" y="90" width="10" height="50" fill="#2A1708" opacity="0.5"/><rect x="80" y="105" width="40" height="8" fill="#1A0A00" opacity="0.4"/><ellipse cx="100" cy="112" rx="15" ry="5" fill="#3A2718" opacity="0.6"/><circle cx="60" cy="110" r="12" fill="url(#candleGlow)" filter="url(#candleBlur)"/><rect x="55" y="100" width="10" height="25" fill="url(#candleGrad)" rx="2"/><ellipse cx="60" cy="100" rx="5" ry="3" fill="#FFF8DC"/><circle cx="60" cy="95" r="6" fill="#FF4500" opacity="0.8" filter="url(#candleBlur)"/><circle cx="60" cy="92" r="3" fill="#FFD700"/><circle cx="140" cy="110" r="12" fill="url(#candleGlow)" filter="url(#candleBlur)"/><rect x="135" y="100" width="10" height="25" fill="url(#candleGrad)" rx="2"/><ellipse cx="140" cy="100" rx="5" ry="3" fill="#FFF8DC"/><circle cx="140" cy="95" r="6" fill="#FF4500" opacity="0.8" filter="url(#candleBlur)"/><circle cx="140" cy="92" r="3" fill="#FFD700"/><path d="M85 60 Q100 55 115 60" stroke="#3A3A4A" stroke-width="2" fill="none" opacity="0.5"/><path d="M80 65 Q100 58 120 65" stroke="#3A3A4A" stroke-width="2" fill="none" opacity="0.4"/></svg>`,
+    rollRequired: { stat: 'knowledge', target: 5 },
+    success: '5+ 獲得 1 點知識',
+    failure: '0-4 承受 1 點精神傷害',
   },
   {
-    id: 'event_4',
+    id: 'event_hanged_men',
     type: 'event',
-    name: '蜘蛛群',
-    description: '一大群蜘蛛從天花板傾瀉而下！',
-    icon: `<rect x="20" y="20" width="60" height="60" fill="#3A3A2A"/>
-           <circle cx="35" cy="35" r="5" fill="#000"/>
-           <line x1="35" y1="35" x2="25" y2="25" stroke="#000" stroke-width="1"/>
-           <line x1="35" y1="35" x2="45" y2="25" stroke="#000" stroke-width="1"/>
-           <line x1="35" y1="35" x2="25" y2="45" stroke="#000" stroke-width="1"/>
-           <line x1="35" y1="35" x2="45" y2="45" stroke="#000" stroke-width="1"/>
-           <circle cx="55" cy="50" r="4" fill="#000"/>
-           <circle cx="45" cy="65" r="3" fill="#000"/>`,
-    rollRequired: { stat: 'might', target: 4 },
-    success: '你揮開蜘蛛，毫髮無傷。',
-    failure: '你被蜘蛛咬傷，失去 1 點體力。',
+    name: '吊死的人',
+    nameEn: 'Hanged Men',
+    description: '幾具屍體從天花板垂下，輕輕搖晃。',
+    descriptionEn: 'Several bodies hang from the ceiling, swaying gently.',
+    icon: `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="bodyGrad1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4A4A3A"/><stop offset="50%" stop-color="#3A3A2A"/><stop offset="100%" stop-color="#2A2A1A"/></linearGradient><linearGradient id="bodyGrad2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#5A5A4A"/><stop offset="50%" stop-color="#4A4A3A"/><stop offset="100%" stop-color="#3A3A2A"/></linearGradient><linearGradient id="ropeGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#8B7355"/><stop offset="50%" stop-color="#6B5345"/><stop offset="100%" stop-color="#4A3728"/></linearGradient><linearGradient id="shadowGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#2A2A1A" stop-opacity="0.3"/><stop offset="100%" stop-color="#0A0A00" stop-opacity="0.6"/></linearGradient><filter id="bodyShadow"><feDropShadow dx="3" dy="3" stdDeviation="4" flood-opacity="0.4"/></filter></defs><rect width="200" height="200" fill="#2A2A1A"/><ellipse cx="70" cy="180" rx="25" ry="8" fill="#1A1A0A" opacity="0.5"/><ellipse cx="130" cy="175" rx="30" ry="10" fill="#1A1A0A" opacity="0.5"/><ellipse cx="100" cy="185" rx="20" ry="6" fill="#1A1A0A" opacity="0.4"/><line x1="70" y1="20" x2="70" y2="70" stroke="url(#ropeGrad)" stroke-width="3"/><line x1="130" y1="20" x2="130" y2="65" stroke="url(#ropeGrad)" stroke-width="3"/><line x1="100" y1="20" x2="100" y2="80" stroke="url(#ropeGrad)" stroke-width="2"/><ellipse cx="70" cy="75" rx="12" ry="15" fill="url(#bodyGrad1)" filter="url(#bodyShadow)"/><ellipse cx="70" cy="105" rx="15" ry="25" fill="url(#bodyGrad1)" filter="url(#bodyShadow)"/><ellipse cx="55" cy="115" rx="6" ry="20" fill="url(#bodyGrad1)" transform="rotate(10 55 115)"/><ellipse cx="85" cy="115" rx="6" ry="20" fill="url(#bodyGrad1)" transform="rotate(-10 85 115)"/><ellipse cx="60" cy="145" rx="5" ry="18" fill="url(#bodyGrad1)" transform="rotate(5 60 145)"/><ellipse cx="80" cy="145" rx="5" ry="18" fill="url(#bodyGrad1)" transform="rotate(-5 80 145)"/><ellipse cx="130" cy="72" rx="14" ry="16" fill="url(#bodyGrad2)" filter="url(#bodyShadow)"/><ellipse cx="130" cy="105" rx="18" ry="28" fill="url(#bodyGrad2)" filter="url(#bodyShadow)"/><ellipse cx="112" cy="118" rx="7" ry="22" fill="url(#bodyGrad2)" transform="rotate(15 112 118)"/><ellipse cx="148" cy="118" rx="7" ry="22" fill="url(#bodyGrad2)" transform="rotate(-15 148 118)"/><ellipse cx="118" cy="150" rx="6" ry="20" fill="url(#bodyGrad2)" transform="rotate(8 118 150)"/><ellipse cx="142" cy="150" rx="6" ry="20" fill="url(#bodyGrad2)" transform="rotate(-8 142 150)"/><ellipse cx="100" cy="88" rx="10" ry="12" fill="url(#bodyGrad1)" opacity="0.8" filter="url(#bodyShadow)"/><ellipse cx="100" cy="120" rx="12" ry="20" fill="url(#bodyGrad1)" opacity="0.8" filter="url(#bodyShadow)"/><ellipse cx="88" cy="128" rx="5" ry="15" fill="url(#bodyGrad1)" opacity="0.8" transform="rotate(12 88 128)"/><ellipse cx="112" cy="128" rx="5" ry="15" fill="url(#bodyGrad1)" opacity="0.8" transform="rotate(-12 112 128)"/><path d="M70 75 Q65 78 68 82" stroke="#2A2A1A" stroke-width="1" fill="none"/><path d="M130 72 Q125 75 128 79" stroke="#2A2A1A" stroke-width="1" fill="none"/><path d="M100 88 Q95 91 98 95" stroke="#2A2A1A" stroke-width="1" fill="none"/></svg>`,
+    rollRequired: { stat: 'sanity', target: 5 },
+    success: '5+ 獲得 1 點力量',
+    failure: '0-4 失去 1 點理智和 1 點力量',
   },
   {
-    id: 'event_5',
+    id: 'event_phone_call',
     type: 'event',
-    name: '古老的日記',
-    description: '你發現一本古老的日記，記載著這棟房子的秘密。',
-    icon: `<rect x="25" y="20" width="40" height="50" fill="#8B4513"/>
-           <rect x="28" y="23" width="34" height="44" fill="#FFF8DC"/>
-           <line x1="32" y1="30" x2="58" y2="30" stroke="#333" stroke-width="1"/>
-           <line x1="32" y1="35" x2="58" y2="35" stroke="#333" stroke-width="1"/>
-           <line x1="32" y1="40" x2="58" y2="40" stroke="#333" stroke-width="1"/>
-           <line x1="32" y1="45" x2="50" y2="45" stroke="#333" stroke-width="1"/>`,
-    rollRequired: { stat: 'knowledge', target: 4 },
-    success: '你讀懂了日記，獲得 1 點知識。',
-    failure: '文字太過模糊，你無法理解。',
+    name: '電話鈴聲',
+    nameEn: 'Phone Call',
+    description: '一部老舊的電話大聲響起。它根本不應該還能接通。',
+    descriptionEn: "An old phone rings loudly. It shouldn't even be connected.",
+    icon: `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="phoneBody" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#2A2A2A"/><stop offset="30%" stop-color="#1A1A1A"/><stop offset="60%" stop-color="#0A0A0A"/><stop offset="100%" stop-color="#000"/></linearGradient><linearGradient id="phoneHighlight" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#3A3A3A"/><stop offset="50%" stop-color="#2A2A2A"/><stop offset="100%" stop-color="#1A1A1A"/></linearGradient><linearGradient id="cordGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#1A1A1A"/><stop offset="50%" stop-color="#0A0A0A"/><stop offset="100%" stop-color="#000"/></linearGradient><radialGradient id="ringGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#FF4500" stop-opacity="0.8"/><stop offset="50%" stop-color="#FF6347" stop-opacity="0.4"/><stop offset="100%" stop-color="#FF4500" stop-opacity="0.1"/></radialGradient><filter id="phoneShadow"><feDropShadow dx="4" dy="4" stdDeviation="5" flood-opacity="0.5"/></filter><filter id="ringBlur"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect width="200" height="200" fill="#2A2A1A"/><ellipse cx="100" cy="170" rx="50" ry="12" fill="#1A1A0A" opacity="0.6" filter="url(#phoneShadow)"/><path d="M60 170 Q50 140 70 130 Q80 125 90 130" stroke="url(#cordGrad)" stroke-width="6" fill="none"/><path d="M140 170 Q150 140 130 130 Q120 125 110 130" stroke="url(#cordGrad)" stroke-width="6" fill="none"/><rect x="75" y="100" width="50" height="60" fill="url(#phoneBody)" rx="8" stroke="#000" stroke-width="2" filter="url(#phoneShadow)"/><rect x="80" y="105" width="40" height="50" fill="url(#phoneHighlight)" rx="5"/><rect x="88" y="75" width="24" height="35" fill="url(#phoneBody)" rx="4" stroke="#000" stroke-width="1"/><rect x="90" y="78" width="20" height="28" fill="#0A0A0A" rx="2"/><circle cx="100" cy="55" r="25" fill="url(#ringGlow)" filter="url(#ringBlur)"/><circle cx="100" cy="55" r="18" fill="#FF4500" opacity="0.6" filter="url(#ringBlur)"/><text x="100" y="62" font-size="20" fill="#FFD700" font-weight="bold" text-anchor="middle" filter="url(#ringBlur)">📞</text><circle cx="85" cy="115" r="4" fill="#333"/><circle cx="115" cy="115" r="4" fill="#333"/><circle cx="85" cy="130" r="4" fill="#333"/><circle cx="115" cy="130" r="4" fill="#333"/><circle cx="100" cy="140" r="5" fill="#2A2A2A" stroke="#444" stroke-width="1"/><ellipse cx="100" cy="85" rx="8" ry="4" fill="#1A1A1A"/></svg>`,
+    rollRequired: { stat: 'knowledge', target: 5 },
+    success: '5+ 獲得 1 點知識',
+    failure: '0-4 承受 1 點精神傷害',
   },
   {
-    id: 'event_6',
+    id: 'event_jonahs_turn',
     type: 'event',
-    name: '幽靈顯現',
-    description: '一個透明的身影飄過你面前。',
-    icon: `<rect x="20" y="20" width="60" height="60" fill="#3A3A4A"/>
-           <ellipse cx="50" cy="40" rx="12" ry="15" fill="#8B8B9B" opacity="0.5"/>
-           <circle cx="46" cy="38" r="2" fill="#FFF"/>
-           <circle cx="54" cy="38" r="2" fill="#FFF"/>
-           <ellipse cx="50" cy="45" rx="3" ry="2" fill="#333" opacity="0.3"/>`,
-    rollRequired: { stat: 'sanity', target: 6 },
-    success: '你與幽靈對視，它似乎想告訴你什麼。',
-    failure: '你嚇得尖叫，失去 2 點理智。',
+    name: '約拿的轉變',
+    nameEn: "Jonah's Turn",
+    description: '時間似乎在你周圍扭曲，以不自然的方式彎曲。',
+    descriptionEn: 'Time seems to twist around you, bending in unnatural ways.',
+    icon: `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="clockFace" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#3A3A2A"/><stop offset="50%" stop-color="#2A2A1A"/><stop offset="100%" stop-color="#1A1A0A"/></linearGradient><linearGradient id="clockRim" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#5A5A4A"/><stop offset="50%" stop-color="#4A4A3A"/><stop offset="100%" stop-color="#3A3A2A"/></linearGradient><linearGradient id="handGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#8B7355"/><stop offset="100%" stop-color="#5A4A3A"/></linearGradient><radialGradient id="timeWarp" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#9370DB" stop-opacity="0.4"/><stop offset="50%" stop-color="#4B0082" stop-opacity="0.2"/><stop offset="100%" stop-color="#2A2A1A" stop-opacity="0.1"/></radialGradient><filter id="clockShadow"><feDropShadow dx="4" dy="4" stdDeviation="5" flood-opacity="0.4"/></filter><filter id="warpBlur"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect width="200" height="200" fill="#2A2A1A"/><ellipse cx="100" cy="170" rx="55" ry="12" fill="#1A1A0A" opacity="0.5"/><circle cx="100" cy="100" r="70" fill="url(#timeWarp)" filter="url(#warpBlur)"/><circle cx="100" cy="100" r="55" fill="url(#clockFace)" stroke="url(#clockRim)" stroke-width="4" filter="url(#clockShadow)"/><circle cx="100" cy="100" r="48" fill="none" stroke="#4A4A3A" stroke-width="1"/><circle cx="100" cy="100" r="5" fill="#5A5A4A"/><line x1="100" y1="55" x2="100" y2="100" stroke="url(#handGrad)" stroke-width="4" stroke-linecap="round" transform="rotate(45 100 100)"/><line x1="100" y1="100" x2="130" y2="100" stroke="#8B0000" stroke-width="3" stroke-linecap="round" transform="rotate(120 100 100)"/><line x1="100" y1="55" x2="100" y2="100" stroke="url(#handGrad)" stroke-width="3" stroke-linecap="round" transform="rotate(-30 100 100)" opacity="0.5"/><line x1="100" y1="100" x2="125" y2="85" stroke="#4A4A3A" stroke-width="2" stroke-linecap="round" opacity="0.4"/><path d="M100 45 L100 40 M100 160 L100 155 M40 100 L45 100 M160 100 L155 100" stroke="#5A5A4A" stroke-width="2"/><path d="M70 55 L74 59 M130 55 L126 59 M70 145 L74 141 M130 145 L126 141" stroke="#4A4A3A" stroke-width="1.5"/><path d="M100 20 Q120 30 130 50" stroke="#9370DB" stroke-width="2" fill="none" opacity="0.5" filter="url(#warpBlur)"/><path d="M180 100 Q170 120 150 130" stroke="#9370DB" stroke-width="2" fill="none" opacity="0.5" filter="url(#warpBlur)"/><path d="M100 180 Q80 170 70 150" stroke="#9370DB" stroke-width="2" fill="none" opacity="0.5" filter="url(#warpBlur)"/><path d="M20 100 Q30 80 50 70" stroke="#9370DB" stroke-width="2" fill="none" opacity="0.5" filter="url(#warpBlur)"/><circle cx="100" cy="100" r="65" fill="none" stroke="#9370DB" stroke-width="1" opacity="0.3" stroke-dasharray="5,5"/></svg>`,
+    rollRequired: { stat: 'knowledge', target: 5 },
+    success: '5+ 獲得 1 點知識',
+    failure: '0-4 承受 1 點精神傷害',
   },
 ];
 
