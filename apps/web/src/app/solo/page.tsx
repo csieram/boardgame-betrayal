@@ -249,8 +249,20 @@ export default function SoloGamePage() {
   const [validExploreDirections, setValidExploreDirections] = useState<Direction[]>([]);
   const [gameState, setGameState] = useState<SoloGameState>(() => createInitialGameState(Date.now().toString()));
   
-  // 卡牌抽牌系統
-  const [cardManager] = useState(() => new CardDrawingManager(Date.now().toString()));
+  // Issue #202-fix: 使用共享的卡牌抽牌系統
+  // 創建單一的 cardManager 實例，並使用 gameState 中的牌堆狀態
+  const cardManager = useMemo(() => {
+    const manager = new CardDrawingManager(gameState.seed, gameState.cardDecks);
+    // 設置牌堆狀態變更回調，將變更同步回 gameState
+    manager.setDeckStateChangeCallback((newState) => {
+      setGameState(prev => ({
+        ...prev,
+        cardDecks: newState,
+      }));
+    });
+    return manager;
+  }, [gameState.seed]); // 只在 seed 變化時重新創建
+  
   const [effectApplier] = useState(() => new CardEffectApplier(Date.now().toString()));
   const [cardDrawState, setCardDrawState] = useState<CardDrawState>({
     showCard: false,
@@ -555,12 +567,14 @@ export default function SoloGamePage() {
         setPlayerState(initialPlayerState);
 
         // Issue #110: 初始化 AI 玩家管理器
+        // Issue #202-fix: 傳入共享的 cardManager 以確保所有玩家使用相同的牌堆
         if (aiSetup && aiSetup.count > 0) {
           const manager = createAIPlayerManager(
             'solo-player',
             aiSetup.count,
             aiSetup.difficulty,
-            seed
+            seed,
+            cardManager // 傳入共享的 cardManager
           );
           setAiManager(manager);
 
@@ -1494,19 +1508,9 @@ export default function SoloGamePage() {
         if (cardType) {
           console.log(`[CardDrawing] Room has symbol ${roomSymbol}, drawing ${cardType} card`);
 
-          // Issue #188: 使用共享牌堆狀態創建 CardDrawingManager
-          const initialDecks = gameState.cardDecks;
-          const sharedCardManager = new CardDrawingManager(gameState.seed, initialDecks);
-
-          // Issue #188: 設置牌堆狀態變更回調，將變更同步回 gameState
-          sharedCardManager.setDeckStateChangeCallback((newState) => {
-            setGameState(prev => ({
-              ...prev,
-              cardDecks: newState,
-            }));
-          });
-
-          const drawResult = drawAndApplyCard(sharedCardManager, effectApplier, cardType, playerState);
+          // Issue #202-fix: 使用共享的 cardManager 實例，而不是創建新的
+          // 這確保人類玩家和 AI 玩家使用相同的牌堆
+          const drawResult = drawAndApplyCard(cardManager, effectApplier, cardType, playerState);
           
           if (drawResult.success && drawResult.card) {
             cardDrawn = true;
@@ -1516,10 +1520,9 @@ export default function SoloGamePage() {
             
             // 添加到日誌 - 詳細記錄卡牌抽取
             const symbolName = roomSymbol === 'E' ? '事件' : roomSymbol === 'I' ? '物品' : '預兆';
-            const currentOmenCount = cardManager.getDeckStatus().omenCount;
             
-            // Issue #188: 使用 sharedCardManager 的狀態更新 omenCount
-            const updatedOmenCount = sharedCardManager.getDeckStatus().omenCount;
+            // Issue #202-fix: 使用共享 cardManager 的狀態獲取 omenCount
+            const updatedOmenCount = cardManager.getDeckStatus().omenCount;
 
             // 記錄進入房間和抽卡
             setLog(prev => [...prev, `進入 ${placedRoom.name} (${roomSymbol}) → 抽到${symbolName}: "${drawResult.card!.name}"`]);
@@ -1878,11 +1881,11 @@ export default function SoloGamePage() {
             }
 
             // Issue #201-fix: 更新 AI 玩家物品到前端狀態
-            if (result.drawnCard.type === 'item' || result.drawnCard.type === 'omen') {
+            if (result.drawnCard && (result.drawnCard.type === 'item' || result.drawnCard.type === 'omen')) {
               setAiPlayers(prev => prev.map(p => {
                 if (p.id !== result.playerId) return p;
                 const newItem = { id: result.drawnCard!.id, name: result.drawnCard!.name, type: result.drawnCard!.type };
-                if (result.drawnCard.type === 'item') {
+                if (result.drawnCard!.type === 'item') {
                   return { ...p, items: [...(p.items || []), newItem] };
                 } else {
                   return { ...p, omens: [...(p.omens || []), newItem] };
@@ -2724,10 +2727,10 @@ export default function SoloGamePage() {
                   // 人類玩家使用 playerState，AI 玩家使用 selectedPlayer
                   const items = selectedPlayer.type === 'human' 
                     ? playerState?.items || []
-                    : selectedPlayer.items || [];
+                    : (selectedPlayer.items as Card[]) || [];
                   const omens = selectedPlayer.type === 'human'
                     ? playerState?.omens || []
-                    : selectedPlayer.omens || [];
+                    : (selectedPlayer.omens as Card[]) || [];
                   
                   return (
                     <InventoryPanel

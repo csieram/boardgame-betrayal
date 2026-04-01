@@ -225,16 +225,21 @@ export class AIPlayer {
   private traitorAI: TraitorAI | null = null;
   private heroAI: HeroAI | null = null;
   private rng: () => number;
+  // Issue #202-fix: 共享的 CardDrawingManager 實例
+  private cardManager?: CardDrawingManager;
 
   constructor(
     playerId: string,
-    config: AIPlayerConfig = { difficulty: 'medium', personality: 'explorer' }
+    config: AIPlayerConfig = { difficulty: 'medium', personality: 'explorer' },
+    cardManager?: CardDrawingManager
   ) {
     this.decisionEngine = new AIDecisionEngine(
       config.difficulty,
       config.seed
     );
     this.rng = this.createSeededRng(config.seed || Date.now().toString());
+    // Issue #202-fix: 保存共享的 cardManager
+    this.cardManager = cardManager;
 
     this.state = {
       config,
@@ -260,6 +265,14 @@ export class AIPlayer {
     };
 
     this.log('AIPlayer initialized', { playerId, config });
+  }
+
+  /**
+   * Issue #202-fix: 設置共享的 CardDrawingManager
+   */
+  setCardManager(cardManager: CardDrawingManager): void {
+    this.cardManager = cardManager;
+    this.log('CardManager set');
   }
 
   /**
@@ -568,25 +581,32 @@ export class AIPlayer {
             const cardType = discoveryResult.cardDrawRequired.type;
             this.log(`Card draw required: ${cardType}`);
 
-            // Issue #188: 使用 gameState 中的共享牌堆狀態
-            const seed = gameState.config?.seed || Date.now().toString();
-
-            // 從 gameState 獲取牌堆狀態，如果沒有則創建新的
-            const initialDecks = gameState.cardDecks || undefined;
-            const cardManager = new CardDrawingManager(seed, initialDecks);
-            const effectApplier = new CardEffectApplier(seed);
-
-            // Issue #188 & #190-fix: 設置牌堆狀態變更回調，將變更同步回 gameState
-            // 這確保了抽出的卡會被記錄，不會重複抽取
-            cardManager.setDeckStateChangeCallback((newState) => {
-              if (gameState.cardDecks) {
-                // 直接修改 gameState.cardDecks 的每個屬性以確保狀態同步
-                gameState.cardDecks.event = newState.event;
-                gameState.cardDecks.item = newState.item;
-                gameState.cardDecks.omen = newState.omen;
-                this.log('Card deck state updated after draw');
-              }
-            });
+            // Issue #202-fix: 使用共享的 CardDrawingManager，而不是創建新的
+            // 這確保所有 AI 玩家和人類玩家使用相同的牌堆
+            let cardManager: CardDrawingManager;
+            
+            if (this.cardManager) {
+              // 使用共享的 cardManager
+              cardManager = this.cardManager;
+              this.log('Using shared CardDrawingManager');
+            } else {
+              // 向後兼容：如果沒有共享的 cardManager，創建新的（不推薦）
+              const seed = gameState.config?.seed || Date.now().toString();
+              const initialDecks = gameState.cardDecks || undefined;
+              cardManager = new CardDrawingManager(seed, initialDecks);
+              
+              // 設置牌堆狀態變更回調
+              cardManager.setDeckStateChangeCallback((newState) => {
+                if (gameState.cardDecks) {
+                  gameState.cardDecks.event = newState.event;
+                  gameState.cardDecks.item = newState.item;
+                  gameState.cardDecks.omen = newState.omen;
+                  this.log('Card deck state updated after draw');
+                }
+              });
+            }
+            
+            const effectApplier = new CardEffectApplier(gameState.config?.seed || Date.now().toString());
 
             // Get current player state for card effect
             const currentPlayer = this.getPlayer(gameState);

@@ -31,6 +31,7 @@ import {
 import { AIDifficulty } from './AIDecisionEngine';
 import { HeroAI } from './HeroAI';
 import { TraitorAI } from './TraitorAI';
+import { CardDrawingManager } from '../rules/cardDrawing';
 
 // ==================== 類型定義 ====================
 
@@ -66,6 +67,10 @@ export interface AIPlayerInfo {
   experience: AIExperience;
   /** 是否存活 */
   isAlive: boolean;
+  /** 物品列表 */
+  items?: { id: string; name: string; type: string }[];
+  /** 預兆列表 */
+  omens?: { id: string; name: string; type: string }[];
 }
 
 /** 回合順序 */
@@ -126,10 +131,13 @@ export class AIPlayerManager {
   private rng: () => number;
   private humanPlayerId: string;
   private isProcessingTurn: boolean;
+  // Issue #202-fix: 共享的 CardDrawingManager
+  private cardManager?: CardDrawingManager;
 
   constructor(
     humanPlayerId: string,
-    config: AIPlayerManagerConfig
+    config: AIPlayerManagerConfig,
+    cardManager?: CardDrawingManager
   ) {
     this.humanPlayerId = humanPlayerId;
     this.config = config;
@@ -137,6 +145,8 @@ export class AIPlayerManager {
     this.actionLogs = [];
     this.isProcessingTurn = false;
     this.rng = this.createSeededRng(config.seed || Date.now().toString());
+    // Issue #202-fix: 保存共享的 cardManager
+    this.cardManager = cardManager;
 
     this.turnOrder = {
       order: [humanPlayerId],
@@ -146,6 +156,18 @@ export class AIPlayerManager {
     };
 
     this.log('AIPlayerManager initialized', { humanPlayerId, config });
+  }
+
+  /**
+   * Issue #202-fix: 設置共享的 CardDrawingManager
+   */
+  setCardManager(cardManager: CardDrawingManager): void {
+    this.cardManager = cardManager;
+    // 為所有已創建的 AI 玩家設置 cardManager
+    this.aiPlayers.forEach((aiPlayer) => {
+      aiPlayer.setCardManager(cardManager);
+    });
+    this.log('CardManager set for all AI players');
   }
 
   /**
@@ -195,14 +217,14 @@ export class AIPlayerManager {
           ? this.getRandomPersonality() 
           : (this.config.defaultPersonality || 'explorer'));
 
-      // 創建 AI 玩家實例
+      // Issue #202-fix: 創建 AI 玩家實例，傳入共享的 cardManager
       const aiPlayer = new AIPlayer(aiId, {
         difficulty: this.config.difficulty,
         personality,
         seed: this.config.seed ? `${this.config.seed}-${i}` : undefined,
         enableLogging: true,
         name: character.name,
-      });
+      }, this.cardManager);
 
       aiPlayer.setCharacter(character);
       aiPlayer.setPosition({ x: 7, y: 7, floor: 'ground' }); // 從入口大廳開始
@@ -600,19 +622,21 @@ export class AIPlayerManager {
 
 /**
  * 建立 AI 玩家管理器
+ * Issue #202-fix: 接受可選的 cardManager 參數以共享牌堆
  */
 export function createAIPlayerManager(
   humanPlayerId: string,
   aiCount: number,
   difficulty: AIDifficulty = 'medium',
-  seed?: string
+  seed?: string,
+  cardManager?: CardDrawingManager
 ): AIPlayerManager {
   return new AIPlayerManager(humanPlayerId, {
     aiCount,
     difficulty,
     randomPersonalities: true,
     seed,
-  });
+  }, cardManager);
 }
 
 /**
