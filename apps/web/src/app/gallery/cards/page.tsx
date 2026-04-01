@@ -1,64 +1,23 @@
 'use client';
 
 import { Button } from '@betrayal/ui';
-import { useState, useEffect } from 'react';
-
-interface Card {
-  id: string;
-  name: string;
-  type: 'event' | 'item' | 'omen';
-  svg: string;
-}
+import { useState } from 'react';
+import { OMEN_CARDS, EVENT_CARDS, ITEM_CARDS, type Card } from '@betrayal/shared';
 
 export default function CardsGalleryPage() {
-  const [cards, setCards] = useState<Card[]>([]);
   const [filter, setFilter] = useState<'all' | 'event' | 'item' | 'omen'>('all');
+  const [selectedCard, setSelectedCard] = useState<Card | null>(null);
 
-  useEffect(() => {
-    // 載入卡牌列表
-    const cardFiles = [
-      // 事件卡
-      { id: 'event-bloodwall', name: '血牆', type: 'event' as const },
-      { id: 'event-chill', name: '寒意', type: 'event' as const },
-      { id: 'event-creature', name: '生物', type: 'event' as const },
-      { id: 'event-door', name: '門', type: 'event' as const },
-      { id: 'event-footprints', name: '腳印', type: 'event' as const },
-      { id: 'event-hallucination', name: '幻覺', type: 'event' as const },
-      { id: 'event-memory', name: '記憶', type: 'event' as const },
-      { id: 'event-shadow', name: '陰影', type: 'event' as const },
-      { id: 'event-shaking', name: '搖晃', type: 'event' as const },
-      { id: 'event-space', name: '空間', type: 'event' as const },
-      { id: 'event-time', name: '時間', type: 'event' as const },
-      { id: 'event-voices', name: '聲音', type: 'event' as const },
-      // 物品卡
-      { id: 'item-camera', name: '相機', type: 'item' as const },
-      { id: 'item-candle', name: '蠟燭', type: 'item' as const },
-      { id: 'item-compass', name: '指南針', type: 'item' as const },
-      { id: 'item-cross', name: '十字架', type: 'item' as const },
-      { id: 'item-food', name: '食物', type: 'item' as const },
-      { id: 'item-holywater', name: '聖水', type: 'item' as const },
-      { id: 'item-key', name: '鑰匙', type: 'item' as const },
-      { id: 'item-matches', name: '火柴', type: 'item' as const },
-      // 預兆卡
-      { id: 'omen-book', name: '書', type: 'omen' as const },
-      { id: 'omen-crystal', name: '水晶', type: 'omen' as const },
-      { id: 'omen-dagger', name: '匕首', type: 'omen' as const },
-      { id: 'omen-dog', name: '狗', type: 'omen' as const },
-      { id: 'omen-ghostcandle', name: '鬼燭', type: 'omen' as const },
-      { id: 'omen-portrait', name: '肖像', type: 'omen' as const },
-      { id: 'omen-ring', name: '戒指', type: 'omen' as const },
-      { id: 'omen-talisman', name: '護身符', type: 'omen' as const },
-    ];
-
-    setCards(cardFiles.map(c => ({
-      ...c,
-      svg: `/gallery-assets/cards/${c.id}.svg`
-    })));
-  }, []);
+  // 合併所有卡牌
+  const allCards: Card[] = [
+    ...EVENT_CARDS.map(c => ({ ...c, type: 'event' as const })),
+    ...ITEM_CARDS.map(c => ({ ...c, type: 'item' as const })),
+    ...OMEN_CARDS.map(c => ({ ...c, type: 'omen' as const })),
+  ];
 
   const filteredCards = filter === 'all' 
-    ? cards 
-    : cards.filter(c => c.type === filter);
+    ? allCards 
+    : allCards.filter(c => c.type === filter);
 
   const typeColors = {
     event: 'bg-green-900',
@@ -72,10 +31,21 @@ export default function CardsGalleryPage() {
     omen: '預兆',
   };
 
+  // 渲染 SVG 圖示
+  const renderIcon = (iconSvg: string) => {
+    return (
+      <svg 
+        viewBox="0 0 100 100" 
+        className="w-full h-full"
+        dangerouslySetInnerHTML={{ __html: iconSvg }}
+      />
+    );
+  };
+
   return (
     <main className="min-h-screen p-6">
       <h1 className="text-4xl font-bold mb-4 text-center">卡牌圖鑑</h1>
-      <p className="text-gray-400 text-center mb-4">共 {cards.length} 張卡牌</p>
+      <p className="text-gray-400 text-center mb-4">共 {allCards.length} 張卡牌</p>
       
       {/* 過濾器 */}
       <div className="flex justify-center gap-2 mb-8">
@@ -94,24 +64,99 @@ export default function CardsGalleryPage() {
         ))}
       </div>
       
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 max-w-6xl mx-auto">
+      {/* 卡牌網格 */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 max-w-7xl mx-auto">
         {filteredCards.map((card) => (
           <div 
             key={card.id} 
-            className={`p-4 rounded-lg ${typeColors[card.type]} flex flex-col items-center`}
+            onClick={() => setSelectedCard(card)}
+            className={`p-4 rounded-lg ${typeColors[card.type]} cursor-pointer hover:scale-105 transition-transform flex flex-col items-center`}
           >
-            <div className="w-24 h-36 mb-2 bg-gray-800 rounded flex items-center justify-center overflow-hidden">
-              <img 
-                src={`/betrayal${card.svg}`}
-                alt={card.name}
-                className="w-full h-full object-contain"
-              />
+            <div className="w-24 h-24 mb-3 bg-gray-800/50 rounded-lg flex items-center justify-center overflow-hidden">
+              {renderIcon(card.icon)}
             </div>
             <p className="text-sm font-bold text-center">{card.name}</p>
-            <p className="text-xs text-gray-400">{typeNames[card.type]}</p>
+            {card.nameEn && (
+              <p className="text-xs text-gray-400 text-center">{card.nameEn}</p>
+            )}
+            <p className="text-xs text-purple-300 mt-1">{typeNames[card.type]}</p>
           </div>
         ))}
       </div>
+
+      {/* 卡牌詳情彈窗 */}
+      {selectedCard && (
+        <div 
+          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedCard(null)}
+        >
+          <div 
+            className={`${typeColors[selectedCard.type]} rounded-xl p-6 max-w-md w-full`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-24 h-24 bg-gray-800/50 rounded-lg flex items-center justify-center flex-shrink-0">
+                {renderIcon(selectedCard.icon)}
+              </div>
+              <div className="flex-1">
+                <h2 className="text-xl font-bold">{selectedCard.name}</h2>
+                {selectedCard.nameEn && (
+                  <p className="text-sm text-gray-400">{selectedCard.nameEn}</p>
+                )}
+                <p className="text-xs text-purple-300 mt-1">{typeNames[selectedCard.type]}</p>
+              </div>
+            </div>
+            
+            <div className="mt-4 space-y-3">
+              <div>
+                <p className="text-xs text-gray-400 uppercase tracking-wide">描述</p>
+                <p className="text-sm mt-1">{selectedCard.description}</p>
+              </div>
+              
+              {selectedCard.effect && (
+                <div>
+                  <p className="text-xs text-gray-400 uppercase tracking-wide">效果</p>
+                  <p className="text-sm mt-1 text-yellow-200">{selectedCard.effect}</p>
+                </div>
+              )}
+              
+              {selectedCard.rollRequired && (
+                <div>
+                  <p className="text-xs text-gray-400 uppercase tracking-wide">檢定</p>
+                  <p className="text-sm mt-1">
+                    {selectedCard.rollRequired.stat === 'speed' && '速度'}
+                    {selectedCard.rollRequired.stat === 'might' && '力量'}
+                    {selectedCard.rollRequired.stat === 'sanity' && '理智'}
+                    {selectedCard.rollRequired.stat === 'knowledge' && '知識'}
+                    {' ≥ '}{selectedCard.rollRequired.target}
+                  </p>
+                </div>
+              )}
+              
+              {selectedCard.success && (
+                <div>
+                  <p className="text-xs text-green-400 uppercase tracking-wide">成功</p>
+                  <p className="text-sm mt-1">{selectedCard.success}</p>
+                </div>
+              )}
+              
+              {selectedCard.failure && (
+                <div>
+                  <p className="text-xs text-red-400 uppercase tracking-wide">失敗</p>
+                  <p className="text-sm mt-1">{selectedCard.failure}</p>
+                </div>
+              )}
+            </div>
+            
+            <button
+              onClick={() => setSelectedCard(null)}
+              className="mt-6 w-full py-2 bg-gray-700 hover:bg-gray-600 rounded-lg font-bold transition-colors"
+            >
+              關閉
+            </button>
+          </div>
+        </div>
+      )}
       
       <div className="text-center mt-8">
         <a href="/betrayal/gallery">
