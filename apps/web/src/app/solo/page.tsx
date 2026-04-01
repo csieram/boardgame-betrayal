@@ -293,6 +293,8 @@ export default function SoloGamePage() {
   const [aiManager, setAiManager] = useState<AIPlayerManager | null>(null);
   const [aiPlayers, setAiPlayers] = useState<AIPlayerInfo[]>([]);
   const [aiActionLogs, setAiActionLogs] = useState<AIActionLog[]>([]);
+  // Issue #199-fix: 添加計數器強制重新渲染當 AI 屬性變化時
+  const [aiStatUpdateCounter, setAiStatUpdateCounter] = useState(0);
   const [currentTurnPlayer, setCurrentTurnPlayer] = useState<string>('solo-player');
   const [isProcessingAITurn, setIsProcessingAITurn] = useState(false);
   const [gameSetup, setGameSetup] = useState<{
@@ -2465,6 +2467,9 @@ export default function SoloGamePage() {
       // Issue #198-fix: 返回全新的陣列引用
       return [...newPlayers];
     });
+    
+    // Issue #199-fix: 增加計數器強制重新渲染
+    setAiStatUpdateCounter(prev => prev + 1);
   };
 
   return (
@@ -2693,7 +2698,7 @@ export default function SoloGamePage() {
                   const selectedPlayer = getSelectedPlayer();
                   return (
                     <CharacterDetailPanel 
-                      key={`${selectedPlayer?.id}-${selectedPlayer?.stats.speed}-${selectedPlayer?.stats.might}-${selectedPlayer?.stats.sanity}-${selectedPlayer?.stats.knowledge}`}
+                      key={`${selectedPlayer?.id}-${aiStatUpdateCounter}`}
                       player={selectedPlayer} 
                     />
                   );
