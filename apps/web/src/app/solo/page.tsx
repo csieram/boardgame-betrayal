@@ -3138,15 +3138,20 @@ interface GameLogProps {
 }
 
 function GameLog({ log }: GameLogProps) {
-  const logEndRef = useRef<HTMLDivElement>(null);
+  const logContainerRef = useRef<HTMLDivElement>(null);
 
-  // 自動滾動到最新日誌條目
+  // 自動滾動到最新日誌條目（只滾動容器，不滾動整個頁面）
   useEffect(() => {
-    logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (logContainerRef.current) {
+      logContainerRef.current.scrollTo({
+        top: logContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
   }, [log]);
 
   return (
-    <div className="h-64 overflow-y-auto space-y-2 pr-2">
+    <div ref={logContainerRef} className="h-64 overflow-y-auto space-y-2 pr-2">
       <AnimatePresence initial={false}>
         {log.slice(-20).map((entry, i) => (
           <motion.p
@@ -3169,7 +3174,6 @@ function GameLog({ log }: GameLogProps) {
           </motion.p>
         ))}
       </AnimatePresence>
-      <div ref={logEndRef} />
     </div>
   );
 }
