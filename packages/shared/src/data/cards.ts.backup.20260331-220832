@@ -4,7 +4,6 @@ export interface Card {
   id: string;
   type: CardType;
   name: string;
-  nameEn?: string;
   description: string;
   icon: string; // SVG
   effect?: string;
@@ -194,145 +193,121 @@ export const ITEM_CARDS: Card[] = [
   },
 ];
 
-// 預兆卡 (官方 Betrayal at House on the Hill 2nd Edition - 9張)
+// 預兆卡
 export const OMEN_CARDS: Card[] = [
   {
-    id: 'omen_idol',
+    id: 'omen_1',
     type: 'omen',
-    name: '詭異神像',
-    nameEn: 'Idol',
-    description: '這尊神像由一種奇怪、磨損的石頭製成。你無法確定它到底代表什麼。',
-    icon: `<rect x="20" y="20" width="60" height="60" fill="#3A3A2A"/>
-           <ellipse cx="50" cy="55" rx="15" ry="20" fill="#5A5A4A"/>
-           <ellipse cx="50" cy="35" rx="12" ry="15" fill="#6A6A5A"/>
-           <circle cx="45" cy="32" r="3" fill="#2A2A1A"/>
-           <circle cx="55" cy="32" r="3" fill="#2A2A1A"/>
-           <ellipse cx="50" cy="42" rx="4" ry="2" fill="#2A2A1A"/>
-           <path d="M35 55 Q30 65 35 75 M65 55 Q70 65 65 75" stroke="#4A4A3A" stroke-width="3" fill="none"/>`,
-    effect: '你的力量檢定結果 +1。當你發現帶有事件符號的板塊時，你可以選擇不抽取事件卡。',
-  },
-  {
-    id: 'omen_armor',
-    type: 'omen',
-    name: '生鏽盔甲',
-    nameEn: 'Armor',
-    description: '生鏽了，但還很堅固。',
-    icon: `<rect x="20" y="20" width="60" height="60" fill="#4A4A4A"/>
-           <path d="M35 30 L65 30 L60 70 L40 70 Z" fill="#6B6B5B" stroke="#8B8B7B" stroke-width="2"/>
-           <rect x="42" y="35" width="16" height="20" fill="#5B5B4B"/>
-           <line x1="35" y1="40" x2="30" y2="50" stroke="#7B7B6B" stroke-width="3"/>
-           <line x1="65" y1="40" x2="70" y2="50" stroke="#7B7B6B" stroke-width="3"/>
-           <circle cx="50" cy="45" r="5" fill="#4A4A3A"/>`,
-    effect: '每當你受到任何物理傷害時，該傷害減少 1 點。（盔甲無法防止一般傷害或力量/速度的損失。）',
-  },
-  {
-    id: 'omen_ring',
-    type: 'omen',
-    name: '扭曲戒指',
-    nameEn: 'Ring',
-    description: '它在自己身上扭曲。',
-    icon: `<rect x="20" y="20" width="60" height="60" fill="#2A1A0A"/>
-           <ellipse cx="50" cy="50" rx="20" ry="22" fill="none" stroke="#FFD700" stroke-width="4"/>
-           <path d="M50 28 Q70 35 65 50 Q60 65 50 72" stroke="#B8860B" stroke-width="2" fill="none"/>
-           <circle cx="50" cy="50" r="6" fill="#8B0000"/>
-           <path d="M47 47 L53 53 M53 47 L47 53" stroke="#FFD700" stroke-width="1"/>`,
-    effect: '你的理智檢定結果 +1。當你使用戒指攻擊時，你和防守方都擲理智而非力量。輸方受到精神傷害。（每回合攻擊只能使用一件武器。你不能在同一回合使用武器攻擊後交易該武器。）',
-  },
-  {
-    id: 'omen_dog',
-    type: 'omen',
-    name: '靈犬',
-    nameEn: 'Dog',
-    description: '牠用敏銳的智慧凝視著你。',
-    icon: `<rect x="20" y="20" width="60" height="60" fill="#4A3A2A"/>
-           <ellipse cx="50" cy="55" rx="18" ry="12" fill="#8B6914"/>
-           <ellipse cx="38" cy="48" rx="10" ry="12" fill="#8B6914"/>
-           <ellipse cx="35" cy="42" rx="4" ry="6" fill="#6B4914"/>
-           <circle cx="36" cy="45" r="2" fill="#000"/>
-           <ellipse cx="42" cy="52" rx="2" ry="1" fill="#000"/>
-           <ellipse cx="50" cy="62" rx="3" ry="8" fill="#8B6914"/>
-           <ellipse cx="45" cy="65" rx="2" ry="6" fill="#8B6914"/>
-           <ellipse cx="55" cy="65" rx="2" ry="6" fill="#8B6914"/>`,
-    effect: '你的速度檢定結果 +1。在你的回合中一次，你可以使用靈犬與最多 4 個板塊距離的另一名玩家交易任意數量的物品或預兆，使用正常交易規則。（你不能交易本回合已使用過的物品或預兆，也不能使用剛從其他玩家處收到的物品或預兆。）',
-  },
-  {
-    id: 'omen_book',
-    type: 'omen',
-    name: '神秘古書',
-    nameEn: 'Book',
-    description: '奇怪的塗鴉覆蓋著書頁。',
-    icon: `<rect x="25" y="25" width="40" height="45" fill="#8B4513"/>
-           <rect x="28" y="28" width="34" height="39" fill="#F5DEB3"/>
-           <path d="M32 38 Q40 35 48 38 Q45 42 38 40" stroke="#4B0082" stroke-width="1" fill="none"/>
-           <path d="M35 45 Q42 42 50 45 Q47 50 40 48" stroke="#8B0000" stroke-width="1" fill="none"/>
-           <path d="M38 52 Q45 50 52 53" stroke="#006400" stroke-width="1" fill="none"/>
-           <circle cx="42" cy="58" r="3" fill="none" stroke="#333" stroke-width="1"/>
-           <text x="40" y="61" font-size="4" fill="#333">?</text>`,
-    effect: '你的知識檢定結果 +1。在你的回合中一次，你可以使用古書失去 1 點理智。本回合你進行的下一次非攻擊特質檢定，你可以用知識代替指定的特質。（使用你知識檢定的加成，而非原特質的加成。）',
-  },
-  {
-    id: 'omen_dagger',
-    type: 'omen',
-    name: '血祭匕首',
-    nameEn: 'Dagger',
-    description: '它散發著尖銳的血腥味。你的血。',
+    name: '染血的匕首',
+    description: '一把古老的匕首，刀刃上還有乾涸的血跡。',
     icon: `<rect x="20" y="20" width="60" height="60" fill="#3A2A2A"/>
-           <rect x="47" y="25" width="6" height="35" fill="#C0C0C0"/>
-           <polygon points="50,25 42,15 58,15" fill="#C0C0C0"/>
-           <rect x="44" y="55" width="12" height="8" fill="#4A3728"/>
-           <path d="M52 30 L60 22" stroke="#8B0000" stroke-width="3"/>
-           <path d="M54 35 L62 28" stroke="#8B0000" stroke-width="2"/>
-           <circle cx="58" cy="25" r="2" fill="#8B0000"/>`,
-    effect: '當你使用血祭匕首攻擊時，失去 1 點速度。攻擊時額外擲兩顆骰子。（每回合攻擊只能使用一件武器。你不能在同一回合使用武器攻擊後交易該武器。）',
+           <rect x="35" y="25" width="8" height="30" fill="#C0C0C0"/>
+           <polygon points="39,25 35,15 43,15" fill="#C0C0C0"/>
+           <rect x="33" y="50" width="12" height="8" fill="#4A3728"/>
+           <path d="M43 35 L55 25" stroke="#8B0000" stroke-width="3"/>`,
+    effect: '攻擊時傷害 +1。',
   },
   {
-    id: 'omen_holy_symbol',
+    id: 'omen_2',
     type: 'omen',
-    name: '聖徽',
-    nameEn: 'Holy Symbol',
-    description: '一個在黑暗中發光的銀色符號。',
-    icon: `<rect x="20" y="20" width="60" height="60" fill="#2A2A3A"/>
-           <circle cx="50" cy="50" r="18" fill="none" stroke="#C0C0C0" stroke-width="3"/>
-           <circle cx="50" cy="50" r="12" fill="none" stroke="#C0C0C0" stroke-width="2"/>
-           <line x1="50" y1="32" x2="50" y2="68" stroke="#C0C0C0" stroke-width="2"/>
-           <line x1="32" y1="50" x2="68" y2="50" stroke="#C0C0C0" stroke-width="2"/>
-           <circle cx="50" cy="50" r="4" fill="#FFD700"/>
-           <circle cx="50" cy="42" r="3" fill="#FFF" opacity="0.6"/>`,
-    effect: '你的理智檢定結果 +1。每當你發現板塊時，你可以選擇將其埋葬並改為發現下一個板塊。如果你這樣做，不要結算第一個板塊的任何效果。',
+    name: '詭異的畫像',
+    description: '畫中人的眼睛似乎在跟著你移動。',
+    icon: `<rect x="25" y="15" width="40" height="50" fill="#4A3728"/>
+           <rect x="28" y="18" width="34" height="44" fill="#8B7355"/>
+           <ellipse cx="45" cy="35" rx="10" ry="12" fill="#F5DEB3"/>
+           <circle cx="42" cy="33" r="2" fill="#333"/>
+           <circle cx="48" cy="33" r="2" fill="#333"/>
+           <path d="M42 42 Q45 45 48 42" stroke="#333" stroke-width="1" fill="none"/>`,
+    effect: '每回合開始時，可以查看一個相鄰的未探索房間。',
   },
   {
-    id: 'omen_skull',
+    id: 'omen_3',
     type: 'omen',
-    name: '銘文頭骨',
-    nameEn: 'Skull',
-    description: '精緻地蝕刻著奇怪的記號。',
-    icon: `<rect x="20" y="20" width="60" height="60" fill="#3A3A3A"/>
-           <ellipse cx="50" cy="52" rx="16" ry="18" fill="#E8E8E8"/>
-           <ellipse cx="50" cy="52" rx="14" ry="16" fill="#D0D0D0"/>
-           <circle cx="44" cy="48" r="4" fill="#2A2A2A"/>
-           <circle cx="56" cy="48" r="4" fill="#2A2A2A"/>
-           <path d="M46 58 Q50 62 54 58" stroke="#2A2A2A" stroke-width="2" fill="none"/>
-           <rect x="46" y="62" width="2" height="3" fill="#2A2A2A"/>
-           <rect x="52" y="62" width="2" height="3" fill="#2A2A2A"/>
-           <path d="M40 40 L42 44 M60 40 L58 44 M50 35 L50 38" stroke="#4A4A4A" stroke-width="1"/>
-           <path d="M38 52 Q35 55 38 58 M62 52 Q65 55 62 58" stroke="#4A4A4A" stroke-width="1" fill="none"/>`,
-    effect: '你的知識檢定結果 +1。如果某事會導致你的探險者死亡，先擲 3 顆骰子。4-6：你不會死亡，改為將所有特質設為臨界值。移除這張卡。0-3：你正常死亡。',
+    name: '破碎的鏡子',
+    description: '鏡子碎裂成無數片，每片都反射著不同的景象。',
+    icon: `<rect x="25" y="20" width="40" height="50" fill="#4A4A5A"/>
+           <rect x="28" y="23" width="34" height="44" fill="#87CEEB" opacity="0.3"/>
+           <line x1="28" y1="35" x2="62" y2="50" stroke="#FFF" stroke-width="1"/>
+           <line x1="62" y1="30" x2="35" y2="67" stroke="#FFF" stroke-width="1"/>
+           <line x1="30" y1="23" x2="55" y2="67" stroke="#FFF" stroke-width="1"/>`,
+    effect: '當你受到傷害時，可以擲骰減少 1 點傷害。',
   },
   {
-    id: 'omen_mask',
+    id: 'omen_4',
     type: 'omen',
-    name: '詭異面具',
-    nameEn: 'Mask',
-    description: '你無法確定它是什麼材質做的，但它非常光滑且微微溫暖。',
-    icon: `<rect x="20" y="20" width="60" height="60" fill="#4A3A4A"/>
-           <ellipse cx="50" cy="50" rx="18" ry="22" fill="#8B7B6B"/>
-           <ellipse cx="50" cy="50" rx="15" ry="18" fill="#9B8B7B"/>
-           <ellipse cx="44" cy="46" rx="4" ry="3" fill="#2A1A1A"/>
-           <ellipse cx="56" cy="46" rx="4" ry="3" fill="#2A1A1A"/>
-           <path d="M46 56 Q50 60 54 56" stroke="#2A1A1A" stroke-width="1" fill="none"/>
-           <ellipse cx="50" cy="38" rx="12" ry="4" fill="#8B7B6B"/>
-           <path d="M35 50 Q32 55 35 60 M65 50 Q68 55 65 60" stroke="#7B6B5B" stroke-width="2" fill="none"/>`,
-    effect: '你的速度檢定結果 +1。在你的回合中一次，你可以使用面具將你所在板塊上的所有其他人（探險者和怪物）移動到任意相鄰板塊。此效果不能用於發現新板塊。',
+    name: '神秘的符咒',
+    description: '一張寫滿未知符號的羊皮紙。',
+    icon: `<rect x="25" y="25" width="40" height="45" fill="#F5DEB3"/>
+           <text x="32" y="40" font-size="12" fill="#8B0000">☥</text>
+           <text x="45" y="50" font-size="10" fill="#4B0082">✦</text>
+           <text x="35" y="60" font-size="11" fill="#006400">❋</text>
+           <circle cx="50" cy="35" r="3" fill="none" stroke="#8B0000"/>`,
+    effect: '對抗超自然存在時，所有檢定 +1。',
+  },
+  {
+    id: 'omen_5',
+    type: 'omen',
+    name: '狗靈',
+    description: '一隻透明的狗跟著你，只有你能看見牠。',
+    icon: `<rect x="20" y="20" width="60" height="60" fill="#3A3A4A"/>
+           <ellipse cx="50" cy="50" rx="15" ry="10" fill="#8B8B9B" opacity="0.4"/>
+           <circle cx="40" cy="45" r="6" fill="#8B8B9B" opacity="0.4"/>
+           <ellipse cx="35" cy="42" rx="3" ry="2" fill="#8B8B9B" opacity="0.3"/>
+           <circle cx="38" cy="44" r="1" fill="#FFF"/>
+           <rect x="55" y="55" width="8" height="3" fill="#8B8B9B" opacity="0.4"/>`,
+    effect: '你的速度 +1，並且可以感知附近的危險。',
+  },
+  {
+    id: 'omen_6',
+    type: 'omen',
+    name: '家族戒指',
+    description: '一枚刻著詭異紋章的戒指，戴上後你感到頭暈目眩。',
+    icon: `<rect x="20" y="20" width="60" height="60" fill="#2A1A0A"/>
+           <ellipse cx="50" cy="50" rx="18" ry="20" fill="none" stroke="#FFD700" stroke-width="4"/>
+           <rect x="45" y="30" width="10" height="8" fill="#8B0000"/>
+           <text x="47" y="37" font-size="6" fill="#FFD700">⚜</text>`,
+    effect: '你的知識 +1，但理智檢定 -1。',
+  },
+  {
+    id: 'omen_7',
+    type: 'omen',
+    name: '水晶球',
+    description: '一個散發著詭異光芒的水晶球。',
+    icon: `<circle cx="50" cy="45" r="20" fill="#E0FFFF" opacity="0.6"/>
+           <circle cx="50" cy="45" r="15" fill="#FFF" opacity="0.4"/>
+           <ellipse cx="50" cy="70" rx="15" ry="5" fill="#4A4A4A"/>`,
+    effect: '每回合可以查看牌堆頂的一張卡。',
+  },
+  {
+    id: 'omen_8',
+    type: 'omen',
+    name: '染血的匕首',
+    description: '一把沾滿血跡的古老匕首。',
+    icon: `<rect x="45" y="20" width="10" height="40" fill="#C0C0C0"/>
+           <rect x="42" y="60" width="16" height="8" fill="#8B4513"/>
+           <path d="M48 25 L50 20 L52 25" fill="#8B0000"/>`,
+    effect: '攻擊時可以額外造成 1 點傷害。',
+  },
+  {
+    id: 'omen_9',
+    type: 'omen',
+    name: '破碎的鏡子',
+    description: '一面破碎的鏡子，碎片中似乎映出另一個世界。',
+    icon: `<rect x="25" y="20" width="40" height="50" fill="#E0E0E0"/>
+           <line x1="25" y1="45" x2="65" y2="35" stroke="#000" stroke-width="1"/>
+           <line x1="35" y1="20" x2="45" y2="70" stroke="#000" stroke-width="1"/>
+           <line x1="25" y1="60" x2="65" y2="50" stroke="#000" stroke-width="1"/>`,
+    effect: '可以查看一個隨機的未發現房間。',
+  },
+  {
+    id: 'omen_10',
+    type: 'omen',
+    name: '黑暗蠟燭',
+    description: '一支燃燒著黑色火焰的蠟燭。',
+    icon: `<rect x="45" y="40" width="10" height="25" fill="#F5DEB3"/>
+           <ellipse cx="50" cy="40" rx="5" ry="8" fill="#000"/>
+           <circle cx="50" cy="35" r="3" fill="#4B0082"/>`,
+    effect: '作祟開始後，可以無視房間的負面效果一次。',
   },
 ];
 

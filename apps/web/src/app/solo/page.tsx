@@ -11,7 +11,7 @@ import { HauntRollModal } from '@/components/game/HauntRollModal';
 import { HauntRevealScreen } from '@/components/game/HauntRevealScreen';
 import { EventCheckModal, EventCheckResult } from '@/components/game/EventCheckModal';
 
-import { AIActivityNotification, AIActivityIndicator } from '@/components/game/AIActivityLog';
+
 import { CharacterTabs, PlayerInfo } from '@/components/game/CharacterTabs';
 import { CharacterDetailPanel } from '@/components/game/CharacterDetailPanel';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -242,18 +242,7 @@ export default function SoloGamePage() {
   const [currentFloor, setCurrentFloor] = useState<Floor>('ground');
   const [multiFloorMap, setMultiFloorMap] = useState<MultiFloorMap>(createEmptyMultiFloorMap());
   const [log, setLog] = useState<string[]>(['遊戲開始']);
-  const logRef = useRef<HTMLDivElement>(null);
   const [discovered, setDiscovered] = useState(false);
-
-  // Auto-scroll game log to latest entries
-  useEffect(() => {
-    if (logRef.current) {
-      logRef.current.scrollTo({ 
-        top: logRef.current.scrollHeight, 
-        behavior: 'smooth' 
-      });
-    }
-  }, [log]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRoom, setSelectedRoom] = useState<{ room: Room | null; x: number; y: number } | null>(null);
   const [reachablePositions, setReachablePositions] = useState<{ x: number; y: number; isExplored?: boolean }[]>([]);
@@ -2803,37 +2792,10 @@ export default function SoloGamePage() {
               </>
             )}
 
-            {/* 遊戲日誌 - Auto-scroll */}
+            {/* 遊戲日誌 */}
             <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
               <h3 className="text-lg font-bold mb-3">遊戲日誌</h3>
-              <div 
-                ref={logRef}
-                className="h-64 overflow-y-auto space-y-2 pr-2 scrollbar-hide"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-              >
-                <AnimatePresence initial={false}>
-                  {log.slice(-20).map((entry, i) => (
-                    <motion.p 
-                      key={i}
-                      className={`text-sm py-2 px-3 rounded-lg ${
-                        entry.includes('發現') ? 'bg-yellow-500/20 text-yellow-400' : 
-                        entry.includes('回合') ? 'bg-blue-500/20 text-blue-400' : 
-                        entry.includes('抽到物品') ? 'bg-blue-500/20 text-blue-400' :
-                        entry.includes('抽到預兆') ? 'bg-purple-500/20 text-purple-400' :
-                        entry.includes('抽到事件') ? 'bg-green-500/20 text-green-400' :
-                        entry.includes('作祟觸發') ? 'bg-red-500/20 text-red-400 font-bold' :
-                        entry.includes('作祟未觸發') ? 'bg-green-500/20 text-green-400' :
-                        'bg-gray-700/50 text-gray-300'
-                      }`}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      {entry}
-                    </motion.p>
-                  ))}
-                </AnimatePresence>
-              </div>
+              <GameLog log={log} />
             </div>
 
             {/* 當前房間資訊 */}
@@ -2866,6 +2828,8 @@ export default function SoloGamePage() {
                 </div>
               </motion.div>
             )}
+
+
 
             {/* Hero AI 狀態面板 (Issue #109) */}
             {hauntState.isActive && heroAIs.size > 0 && (
@@ -2964,18 +2928,7 @@ export default function SoloGamePage() {
         eventCheckResult={aiCardDrawState.eventCheckResult}
       />
 
-      {/* Issue #118: AI 活動通知氣泡 */}
-      <AIActivityNotification
-        latestLog={aiActionLogs.length > 0 && aiActionLogs[aiActionLogs.length - 1] != null ? aiActionLogs[aiActionLogs.length - 1] : null}
-        autoHideDelay={4000}
-      />
 
-      {/* Issue #118: AI 活動指示器 */}
-      <AIActivityIndicator
-        activity={isProcessingAITurn ? 'AI 正在行動...' : ''}
-        aiName={aiPlayers.find(p => p.id === currentTurnPlayer)?.name || ''}
-        isVisible={isProcessingAITurn && currentTurnPlayer !== 'solo-player'}
-      />
 
       {/* 作祟檢定結果覆蓋層（舊版，保留用於非預兆卡情況） */}
       <AnimatePresence>
@@ -3173,6 +3126,50 @@ function StatCard({ label, value, color, icon }: StatCardProps) {
         <div className="text-xs text-gray-400">{label}</div>
         <div className="font-bold text-lg" style={{ color }}>{value}</div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * 遊戲日誌組件 - 自動滾動到最新條目
+ */
+interface GameLogProps {
+  log: string[];
+}
+
+function GameLog({ log }: GameLogProps) {
+  const logEndRef = useRef<HTMLDivElement>(null);
+
+  // 自動滾動到最新日誌條目
+  useEffect(() => {
+    logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [log]);
+
+  return (
+    <div className="h-64 overflow-y-auto space-y-2 pr-2">
+      <AnimatePresence initial={false}>
+        {log.slice(-20).map((entry, i) => (
+          <motion.p
+            key={i}
+            className={`text-sm py-2 px-3 rounded-lg ${
+              entry.includes('發現') ? 'bg-yellow-500/20 text-yellow-400' :
+              entry.includes('回合') ? 'bg-blue-500/20 text-blue-400' :
+              entry.includes('抽到物品') ? 'bg-blue-500/20 text-blue-400' :
+              entry.includes('抽到預兆') ? 'bg-purple-500/20 text-purple-400' :
+              entry.includes('抽到事件') ? 'bg-green-500/20 text-green-400' :
+              entry.includes('作祟觸發') ? 'bg-red-500/20 text-red-400 font-bold' :
+              entry.includes('作祟未觸發') ? 'bg-green-500/20 text-green-400' :
+              'bg-gray-700/50 text-gray-300'
+            }`}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            {entry}
+          </motion.p>
+        ))}
+      </AnimatePresence>
+      <div ref={logEndRef} />
     </div>
   );
 }

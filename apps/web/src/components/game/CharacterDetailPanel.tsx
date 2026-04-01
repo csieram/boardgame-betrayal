@@ -107,25 +107,24 @@ export function CharacterDetailPanel({
         </div>
       </div>
 
-      {/* 當前位置 - Simplified to one line */}
-      <div className="mb-3 p-2 bg-gray-700/30 rounded-lg">
-        <p className="text-sm">
-          <span className="text-gray-400">📍當前位置:</span>{' '}
-          <span className="text-white font-medium">
-            {floorNames[player.position.floor]} ({player.position.x}, {player.position.y})
-          </span>
+      {/* 當前位置 - 簡化顯示 */}
+      <div className="mb-4 p-2 bg-gray-700/30 rounded-lg">
+        <p className="text-sm text-gray-300">
+          📍當前位置: {floorNames[player.position.floor]} ({player.position.x}, {player.position.y})
         </p>
       </div>
 
-      {/* 屬性面板 - Compact */}
-      <div className="mb-3">
-        <h4 className="text-sm font-medium text-gray-300 mb-1">角色屬性</h4>
-        <div className="flex gap-2">
-          <CompactStat label="速" value={player.stats.speed} color="#3B82F6" />
-          <CompactStat label="力" value={player.stats.might} color="#EF4444" />
-          <CompactStat label="理" value={player.stats.sanity} color="#8B5CF6" />
-          <CompactStat label="知" value={player.stats.knowledge} color="#10B981" />
-        </div>
+      {/* 屬性面板 - 簡化單行顯示 */}
+      <div className="mb-4 p-2 bg-gray-700/30 rounded-lg">
+        <p className="text-sm text-gray-300">
+          <span className="text-blue-400">速 {player.stats.speed}</span>
+          <span className="text-gray-500 mx-2">|</span>
+          <span className="text-red-400">力 {player.stats.might}</span>
+          <span className="text-gray-500 mx-2">|</span>
+          <span className="text-purple-400">理 {player.stats.sanity}</span>
+          <span className="text-gray-500 mx-2">|</span>
+          <span className="text-green-400">知 {player.stats.knowledge}</span>
+        </p>
       </div>
 
       {/* Issue #189: 移除重複的背包資訊，由 InventoryPanel 統一顯示 */}
@@ -148,25 +147,7 @@ export function CharacterDetailPanel({
   );
 }
 
-/**
- * 緊湊屬性組件
- */
-interface CompactStatProps {
-  label: string;
-  value: number;
-  color: string;
-}
 
-function CompactStat({ label, value, color }: CompactStatProps) {
-  return (
-    <div className="flex-1 bg-gray-700/50 rounded px-2 py-1 text-center">
-      <span className="text-xs text-gray-400">{label}</span>
-      <span className="font-bold text-sm ml-1" style={{ color }}>
-        {value}
-      </span>
-    </div>
-  );
-}
 
 /**
  * 取得個性標籤
