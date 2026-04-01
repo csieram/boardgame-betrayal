@@ -1883,9 +1883,9 @@ export default function SoloGamePage() {
                 if (p.id !== result.playerId) return p;
                 const newItem = { id: result.drawnCard!.id, name: result.drawnCard!.name, type: result.drawnCard!.type };
                 if (result.drawnCard.type === 'item') {
-                  return { ...p, items: [...p.items, newItem] };
+                  return { ...p, items: [...(p.items || []), newItem] };
                 } else {
-                  return { ...p, omens: [...p.omens, newItem] };
+                  return { ...p, omens: [...(p.omens || []), newItem] };
                 }
               }));
             }
