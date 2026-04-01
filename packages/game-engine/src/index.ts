@@ -141,7 +141,7 @@ export {
   initiateCombat,
   resolveCombat,
   calculateDamage,
-  applyDamage,
+  applyDamage as applyCombatDamage,
   calculateWeaponBonus,
   WEAPON_EFFECTS,
 } from './rules/combat';
@@ -152,6 +152,44 @@ export type {
   CombatValidation,
   WeaponEffect,
 } from './rules/combat';
+
+// Damage System (Issue #229)
+export {
+  // Core functions
+  getAvailableTraitsForDamage,
+  isValidTraitForDamage,
+  checkDeath,
+  findFatalStat,
+  calculateNewStatValue,
+  calculateActualReduction,
+  applyDamage,
+  createDamageAllocation,
+  createDeathResult,
+  handlePlayerDeath,
+  formatDeathNotification,
+  getRecommendedTraitForDamage,
+  willDamageCauseDeath,
+  getFatalTraitChoices,
+  getSafeTraitChoices,
+  // Constants
+  PHYSICAL_DAMAGE_TRAITS,
+  MENTAL_DAMAGE_TRAITS,
+  ALL_TRAITS,
+  TRAIT_NAMES,
+  TRAIT_NAMES_EN,
+  DEATH_THRESHOLD,
+  EXPLORATION_MIN_STAT,
+} from './rules/damage';
+export type {
+  DamageType,
+  PhysicalTrait,
+  MentalTrait,
+  AllTrait,
+  DamageAllocation,
+  DamageApplicationResult,
+  DeathResult,
+  DeathHandlingResult,
+} from './rules/damage';
 
 // Legacy exports (for backward compatibility)
 export { GameEngine as GameEngineLegacy } from './core/GameEngine';
