@@ -245,7 +245,7 @@ export function HauntRollModal({
                           {rollResult.total}
                         </p>
                         <p className="text-gray-500 text-xs mt-1">
-                          （閾值 &lt; 5 觸發作祟）
+                          （總和 &lt; {omenCount} 觸發作祟）
                         </p>
                       </div>
 
@@ -262,7 +262,7 @@ export function HauntRollModal({
                             作祟開始！
                           </h3>
                           <p className="text-red-300 text-sm">
-                            {rollResult.total} &lt; 5，作祟被觸發
+                            {rollResult.total} &lt; {omenCount}，作祟被觸發
                           </p>
                         </motion.div>
                       ) : (
@@ -277,7 +277,7 @@ export function HauntRollModal({
                             安全
                           </h3>
                           <p className="text-green-300 text-sm">
-                            {rollResult.total} ≥ 5，作祟未觸發
+                            {rollResult.total} ≥ {omenCount}，作祟未觸發
                           </p>
                         </motion.div>
                       )}

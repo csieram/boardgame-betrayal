@@ -243,23 +243,33 @@ export class CardDrawingManager {
 
   /**
    * 進行作祟檢定
-   * Rulebook: 擲骰子，若結果小於已抽預兆卡數量，則觸發作祟
+   * Rulebook Page 14: 擲骰子數量 = 已發現的預兆數量
+   * 若總和 < 預兆數量，則觸發作祟
    * @returns 是否觸發作祟
    */
-  performHauntRoll(): { triggered: boolean; roll: number; threshold: number } {
-    // 擲六面骰（1-6）
-    const roll = this.rng.nextInt(1, 6);
+  performHauntRoll(): { triggered: boolean; roll: number; dice: number[]; threshold: number } {
+    // 擲 omenCount 顆骰子（每顆 0, 0, 1, 1, 2, 2）
+    const diceCount = Math.max(1, this.omenCount);
+    const dice: number[] = [];
+    const DICE_FACES = [0, 0, 1, 1, 2, 2];
+    
+    for (let i = 0; i < diceCount; i++) {
+      const faceIndex = this.rng.nextInt(0, 6);
+      dice.push(DICE_FACES[faceIndex]);
+    }
+    
+    const roll = dice.reduce((sum, val) => sum + val, 0);
     const threshold = this.omenCount;
     const triggered = roll < threshold;
 
-    console.log(`[CardDrawingManager] Haunt roll: ${roll} vs threshold ${threshold}`);
+    console.log(`[CardDrawingManager] Haunt roll: ${dice.join('+')} = ${roll} vs threshold ${threshold}`);
     console.log(`[CardDrawingManager] Haunt ${triggered ? 'TRIGGERED!' : 'not triggered'}`);
 
     if (triggered) {
       this.hauntTriggered = true;
     }
 
-    return { triggered, roll, threshold };
+    return { triggered, roll, dice, threshold };
   }
 
   /**
@@ -619,6 +629,7 @@ export interface CardDrawResult {
   hauntRoll?: {
     triggered: boolean;
     roll: number;
+    dice: number[];
     threshold: number;
   };
 }
@@ -662,7 +673,8 @@ export function drawAndApplyCard(
 
   // 如果是預兆卡，進行作祟檢定
   if (type === 'omen' && cardManager.shouldTriggerHauntRoll()) {
-    result.hauntRoll = cardManager.performHauntRoll();
+    const hauntRollResult = cardManager.performHauntRoll();
+    result.hauntRoll = hauntRollResult;
   }
 
   return result;

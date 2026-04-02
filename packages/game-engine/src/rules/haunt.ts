@@ -86,10 +86,10 @@ export interface HauntStartResult {
 /**
  * 執行 Haunt Roll（作祟檢定）
  * 
- * Rulebook Page 14:
+ * Rulebook Page 14 (Issue #231):
  * - 擲骰數量 = 已發現的預兆數量
- * - 結果 < 5：作祟開始
- * - 結果 >= 5：無事發生
+ * - 結果 < omenCount：作祟開始
+ * - 結果 >= omenCount：無事發生
  * 
  * @param omenCount 已發現的預兆數量
  * @param rng 隨機數生成器
@@ -105,8 +105,8 @@ export function makeHauntRoll(
   // 擲骰子（使用遊戲標準骰子：0, 0, 1, 1, 2, 2）
   const diceRoll = rng.rollDice(diceCount);
   
-  // 判斷是否觸發作祟
-  const hauntBegins = diceRoll.total < HAUNT_ROLL_THRESHOLD;
+  // 判斷是否觸發作祟：總和 < omenCount
+  const hauntBegins = diceRoll.total < omenCount;
   
   return {
     dice: diceRoll.results,
