@@ -23,7 +23,11 @@ import { SeededRng } from '../core/GameState';
 
 // ==================== 常數 ====================
 
-/** 作祟觸發閾值：擲骰總和 < 5 則觸發 */
+/** 
+ * 作祟觸發閾值（已棄用，保留向後兼容）
+ * 實際規則：擲骰總和 < omenCount 時觸發
+ * @deprecated 使用 omenCount 作為動態閾值
+ */
 export const HAUNT_ROLL_THRESHOLD = 5;
 
 /** 預兆卡總數（當所有預兆都被發現時自動觸發作祟） */
@@ -376,11 +380,11 @@ export function createHauntStartResult(
     turn: gameState.turn.turnNumber,
     playerId: gameState.turn.currentPlayerId,
     actionType: 'HAUNT_ROLL',
-    description: `作祟檢定：擲出 ${hauntRoll.dice.join('+')} = ${hauntRoll.total}（閾值 ${HAUNT_ROLL_THRESHOLD}）- 作祟開始！`,
+    description: `作祟檢定：擲出 ${hauntRoll.dice.join('+')} = ${hauntRoll.total}（閾值 < ${hauntRoll.diceCount}）- 作祟開始！`,
     data: {
       dice: hauntRoll.dice,
       total: hauntRoll.total,
-      threshold: HAUNT_ROLL_THRESHOLD,
+      threshold: hauntRoll.diceCount,
       hauntBegins: true,
     },
   });
