@@ -63,7 +63,7 @@ export function ItemDetailModal({
           >
             <div 
               className={`
-                pointer-events-auto w-full max-w-md rounded-2xl border-2 p-6 shadow-2xl
+                pointer-events-auto w-full max-w-md max-h-[80vh] rounded-2xl border-2 p-6 shadow-2xl overflow-hidden flex flex-col
                 ${isOmen 
                   ? 'bg-purple-900/95 border-purple-500/50' 
                   : 'bg-blue-900/95 border-blue-500/50'
@@ -71,15 +71,21 @@ export function ItemDetailModal({
               `}
               onClick={(e) => e.stopPropagation()}
             >
-              {/* 關閉按鈕 */}
-              <button
-                onClick={onClose}
-                className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              {/* 頂部區域 - sticky header with close button */}
+              <div className="sticky top-0 z-20 flex justify-end mb-4 bg-inherit">
+                {/* 關閉按鈕 */}
+                <button
+                  onClick={onClose}
+                  className="p-2 rounded-full bg-black/20 hover:bg-black/40 text-gray-400 hover:text-white transition-colors z-30"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* 可滾動內容區域 */}
+              <div className="overflow-y-auto flex-1 pr-2">
 
               {/* 卡牌圖示 */}
               <div className="flex justify-center mb-6">

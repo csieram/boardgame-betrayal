@@ -193,15 +193,15 @@ export function EventCheckModal({
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            className="relative w-full max-w-lg mx-4"
+            className="relative w-full max-w-lg mx-4 max-h-[85vh]"
           >
             {/* 主容器 */}
-            <div className="bg-gradient-to-b from-gray-800 to-gray-900 rounded-2xl border-2 border-emerald-500/50 shadow-2xl shadow-emerald-500/20 overflow-hidden">
+            <div className="bg-gradient-to-b from-gray-800 to-gray-900 rounded-2xl border-2 border-emerald-500/50 shadow-2xl shadow-emerald-500/20 overflow-hidden max-h-[85vh] flex flex-col">
               {/* 頂部裝飾 */}
-              <div className="h-2 bg-gradient-to-r from-emerald-600 via-emerald-400 to-emerald-600" />
+              <div className="h-2 bg-gradient-to-r from-emerald-600 via-emerald-400 to-emerald-600 flex-shrink-0" />
               
-              {/* 內容區域 */}
-              <div className="p-6 sm:p-8">
+              {/* 內容區域 - scrollable */}
+              <div className="p-6 sm:p-8 overflow-y-auto">
                 {/* 標題和卡牌資訊 */}
                 <motion.div
                   initial={{ opacity: 0, y: -20 }}
