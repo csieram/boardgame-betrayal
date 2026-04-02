@@ -168,6 +168,8 @@ export interface Player {
   character: Character;
   /** 當前位置 */
   position: Position3D;
+  /** 上一個位置（用於強制移動回退） */
+  previousPosition?: Position3D;
   /** 當前屬性值（可能因遊戲進行而改變） */
   currentStats: CharacterStats;
   /** 持有的物品卡 */

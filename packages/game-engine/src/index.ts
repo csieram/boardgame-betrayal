@@ -191,6 +191,22 @@ export type {
   DeathHandlingResult,
 } from './rules/damage';
 
+// Forced Movement System (Issue #233)
+export {
+  // Core functions
+  executeForcedMove,
+  createForcedMoveToPosition,
+  createForcedMoveAdjacent,
+  createForcedMoveToPrevious,
+  createForcedMoveToLanding,
+} from './rules/forcedMovement';
+export type {
+  ForcedMoveType,
+  ForcedMoveOptions,
+  ForcedMoveResult,
+  DamageType as ForcedMoveDamageType,
+} from './rules/forcedMovement';
+
 // Legacy exports (for backward compatibility)
 export { GameEngine as GameEngineLegacy } from './core/GameEngine';
 
