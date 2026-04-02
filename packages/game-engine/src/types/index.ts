@@ -380,6 +380,8 @@ export interface GameState {
   rngState: RngState;
   /** 已放置的房間 ID（確保每個房間只出現一次） */
   placedRoomIds: Set<string>;
+  /** 已埋葬/丟棄的物品（Issue #232） */
+  discardedItems?: Card[];
 }
 
 // ==================== RNG 系統（Deterministic） ====================

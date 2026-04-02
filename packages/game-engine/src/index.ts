@@ -207,6 +207,28 @@ export type {
   DamageType as ForcedMoveDamageType,
 } from './rules/forcedMovement';
 
+// Item System (Issue #232)
+export {
+  // Core functions
+  buryItem,
+  canBuryItem,
+  getBuryableItems,
+  getEventBuryOption,
+  hasBuryOption,
+  createBuryOption,
+  applyBuryResultToGameState,
+  formatBenefitDescription,
+  getBuryOptionFullDescription,
+  // Constants
+  DEFAULT_EVENT_BURY_OPTIONS,
+} from './rules/items';
+export type {
+  BuryItemOptions,
+  BuryItemResult,
+  ItemChoice,
+  EventBuryOption,
+} from './rules/items';
+
 // Legacy exports (for backward compatibility)
 export { GameEngine as GameEngineLegacy } from './core/GameEngine';
 

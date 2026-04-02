@@ -10,6 +10,7 @@ import { InventoryPanel } from '@/components/game/InventoryPanel';
 import { HauntRollModal } from '@/components/game/HauntRollModal';
 import { HauntRevealScreen } from '@/components/game/HauntRevealScreen';
 import { EventCheckModal, EventCheckResult } from '@/components/game/EventCheckModal';
+import { ItemSelectDialog } from '@/components/game/ItemSelectDialog';
 
 
 import { CharacterTabs, PlayerInfo } from '@/components/game/CharacterTabs';
@@ -37,6 +38,15 @@ import {
   CombatManager,
   CombatResult,
   calculateWeaponBonus,
+  // Item Burying System (Issue #232)
+  buryItem,
+  canBuryItem,
+  getBuryableItems,
+  getEventBuryOption,
+  hasBuryOption,
+  formatBenefitDescription,
+  BuryItemResult,
+  EventBuryOption,
   // Hero AI System (Issue #109)
   HeroAI,
   createHeroAIs,
@@ -121,6 +131,15 @@ interface CombatUIState {
   isCombatAnimating: boolean;
   validTargets: string[];
   selectedTarget: string | null;
+}
+
+/** 物品埋葬狀態 (Issue #232) */
+interface ItemBuryState {
+  showDialog: boolean;
+  currentCard: Card | null;
+  buryOption: EventBuryOption | null;
+  selectedItem: Card | null;
+  buryResult: BuryItemResult | null;
 }
 
 /**
@@ -367,6 +386,15 @@ export default function SoloGamePage() {
     card: null,
     isRolling: false,
     result: null,
+  });
+
+  // Issue #232: 物品埋葬狀態
+  const [itemBuryState, setItemBuryState] = useState<ItemBuryState>({
+    showDialog: false,
+    currentCard: null,
+    buryOption: null,
+    selectedItem: null,
+    buryResult: null,
   });
 
   // 當前樓層的地圖（向後兼容）
@@ -2152,6 +2180,38 @@ export default function SoloGamePage() {
       return;
     }
     
+    // Issue #232: 檢查事件卡是否有埋葬選項
+    if (card?.type === 'event' && playerState && hasBuryOption(card.id)) {
+      const buryOption = getEventBuryOption(card.id);
+      if (buryOption && canBuryItem({
+        id: 'solo-player',
+        name: player?.name || '玩家',
+        character: player!,
+        position: { x: position.x, y: position.y, floor: currentFloor },
+        currentStats: {
+          speed: playerState.stats.speed,
+          might: playerState.stats.might,
+          sanity: playerState.stats.sanity,
+          knowledge: playerState.stats.knowledge,
+        },
+        items: playerState.items,
+        omens: playerState.omens,
+        isTraitor: false,
+        isDead: false,
+        usedItemsThisTurn: [],
+      })) {
+        // 顯示物品埋葬對話框
+        setItemBuryState({
+          showDialog: true,
+          currentCard: card,
+          buryOption,
+          selectedItem: null,
+          buryResult: null,
+        });
+        return;
+      }
+    }
+
     // Issue #104: 檢查事件卡是否需要屬性檢定
     if (card?.type === 'event' && card.rollRequired && playerState) {
       // 顯示事件卡檢定模態框
@@ -2283,8 +2343,194 @@ export default function SoloGamePage() {
       isRolling: false,
       result: null,
     });
-    
+
     // Issue #127: 標記回合結束，觸發自動切換
+    setTurnState({
+      hasEnded: true,
+      endedByDiscovery: true,
+    });
+  };
+
+  // Issue #232: 處理物品埋葬選擇
+  const handleBuryItemSelect = (item: Card | null) => {
+    if (!item || !itemBuryState.buryOption || !playerState || !player) {
+      // 取消埋葬，關閉對話框
+      setItemBuryState({
+        showDialog: false,
+        currentCard: null,
+        buryOption: null,
+        selectedItem: null,
+        buryResult: null,
+      });
+
+      // 如果沒有選擇物品，檢查是否有替代選項（如擲骰）
+      if (itemBuryState.buryOption?.alternative) {
+        // 這裡可以處理替代選項（如擲骰檢定）
+        // 暫時直接結束回合
+        setTurnState({
+          hasEnded: true,
+          endedByDiscovery: true,
+        });
+      }
+      return;
+    }
+
+    // 執行埋葬
+    const mockPlayer = {
+      id: 'solo-player',
+      name: player.name,
+      character: player,
+      position: { x: position.x, y: position.y, floor: currentFloor },
+      currentStats: {
+        speed: playerState.stats.speed,
+        might: playerState.stats.might,
+        sanity: playerState.stats.sanity,
+        knowledge: playerState.stats.knowledge,
+      },
+      items: playerState.items,
+      omens: playerState.omens,
+      isTraitor: false,
+      isDead: false,
+      usedItemsThisTurn: [],
+    };
+
+    // Issue #232: 創建簡化的遊戲狀態用於埋葬物品
+    const mockGameState: any = {
+      gameId: 'solo-game',
+      version: '1.0.0',
+      phase: 'exploration',
+      result: 'ongoing',
+      config: { playerCount: 1, enableAI: false, seed: gameState.seed, maxTurns: 100 },
+      map: {
+        ground: multiFloorMap.ground,
+        upper: multiFloorMap.upper,
+        basement: multiFloorMap.basement,
+        roof: multiFloorMap.roof,
+        placedRoomCount: gameState.placedRoomIds.size,
+      },
+      players: [mockPlayer],
+      playerOrder: ['solo-player'],
+      turn: {
+        currentPlayerId: 'solo-player',
+        turnNumber: turn,
+        movesRemaining: moves,
+        hasDiscoveredRoom: discovered,
+        hasDrawnCard: true,
+        hasEnded: false,
+        usedSpecialActions: [],
+        usedItems: [],
+      },
+      cardDecks: gameState.cardDecks,
+      roomDeck: {
+        ground: gameState.roomDecks.ground,
+        upper: gameState.roomDecks.upper,
+        basement: gameState.roomDecks.basement,
+        roof: gameState.roomDecks.roof,
+        drawn: gameState.drawn,
+      },
+      haunt: {
+        isActive: hauntState.isActive,
+        type: 'none',
+        hauntNumber: null,
+        traitorPlayerId: null,
+        omenCount: cardManager.getDeckStatus().omenCount,
+        heroObjective: null,
+        traitorObjective: null,
+      },
+      combat: {
+        isActive: false,
+        attackerId: null,
+        defenderId: null,
+        usedStat: null,
+        attackerRoll: null,
+        defenderRoll: null,
+        damage: null,
+      },
+      log: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      rngState: { seed: gameState.seed, count: 0, internalState: [] },
+      placedRoomIds: gameState.placedRoomIds,
+      discardedItems: [],
+    };
+
+    const buryResult = buryItem(mockPlayer as any, mockGameState, {
+      itemId: item.id,
+      benefit: itemBuryState.buryOption.benefit,
+    });
+
+    if (buryResult.success && buryResult.buriedItem) {
+      // 更新玩家狀態
+      setPlayerState(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          items: prev.items.filter(i => i.id !== item.id),
+          omens: prev.omens.filter(o => o.id !== item.id),
+          stats: buryResult.newStats || prev.stats,
+        };
+      });
+
+      // 同步更新 player (Character) 的 stats
+      if (buryResult.newStats) {
+        setPlayer(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            stats: {
+              speed: [buryResult.newStats!.speed, prev.stats.speed[1]],
+              might: [buryResult.newStats!.might, prev.stats.might[1]],
+              sanity: [buryResult.newStats!.sanity, prev.stats.sanity[1]],
+              knowledge: [buryResult.newStats!.knowledge, prev.stats.knowledge[1]],
+            },
+          };
+        });
+      }
+
+      // 添加到棄牌堆
+      setGameState(prev => ({
+        ...prev,
+        cardDecks: {
+          ...prev.cardDecks,
+          [item.type]: {
+            ...prev.cardDecks[item.type as 'item' | 'omen'],
+            discarded: [...prev.cardDecks[item.type as 'item' | 'omen'].discarded, item.id],
+          },
+        },
+      }));
+
+      // 記錄到日誌
+      setLog(prev => [...prev, `💀 ${buryResult.message}`]);
+
+      // 關閉對話框並結束回合
+      setItemBuryState({
+        showDialog: false,
+        currentCard: null,
+        buryOption: null,
+        selectedItem: null,
+        buryResult: null,
+      });
+
+      // 標記回合結束
+      setTurnState({
+        hasEnded: true,
+        endedByDiscovery: true,
+      });
+    }
+  };
+
+  // Issue #232: 處理選擇替代選項（不埋葬物品）
+  const handleBuryAlternative = () => {
+    setItemBuryState({
+      showDialog: false,
+      currentCard: null,
+      buryOption: null,
+      selectedItem: null,
+      buryResult: null,
+    });
+
+    // 如果有替代選項（如擲骰檢定），這裡可以處理
+    // 暫時直接結束回合
     setTurnState({
       hasEnded: true,
       endedByDiscovery: true,
@@ -2928,7 +3174,21 @@ export default function SoloGamePage() {
         eventCheckResult={aiCardDrawState.eventCheckResult}
       />
 
-
+      {/* Issue #232: 物品埋葬選擇對話框 */}
+      <ItemSelectDialog
+        isOpen={itemBuryState.showDialog}
+        items={playerState?.items || []}
+        omens={playerState?.omens || []}
+        title={itemBuryState.buryOption?.label || '埋葬物品'}
+        description={itemBuryState.buryOption?.description || '選擇一個物品埋葬來獲得收益'}
+        benefitDescription={itemBuryState.buryOption ? formatBenefitDescription(itemBuryState.buryOption.benefit) : ''}
+        onSelect={handleBuryItemSelect}
+        onCancel={handleBuryAlternative}
+        showAlternative={!!itemBuryState.buryOption?.alternative}
+        alternativeLabel={itemBuryState.buryOption?.alternative?.label}
+        alternativeDescription={itemBuryState.buryOption?.alternative?.description}
+        onAlternative={handleBuryAlternative}
+      />
 
       {/* 作祟檢定結果覆蓋層（舊版，保留用於非預兆卡情況） */}
       <AnimatePresence>
