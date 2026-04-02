@@ -189,24 +189,16 @@ function CardContent({ card, onClose, animate, typeConfig, eventCheckResult }: C
       animate="visible"
       exit="exit"
       className={`
-        relative w-[320px] sm:w-[380px] 
+        relative w-[320px] sm:w-[380px] max-h-[80vh]
         bg-gradient-to-br ${typeConfig.bgGradient}
         rounded-2xl border-2 ${typeConfig.borderColor}
         shadow-2xl ${typeConfig.glowColor}
-        overflow-hidden
+        overflow-hidden flex flex-col
       `}
     >
-      {/* 關閉按鈕 */}
-      <button
-        onClick={onClose}
-        className="absolute top-3 right-3 z-10 p-2 rounded-full bg-black/30 hover:bg-black/50 text-white transition-colors"
-        aria-label="關閉"
-      >
-        <X className="w-5 h-5" />
-      </button>
-
-      {/* 卡牌類型標籤 */}
-      <div className="absolute top-3 left-3 z-10">
+      {/* 頂部區域 - sticky header with close button */}
+      <div className="sticky top-0 z-20 p-3 flex justify-between items-start bg-inherit">
+        {/* 卡牌類型標籤 */}
         <div
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white text-sm font-bold shadow-lg"
           style={{ backgroundColor: typeConfig.color }}
@@ -214,10 +206,19 @@ function CardContent({ card, onClose, animate, typeConfig, eventCheckResult }: C
           {typeConfig.icon}
           <span>{typeConfig.label}</span>
         </div>
+
+        {/* 關閉按鈕 */}
+        <button
+          onClick={onClose}
+          className="p-2 rounded-full bg-black/30 hover:bg-black/50 text-white transition-colors z-30"
+          aria-label="關閉"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
-      {/* 卡牌內容 */}
-      <div className="p-6 pt-16">
+      {/* 卡牌內容 - scrollable */}
+      <div className="p-6 pt-2 overflow-y-auto">
         {/* 卡牌圖示區域 */}
         <div className="flex justify-center mb-6">
           <motion.div
