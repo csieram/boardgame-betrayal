@@ -1,10 +1,10 @@
 /**
- * Item System - Bury Item Logic
- * 
- * 實作物品埋葬（丟棄）系統，用於事件卡效果
- * Rulebook Reference: 某些事件卡允許玩家埋葬物品以獲得收益
- * 
- * Example: "Wandering Ghost" - "Bury item to gain 1 Sanity OR roll: 4+ Draw item, 0-3 Take 1 General damage"
+ * Item System - Discard Item Logic
+ *
+ * 實作物品捨棄（丟棄）系統，用於事件卡效果
+ * Rulebook Reference: 某些事件卡允許玩家捨棄物品以獲得收益
+ *
+ * Example: "Wandering Ghost" - "Discard item to gain 1 Sanity OR roll: 4+ Draw item, 0-3 Take 1 General damage"
  */
 
 import { Card, CardType } from '@betrayal/shared';
@@ -12,11 +12,11 @@ import { Player, CharacterStats, GameState } from '../types';
 
 // ==================== 類型定義 ====================
 
-/** 埋葬物品選項 */
-export interface BuryItemOptions {
-  /** 要埋葬的物品 ID */
+/** 捨棄物品選項 */
+export interface DiscardItemOptions {
+  /** 要捨棄的物品 ID */
   itemId: string;
-  /** 埋葬後獲得的收益 */
+  /** 捨棄後獲得的收益 */
   benefit: {
     /** 收益類型 */
     type: 'stat' | 'avoid_damage' | 'other';
@@ -29,12 +29,17 @@ export interface BuryItemOptions {
   };
 }
 
-/** 埋葬物品結果 */
-export interface BuryItemResult {
+/** 捨棄物品選項（向後兼容的別名）
+ * @deprecated 請使用 DiscardItemOptions
+ */
+export type BuryItemOptions = DiscardItemOptions;
+
+/** 捨棄物品結果 */
+export interface DiscardItemResult {
   /** 是否成功 */
   success: boolean;
-  /** 被埋葬的物品（若失敗則為 null） */
-  buriedItem: Card | null;
+  /** 被捨棄的物品（若失敗則為 null） */
+  discardedItem: Card | null;
   /** 收益是否已應用 */
   benefitApplied: boolean;
   /** 新的玩家屬性（若有變化） */
@@ -42,6 +47,11 @@ export interface BuryItemResult {
   /** 訊息 */
   message: string;
 }
+
+/** 埋葬物品結果（向後兼容的別名）
+ * @deprecated 請使用 DiscardItemResult
+ */
+export type BuryItemResult = DiscardItemResult;
 
 /** 物品選擇選項 */
 export interface ItemChoice {
@@ -54,18 +64,18 @@ export interface ItemChoice {
   /** 需要的物品類型 */
   requiredItemType?: CardType;
   /** 收益 */
-  benefit: BuryItemOptions['benefit'];
+  benefit: DiscardItemOptions['benefit'];
 }
 
-/** 事件卡埋葬選項 */
-export interface EventBuryOption {
+/** 事件卡捨棄選項 */
+export interface EventDiscardOption {
   /** 選項標籤（顯示給玩家） */
   label: string;
   /** 選項描述 */
   description: string;
-  /** 埋葬後的收益 */
-  benefit: BuryItemOptions['benefit'];
-  /** 替代選項（如果不埋葬） */
+  /** 捨棄後的收益 */
+  benefit: DiscardItemOptions['benefit'];
+  /** 替代選項（如果不捨棄） */
   alternative?: {
     label: string;
     description: string;
@@ -82,14 +92,19 @@ export interface EventBuryOption {
   };
 }
 
+/** 事件卡埋葬選項（向後兼容的別名）
+ * @deprecated 請使用 EventDiscardOption
+ */
+export type EventBuryOption = EventDiscardOption;
+
 // ==================== 常數 ====================
 
-/** 預設事件卡埋葬選項 */
-export const DEFAULT_EVENT_BURY_OPTIONS: Record<string, EventBuryOption> = {
-  // Wandering Ghost: 埋葬物品獲得 +1 理智，或擲骰檢定
+/** 預設事件卡捨棄選項 */
+export const DEFAULT_EVENT_DISCARD_OPTIONS: Record<string, EventDiscardOption> = {
+  // Wandering Ghost: 捨棄物品獲得 +1 理智，或擲骰檢定
   'wandering_ghost': {
-    label: '埋葬物品',
-    description: '埋葬一個物品來安撫遊蕩的幽靈',
+    label: '捨棄物品',
+    description: '捨棄一個物品來安撫遊蕩的幽靈',
     benefit: {
       type: 'stat',
       stat: 'sanity',
@@ -105,48 +120,53 @@ export const DEFAULT_EVENT_BURY_OPTIONS: Record<string, EventBuryOption> = {
       failureEffect: 'take_1_general_damage',
     },
   },
-  // 可以添加更多事件卡的埋葬選項
+  // 可以添加更多事件卡的捨棄選項
 };
+
+/** 預設事件卡埋葬選項（向後兼容的別名）
+ * @deprecated 請使用 DEFAULT_EVENT_DISCARD_OPTIONS
+ */
+export const DEFAULT_EVENT_BURY_OPTIONS = DEFAULT_EVENT_DISCARD_OPTIONS;
 
 // ==================== 核心函數 ====================
 
 /**
- * 埋葬物品
- * 
+ * 捨棄物品
+ *
  * 將物品從玩家背包中移除，並添加到棄牌堆，然後應用收益
- * 
+ *
  * @param player 玩家狀態
  * @param gameState 遊戲狀態
- * @param options 埋葬選項
- * @returns 埋葬結果
+ * @param options 捨棄選項
+ * @returns 捨棄結果
  */
-export function buryItem(
+export function discardItem(
   player: Player,
   gameState: GameState,
-  options: BuryItemOptions
-): BuryItemResult {
+  options: DiscardItemOptions
+): DiscardItemResult {
   const { itemId, benefit } = options;
 
   // 1. 檢查玩家是否擁有該物品
   const itemIndex = player.items.findIndex(item => item.id === itemId);
   const omenIndex = player.omens.findIndex(omen => omen.id === itemId);
 
-  let itemToBury: Card | null = null;
+  let itemToDiscard: Card | null = null;
   let itemType: 'item' | 'omen' | null = null;
 
   if (itemIndex !== -1) {
-    itemToBury = player.items[itemIndex];
+    itemToDiscard = player.items[itemIndex];
     itemType = 'item';
   } else if (omenIndex !== -1) {
-    itemToBury = player.omens[omenIndex];
+    itemToDiscard = player.omens[omenIndex];
     itemType = 'omen';
   }
 
   // 2. 如果找不到物品，返回失敗
-  if (!itemToBury || !itemType) {
+  if (!itemToDiscard || !itemType) {
     return {
       success: false,
-      buriedItem: null,
+      discardedItem: null,
       benefitApplied: false,
       message: `玩家沒有 ID 為 "${itemId}" 的物品`,
     };
@@ -163,7 +183,7 @@ export function buryItem(
   }
 
   // 4. 添加到棄牌堆（通過更新 gameState）
-  const updatedDiscardedItems = [...(gameState.discardedItems || []), itemToBury];
+  const updatedDiscardedItems = [...(gameState.discardedItems || []), itemToDiscard];
 
   // 5. 應用收益
   let newStats: CharacterStats | undefined;
@@ -192,7 +212,7 @@ export function buryItem(
     knowledge: '知識',
   };
 
-  let message = `埋葬了 ${itemToBury.name}`;
+  let message = `捨棄了 ${itemToDiscard.name}`;
   if (benefit.type === 'stat' && benefit.stat && benefit.amount) {
     const changeText = benefit.amount > 0 ? `+${benefit.amount}` : `${benefit.amount}`;
     message += `，${statNameMap[benefit.stat]} ${changeText}`;
@@ -202,7 +222,7 @@ export function buryItem(
 
   return {
     success: true,
-    buriedItem: itemToBury,
+    discardedItem: itemToDiscard,
     benefitApplied,
     newStats,
     message,
@@ -210,60 +230,104 @@ export function buryItem(
 }
 
 /**
- * 檢查玩家是否可以埋葬物品
- * 
- * @param player 玩家狀態
- * @returns 是否可以埋葬
+ * 捨棄物品（向後兼容的別名）
+ * @deprecated 請使用 discardItem
  */
-export function canBuryItem(player: Player): boolean {
+export function buryItem(
+  player: Player,
+  gameState: GameState,
+  options: DiscardItemOptions
+): DiscardItemResult {
+  return discardItem(player, gameState, options);
+}
+
+/**
+ * 檢查玩家是否可以捨棄物品
+ *
+ * @param player 玩家狀態
+ * @returns 是否可以捨棄
+ */
+export function canDiscardItem(player: Player): boolean {
   return player.items.length > 0 || player.omens.length > 0;
 }
 
 /**
- * 獲取玩家可埋葬的物品列表
- * 
- * @param player 玩家狀態
- * @returns 可埋葬的物品列表
+ * 檢查玩家是否可以埋葬物品（向後兼容的別名）
+ * @deprecated 請使用 canDiscardItem
  */
-export function getBuryableItems(player: Player): Card[] {
+export function canBuryItem(player: Player): boolean {
+  return canDiscardItem(player);
+}
+
+/**
+ * 獲取玩家可捨棄的物品列表
+ *
+ * @param player 玩家狀態
+ * @returns 可捨棄的物品列表
+ */
+export function getDiscardableItems(player: Player): Card[] {
   return [...player.items, ...player.omens];
 }
 
 /**
- * 獲取事件卡的埋葬選項
- * 
- * @param eventCardId 事件卡 ID
- * @returns 埋葬選項，若無則返回 null
+ * 獲取玩家可埋葬的物品列表（向後兼容的別名）
+ * @deprecated 請使用 getDiscardableItems
  */
-export function getEventBuryOption(eventCardId: string): EventBuryOption | null {
-  return DEFAULT_EVENT_BURY_OPTIONS[eventCardId] || null;
+export function getBuryableItems(player: Player): Card[] {
+  return getDiscardableItems(player);
 }
 
 /**
- * 檢查事件卡是否有埋葬選項
- * 
+ * 獲取事件卡的捨棄選項
+ *
  * @param eventCardId 事件卡 ID
- * @returns 是否有埋葬選項
+ * @returns 捨棄選項，若無則返回 null
+ */
+export function getEventDiscardOption(eventCardId: string): EventDiscardOption | null {
+  return DEFAULT_EVENT_DISCARD_OPTIONS[eventCardId] || null;
+}
+
+/**
+ * 獲取事件卡的埋葬選項（向後兼容的別名）
+ * @deprecated 請使用 getEventDiscardOption
+ */
+export function getEventBuryOption(eventCardId: string): EventDiscardOption | null {
+  return getEventDiscardOption(eventCardId);
+}
+
+/**
+ * 檢查事件卡是否有捨棄選項
+ *
+ * @param eventCardId 事件卡 ID
+ * @returns 是否有捨棄選項
+ */
+export function hasDiscardOption(eventCardId: string): boolean {
+  return eventCardId in DEFAULT_EVENT_DISCARD_OPTIONS;
+}
+
+/**
+ * 檢查事件卡是否有埋葬選項（向後兼容的別名）
+ * @deprecated 請使用 hasDiscardOption
  */
 export function hasBuryOption(eventCardId: string): boolean {
-  return eventCardId in DEFAULT_EVENT_BURY_OPTIONS;
+  return hasDiscardOption(eventCardId);
 }
 
 /**
- * 創建自定義埋葬選項
- * 
+ * 創建自定義捨棄選項
+ *
  * @param label 選項標籤
  * @param description 選項描述
  * @param benefit 收益
  * @param alternative 替代選項
- * @returns 埋葬選項
+ * @returns 捨棄選項
  */
-export function createBuryOption(
+export function createDiscardOption(
   label: string,
   description: string,
-  benefit: BuryItemOptions['benefit'],
-  alternative?: EventBuryOption['alternative']
-): EventBuryOption {
+  benefit: DiscardItemOptions['benefit'],
+  alternative?: EventDiscardOption['alternative']
+): EventDiscardOption {
   return {
     label,
     description,
@@ -272,22 +336,35 @@ export function createBuryOption(
   };
 }
 
+/**
+ * 創建自定義埋葬選項（向後兼容的別名）
+ * @deprecated 請使用 createDiscardOption
+ */
+export function createBuryOption(
+  label: string,
+  description: string,
+  benefit: DiscardItemOptions['benefit'],
+  alternative?: EventDiscardOption['alternative']
+): EventDiscardOption {
+  return createDiscardOption(label, description, benefit, alternative);
+}
+
 // ==================== 遊戲狀態更新函數 ====================
 
 /**
- * 應用埋葬結果到遊戲狀態
- * 
+ * 應用捨棄結果到遊戲狀態
+ *
  * @param gameState 原始遊戲狀態
  * @param playerId 玩家 ID
- * @param buryResult 埋葬結果
+ * @param discardResult 捨棄結果
  * @returns 更新後的遊戲狀態
  */
-export function applyBuryResultToGameState(
+export function applyDiscardResultToGameState(
   gameState: GameState,
   playerId: string,
-  buryResult: BuryItemResult
+  discardResult: DiscardItemResult
 ): GameState {
-  if (!buryResult.success || !buryResult.buriedItem) {
+  if (!discardResult.success || !discardResult.discardedItem) {
     return gameState;
   }
 
@@ -297,14 +374,14 @@ export function applyBuryResultToGameState(
   }
 
   const player = gameState.players[playerIndex];
-  const itemId = buryResult.buriedItem.id;
+  const itemId = discardResult.discardedItem.id;
 
   // 更新玩家物品列表
   const updatedItems = player.items.filter(item => item.id !== itemId);
   const updatedOmens = player.omens.filter(omen => omen.id !== itemId);
 
   // 更新玩家屬性（如果有變化）
-  const updatedStats = buryResult.newStats || player.currentStats;
+  const updatedStats = discardResult.newStats || player.currentStats;
 
   // 更新玩家
   const updatedPlayer: Player = {
@@ -319,20 +396,20 @@ export function applyBuryResultToGameState(
   updatedPlayers[playerIndex] = updatedPlayer;
 
   // 更新棄牌堆
-  const updatedDiscardedItems = [...(gameState.discardedItems || []), buryResult.buriedItem];
+  const updatedDiscardedItems = [...(gameState.discardedItems || []), discardResult.discardedItem];
 
   // 添加日誌
   const newLogEntry = {
     timestamp: Date.now(),
     turn: gameState.turn.turnNumber,
     playerId,
-    actionType: 'BURY_ITEM',
-    description: buryResult.message,
+    actionType: 'DISCARD_ITEM',
+    description: discardResult.message,
     data: {
-      itemId: buryResult.buriedItem.id,
-      itemName: buryResult.buriedItem.name,
-      benefitApplied: buryResult.benefitApplied,
-      newStats: buryResult.newStats,
+      itemId: discardResult.discardedItem.id,
+      itemName: discardResult.discardedItem.name,
+      benefitApplied: discardResult.benefitApplied,
+      newStats: discardResult.newStats,
     },
   };
 
@@ -348,12 +425,12 @@ export function applyBuryResultToGameState(
 // ==================== 輔助函數 ====================
 
 /**
- * 格式化埋葬收益描述
- * 
+ * 格式化捨棄收益描述
+ *
  * @param benefit 收益
  * @returns 格式化後的描述
  */
-export function formatBenefitDescription(benefit: BuryItemOptions['benefit']): string {
+export function formatBenefitDescription(benefit: DiscardItemOptions['benefit']): string {
   const statNameMap: Record<string, string> = {
     might: '力量',
     speed: '速度',
@@ -378,15 +455,15 @@ export function formatBenefitDescription(benefit: BuryItemOptions['benefit']): s
 }
 
 /**
- * 獲取埋葬選項的完整描述
- * 
- * @param option 埋葬選項
+ * 獲取捨棄選項的完整描述
+ *
+ * @param option 捨棄選項
  * @returns 完整描述
  */
-export function getBuryOptionFullDescription(option: EventBuryOption): string {
+export function getDiscardOptionFullDescription(option: EventDiscardOption): string {
   let description = option.description;
   description += `\n收益: ${formatBenefitDescription(option.benefit)}`;
-  
+
   if (option.alternative) {
     description += `\n\n或選擇: ${option.alternative.label}`;
     description += `\n${option.alternative.description}`;
@@ -394,6 +471,26 @@ export function getBuryOptionFullDescription(option: EventBuryOption): string {
       description += `\n需要 ${option.alternative.rollStat} 檢定 (目標 ${option.alternative.rollTarget})`;
     }
   }
-  
+
   return description;
+}
+
+/**
+ * 獲取埋葬選項的完整描述（向後兼容的別名）
+ * @deprecated 請使用 getDiscardOptionFullDescription
+ */
+export function getBuryOptionFullDescription(option: EventDiscardOption): string {
+  return getDiscardOptionFullDescription(option);
+}
+
+/**
+ * 應用埋葬結果到遊戲狀態（向後兼容的別名）
+ * @deprecated 請使用 applyDiscardResultToGameState
+ */
+export function applyBuryResultToGameState(
+  gameState: GameState,
+  playerId: string,
+  discardResult: DiscardItemResult
+): GameState {
+  return applyDiscardResultToGameState(gameState, playerId, discardResult);
 }

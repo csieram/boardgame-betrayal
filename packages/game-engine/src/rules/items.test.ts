@@ -1,5 +1,5 @@
 /**
- * Item Burying System Tests (Issue #232)
+ * Item Discarding System Tests (Issue #232)
  */
 
 
@@ -140,7 +140,7 @@ describe('Item Burying System', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.buriedItem).toEqual(item);
+      expect(result.discardedItem).toEqual(item);
       expect(result.benefitApplied).toBe(true);
       expect(result.newStats?.sanity).toBe(5); // 4 + 1
       expect(result.message).toContain('Dagger');
@@ -158,7 +158,7 @@ describe('Item Burying System', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.buriedItem).toEqual(omen);
+      expect(result.discardedItem).toEqual(omen);
       expect(result.newStats?.might).toBe(6); // 4 + 2
     });
 
@@ -172,7 +172,7 @@ describe('Item Burying System', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.buriedItem).toBeNull();
+      expect(result.discardedItem).toBeNull();
       expect(result.benefitApplied).toBe(false);
     });
 
@@ -263,7 +263,7 @@ describe('Item Burying System', () => {
       const option = getEventBuryOption('wandering_ghost');
 
       expect(option).toBeDefined();
-      expect(option?.label).toBe('埋葬物品');
+      expect(option?.label).toBe('捨棄物品');
       expect(option?.benefit.type).toBe('stat');
       expect(option?.benefit.stat).toBe('sanity');
       expect(option?.benefit.amount).toBe(1);

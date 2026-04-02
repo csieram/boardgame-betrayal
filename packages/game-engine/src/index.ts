@@ -209,7 +209,17 @@ export type {
 
 // Item System (Issue #232)
 export {
-  // Core functions
+  // Core functions (new names)
+  discardItem,
+  canDiscardItem,
+  getDiscardableItems,
+  getEventDiscardOption,
+  hasDiscardOption,
+  createDiscardOption,
+  applyDiscardResultToGameState,
+  formatBenefitDescription,
+  getDiscardOptionFullDescription,
+  // Legacy functions (backward compatibility)
   buryItem,
   canBuryItem,
   getBuryableItems,
@@ -217,15 +227,19 @@ export {
   hasBuryOption,
   createBuryOption,
   applyBuryResultToGameState,
-  formatBenefitDescription,
   getBuryOptionFullDescription,
   // Constants
+  DEFAULT_EVENT_DISCARD_OPTIONS,
   DEFAULT_EVENT_BURY_OPTIONS,
 } from './rules/items';
 export type {
+  DiscardItemOptions,
+  DiscardItemResult,
+  ItemChoice,
+  EventDiscardOption,
+  // Legacy types (backward compatibility)
   BuryItemOptions,
   BuryItemResult,
-  ItemChoice,
   EventBuryOption,
 } from './rules/items';
 

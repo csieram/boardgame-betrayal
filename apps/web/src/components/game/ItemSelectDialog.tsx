@@ -15,6 +15,8 @@ interface ItemSelectDialogProps {
   items: Card[];
   /** 玩家預兆列表 */
   omens: Card[];
+  /** 玩家背包物品列表 (Issue #236) */
+  backpack?: Card[];
   /** 對話框標題 */
   title: string;
   /** 對話框描述 */
@@ -43,20 +45,20 @@ interface ItemSelectDialogProps {
 
 /**
  * 物品選擇對話框
- * 
- * 用於事件卡效果中讓玩家選擇要埋葬的物品
- * Issue #232: Item Burying System
- * 
+ *
+ * 用於事件卡效果中讓玩家選擇要捨棄的物品
+ * Issue #232: Item Discarding System
+ *
  * @example
  * <ItemSelectDialog
- *   isOpen={showBuryDialog}
+ *   isOpen={showDiscardDialog}
  *   items={playerItems}
  *   omens={playerOmens}
- *   title="埋葬物品"
- *   description="選擇一個物品埋葬來獲得收益"
+ *   title="捨棄物品"
+ *   description="選擇一個物品捨棄來獲得收益"
  *   benefitDescription="理智 +1"
- *   onSelect={(item) => handleBuryItem(item)}
- *   onCancel={() => setShowBuryDialog(false)}
+ *   onSelect={(item) => handleDiscardItem(item)}
+ *   onCancel={() => setShowDiscardDialog(false)}
  *   showAlternative
  *   alternativeLabel="冒險一搏"
  *   alternativeDescription="進行力量檢定"
@@ -67,10 +69,11 @@ export function ItemSelectDialog({
   isOpen,
   items,
   omens,
+  backpack = [],
   title,
   description,
   benefitDescription,
-  confirmLabel = '確認埋葬',
+  confirmLabel = '確認捨棄',
   cancelLabel = '取消',
   onSelect,
   onCancel,
@@ -80,7 +83,7 @@ export function ItemSelectDialog({
   onAlternative,
 }: ItemSelectDialogProps) {
   const [selectedItem, setSelectedItem] = useState<Card | null>(null);
-  const [activeTab, setActiveTab] = useState<'items' | 'omens'>('items');
+  const [activeTab, setActiveTab] = useState<'items' | 'omens' | 'backpack'>('items');
 
   // 重置選擇狀態
   useEffect(() => {
@@ -91,9 +94,11 @@ export function ItemSelectDialog({
         setActiveTab('items');
       } else if (omens.length > 0) {
         setActiveTab('omens');
+      } else if (backpack.length > 0) {
+        setActiveTab('backpack');
       }
     }
-  }, [isOpen, items.length, omens.length]);
+  }, [isOpen, items.length, omens.length, backpack.length]);
 
   // ESC 鍵關閉
   useEffect(() => {
@@ -114,10 +119,12 @@ export function ItemSelectDialog({
     }
   };
 
-  const allItems = [...items, ...omens];
+  // Issue #236: Combine items, omens, and backpack items
+  const allItems = [...items, ...omens, ...backpack];
   const hasItems = items.length > 0;
   const hasOmens = omens.length > 0;
-  const hasAnyItems = hasItems || hasOmens;
+  const hasBackpack = backpack.length > 0;
+  const hasAnyItems = hasItems || hasOmens || hasBackpack;
 
   return (
     <AnimatePresence>
@@ -176,34 +183,50 @@ export function ItemSelectDialog({
                     <span className="text-3xl">🎒</span>
                   </div>
                   <p className="text-gray-400 mb-2">你的背包是空的</p>
-                  <p className="text-gray-500 text-sm">沒有物品可以埋葬</p>
+                  <p className="text-gray-500 text-sm">沒有物品可以捨棄</p>
                 </div>
               ) : (
                 // 有物品時的顯示
                 <>
                   {/* 標籤切換 */}
-                  {(hasItems && hasOmens) && (
-                    <div className="flex gap-2 mb-4">
-                      <button
-                        onClick={() => setActiveTab('items')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          activeTab === 'items'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-                        }`}
-                      >
-                        物品 ({items.length})
-                      </button>
-                      <button
-                        onClick={() => setActiveTab('omens')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          activeTab === 'omens'
-                            ? 'bg-purple-600 text-white'
-                            : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-                        }`}
-                      >
-                        預兆 ({omens.length})
-                      </button>
+                  {(hasItems || hasOmens || hasBackpack) && (
+                    <div className="flex gap-2 mb-4 flex-wrap">
+                      {hasItems && (
+                        <button
+                          onClick={() => setActiveTab('items')}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            activeTab === 'items'
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                          }`}
+                        >
+                          物品 ({items.length})
+                        </button>
+                      )}
+                      {hasOmens && (
+                        <button
+                          onClick={() => setActiveTab('omens')}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            activeTab === 'omens'
+                              ? 'bg-purple-600 text-white'
+                              : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                          }`}
+                        >
+                          預兆 ({omens.length})
+                        </button>
+                      )}
+                      {hasBackpack && (
+                        <button
+                          onClick={() => setActiveTab('backpack')}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            activeTab === 'backpack'
+                              ? 'bg-green-600 text-white'
+                              : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                          }`}
+                        >
+                          背包 ({backpack.length})
+                        </button>
+                      )}
                     </div>
                   )}
 
@@ -225,6 +248,15 @@ export function ItemSelectDialog({
                         type="omen"
                         isSelected={selectedItem?.id === omen.id}
                         onClick={() => setSelectedItem(omen)}
+                      />
+                    ))}
+                    {activeTab === 'backpack' && backpack.map((item) => (
+                      <ItemCard
+                        key={item.id}
+                        item={item}
+                        type="item"
+                        isSelected={selectedItem?.id === item.id}
+                        onClick={() => setSelectedItem(item)}
                       />
                     ))}
                   </div>

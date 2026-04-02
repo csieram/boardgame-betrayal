@@ -38,15 +38,15 @@ import {
   CombatManager,
   CombatResult,
   calculateWeaponBonus,
-  // Item Burying System (Issue #232)
-  buryItem,
-  canBuryItem,
-  getBuryableItems,
-  getEventBuryOption,
-  hasBuryOption,
+  // Item Discarding System (Issue #232)
+  discardItem,
+  canDiscardItem,
+  getDiscardableItems,
+  getEventDiscardOption,
+  hasDiscardOption,
   formatBenefitDescription,
-  BuryItemResult,
-  EventBuryOption,
+  DiscardItemResult,
+  EventDiscardOption,
   // Hero AI System (Issue #109)
   HeroAI,
   createHeroAIs,
@@ -133,13 +133,13 @@ interface CombatUIState {
   selectedTarget: string | null;
 }
 
-/** 物品埋葬狀態 (Issue #232) */
-interface ItemBuryState {
+/** 物品捨棄狀態 (Issue #232) */
+interface ItemDiscardState {
   showDialog: boolean;
   currentCard: Card | null;
-  buryOption: EventBuryOption | null;
+  discardOption: EventDiscardOption | null;
   selectedItem: Card | null;
-  buryResult: BuryItemResult | null;
+  discardResult: DiscardItemResult | null;
 }
 
 /**
@@ -388,13 +388,13 @@ export default function SoloGamePage() {
     result: null,
   });
 
-  // Issue #232: 物品埋葬狀態
-  const [itemBuryState, setItemBuryState] = useState<ItemBuryState>({
+  // Issue #232: 物品捨棄狀態
+  const [itemDiscardState, setItemDiscardState] = useState<ItemDiscardState>({
     showDialog: false,
     currentCard: null,
-    buryOption: null,
+    discardOption: null,
     selectedItem: null,
-    buryResult: null,
+    discardResult: null,
   });
 
   // 當前樓層的地圖（向後兼容）
@@ -2180,10 +2180,10 @@ export default function SoloGamePage() {
       return;
     }
     
-    // Issue #232: 檢查事件卡是否有埋葬選項
-    if (card?.type === 'event' && playerState && hasBuryOption(card.id)) {
-      const buryOption = getEventBuryOption(card.id);
-      if (buryOption && canBuryItem({
+    // Issue #232: 檢查事件卡是否有捨棄選項
+    if (card?.type === 'event' && playerState && hasDiscardOption(card.id)) {
+      const discardOption = getEventDiscardOption(card.id);
+      if (discardOption && canDiscardItem({
         id: 'solo-player',
         name: player?.name || '玩家',
         character: player!,
@@ -2200,13 +2200,13 @@ export default function SoloGamePage() {
         isDead: false,
         usedItemsThisTurn: [],
       })) {
-        // 顯示物品埋葬對話框
-        setItemBuryState({
+        // 顯示物品捨棄對話框
+        setItemDiscardState({
           showDialog: true,
           currentCard: card,
-          buryOption,
+          discardOption,
           selectedItem: null,
-          buryResult: null,
+          discardResult: null,
         });
         return;
       }
@@ -2351,20 +2351,20 @@ export default function SoloGamePage() {
     });
   };
 
-  // Issue #232: 處理物品埋葬選擇
-  const handleBuryItemSelect = (item: Card | null) => {
-    if (!item || !itemBuryState.buryOption || !playerState || !player) {
-      // 取消埋葬，關閉對話框
-      setItemBuryState({
+  // Issue #232: 處理物品捨棄選擇
+  const handleDiscardItemSelect = (item: Card | null) => {
+    if (!item || !itemDiscardState.discardOption || !playerState || !player) {
+      // 取消捨棄，關閉對話框
+      setItemDiscardState({
         showDialog: false,
         currentCard: null,
-        buryOption: null,
+        discardOption: null,
         selectedItem: null,
-        buryResult: null,
+        discardResult: null,
       });
 
       // 如果沒有選擇物品，檢查是否有替代選項（如擲骰）
-      if (itemBuryState.buryOption?.alternative) {
+      if (itemDiscardState.discardOption?.alternative) {
         // 這裡可以處理替代選項（如擲骰檢定）
         // 暫時直接結束回合
         setTurnState({
@@ -2375,7 +2375,7 @@ export default function SoloGamePage() {
       return;
     }
 
-    // 執行埋葬
+    // 執行捨棄
     const mockPlayer = {
       id: 'solo-player',
       name: player.name,
@@ -2394,7 +2394,7 @@ export default function SoloGamePage() {
       usedItemsThisTurn: [],
     };
 
-    // Issue #232: 創建簡化的遊戲狀態用於埋葬物品
+    // Issue #232: 創建簡化的遊戲狀態用於捨棄物品
     const mockGameState: any = {
       gameId: 'solo-game',
       version: '1.0.0',
@@ -2454,12 +2454,12 @@ export default function SoloGamePage() {
       discardedItems: [],
     };
 
-    const buryResult = buryItem(mockPlayer as any, mockGameState, {
+    const discardResult = discardItem(mockPlayer as any, mockGameState, {
       itemId: item.id,
-      benefit: itemBuryState.buryOption.benefit,
+      benefit: itemDiscardState.discardOption.benefit,
     });
 
-    if (buryResult.success && buryResult.buriedItem) {
+    if (discardResult.success && discardResult.discardedItem) {
       // 更新玩家狀態
       setPlayerState(prev => {
         if (!prev) return prev;
@@ -2467,21 +2467,21 @@ export default function SoloGamePage() {
           ...prev,
           items: prev.items.filter(i => i.id !== item.id),
           omens: prev.omens.filter(o => o.id !== item.id),
-          stats: buryResult.newStats || prev.stats,
+          stats: discardResult.newStats || prev.stats,
         };
       });
 
       // 同步更新 player (Character) 的 stats
-      if (buryResult.newStats) {
+      if (discardResult.newStats) {
         setPlayer(prev => {
           if (!prev) return prev;
           return {
             ...prev,
             stats: {
-              speed: [buryResult.newStats!.speed, prev.stats.speed[1]],
-              might: [buryResult.newStats!.might, prev.stats.might[1]],
-              sanity: [buryResult.newStats!.sanity, prev.stats.sanity[1]],
-              knowledge: [buryResult.newStats!.knowledge, prev.stats.knowledge[1]],
+              speed: [discardResult.newStats!.speed, prev.stats.speed[1]],
+              might: [discardResult.newStats!.might, prev.stats.might[1]],
+              sanity: [discardResult.newStats!.sanity, prev.stats.sanity[1]],
+              knowledge: [discardResult.newStats!.knowledge, prev.stats.knowledge[1]],
             },
           };
         });
@@ -2500,15 +2500,15 @@ export default function SoloGamePage() {
       }));
 
       // 記錄到日誌
-      setLog(prev => [...prev, `💀 ${buryResult.message}`]);
+      setLog(prev => [...prev, `💀 ${discardResult.message}`]);
 
       // 關閉對話框並結束回合
-      setItemBuryState({
+      setItemDiscardState({
         showDialog: false,
         currentCard: null,
-        buryOption: null,
+        discardOption: null,
         selectedItem: null,
-        buryResult: null,
+        discardResult: null,
       });
 
       // 標記回合結束
@@ -2519,14 +2519,14 @@ export default function SoloGamePage() {
     }
   };
 
-  // Issue #232: 處理選擇替代選項（不埋葬物品）
-  const handleBuryAlternative = () => {
-    setItemBuryState({
+  // Issue #232: 處理選擇替代選項（不捨棄物品）
+  const handleDiscardAlternative = () => {
+    setItemDiscardState({
       showDialog: false,
       currentCard: null,
-      buryOption: null,
+      discardOption: null,
       selectedItem: null,
-      buryResult: null,
+      discardResult: null,
     });
 
     // 如果有替代選項（如擲骰檢定），這裡可以處理
@@ -3174,20 +3174,20 @@ export default function SoloGamePage() {
         eventCheckResult={aiCardDrawState.eventCheckResult}
       />
 
-      {/* Issue #232: 物品埋葬選擇對話框 */}
+      {/* Issue #232: 物品捨棄選擇對話框 */}
       <ItemSelectDialog
-        isOpen={itemBuryState.showDialog}
+        isOpen={itemDiscardState.showDialog}
         items={playerState?.items || []}
         omens={playerState?.omens || []}
-        title={itemBuryState.buryOption?.label || '埋葬物品'}
-        description={itemBuryState.buryOption?.description || '選擇一個物品埋葬來獲得收益'}
-        benefitDescription={itemBuryState.buryOption ? formatBenefitDescription(itemBuryState.buryOption.benefit) : ''}
-        onSelect={handleBuryItemSelect}
-        onCancel={handleBuryAlternative}
-        showAlternative={!!itemBuryState.buryOption?.alternative}
-        alternativeLabel={itemBuryState.buryOption?.alternative?.label}
-        alternativeDescription={itemBuryState.buryOption?.alternative?.description}
-        onAlternative={handleBuryAlternative}
+        title={itemDiscardState.discardOption?.label || '捨棄物品'}
+        description={itemDiscardState.discardOption?.description || '選擇一個物品捨棄來獲得收益'}
+        benefitDescription={itemDiscardState.discardOption ? formatBenefitDescription(itemDiscardState.discardOption.benefit) : ''}
+        onSelect={handleDiscardItemSelect}
+        onCancel={handleDiscardAlternative}
+        showAlternative={!!itemDiscardState.discardOption?.alternative}
+        alternativeLabel={itemDiscardState.discardOption?.alternative?.label}
+        alternativeDescription={itemDiscardState.discardOption?.alternative?.description}
+        onAlternative={handleDiscardAlternative}
       />
 
       {/* 作祟檢定結果覆蓋層（舊版，保留用於非預兆卡情況） */}
