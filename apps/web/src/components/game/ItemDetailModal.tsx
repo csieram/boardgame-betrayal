@@ -87,7 +87,7 @@ export function ItemDetailModal({
               {/* 可滾動內容區域 */}
               <div className="overflow-y-auto flex-1 pr-2">
 
-              {/* 卡牌圖示 */}
+                {/* 卡牌圖示 */}
               <div className="flex justify-center mb-6">
                 <div 
                   className={`
@@ -177,6 +177,8 @@ export function ItemDetailModal({
                   )}
                 </div>
               )}
+
+              </div>
 
               {/* 關閉按鈕 */}
               <button
