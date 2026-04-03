@@ -44,9 +44,16 @@ export default function SoloCharacterSelectPage() {
   const [showAISetup, setShowAISetup] = useState(false);
 
   /**
-   * 處理角色選擇
+   * 處理角色點擊（選擇）
    */
-  const handleCharacterSelect = (character: Character) => {
+  const handleCharacterClick = (character: Character) => {
+    setSelectedCharacter(character);
+  };
+
+  /**
+   * 處理角色確認選擇
+   */
+  const handleCharacterConfirm = (character: Character) => {
     setSelectedCharacter(character);
     setShowAISetup(true);
   };
@@ -145,7 +152,8 @@ export default function SoloCharacterSelectPage() {
         <CharacterSelect
           title="單人模式 - 選擇角色"
           showConfirm
-          onConfirm={handleCharacterSelect}
+          onSelect={handleCharacterClick}
+          onConfirm={handleCharacterConfirm}
           disabled={isLoading}
         />
       ) : (
