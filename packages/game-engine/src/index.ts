@@ -2,6 +2,26 @@
 export { GameStateManager, SeededRng } from './core/GameState';
 export type { GameStateManager as GameEngine } from './core/GameState';
 
+// Map Token System (Issue #235 - Secret Passages)
+export {
+  TokenManager,
+  createSecretPassage,
+  createBlockedToken,
+  createTrapToken,
+  createSafeToken,
+  validateSecretPassagePositions,
+  validateTokenPlacement,
+  TOKEN_TYPE_NAMES,
+  TOKEN_TYPE_DESCRIPTIONS,
+} from './state/mapTokens';
+export type {
+  TokenType,
+  MapToken,
+  MapTokenState,
+  TokenValidationResult,
+  TokenPlacementResult,
+} from './state/mapTokens';
+
 // Types
 export * from './types';
 
@@ -206,6 +226,19 @@ export type {
   ForcedMoveResult,
   DamageType as ForcedMoveDamageType,
 } from './rules/forcedMovement';
+
+// Tiered Roll Results System (Issue #234)
+export {
+  // Core functions
+  resolveTieredOutcome,
+  hasTieredOutcomes,
+  getOutcomeDescriptions,
+  formatRollRange,
+  isRollInOutcomeRange,
+  getOutcomeIndex,
+  applyTieredOutcome,
+  validateTieredOutcomes,
+} from './rules/tieredRoll';
 
 // Item System (Issue #232)
 export {

@@ -10,6 +10,7 @@
  */
 
 import { Room, SymbolType } from '@betrayal/shared';
+import { MapToken } from '../state/mapTokens';
 
 // Re-export Floor from shared
 export type Floor = import('@betrayal/shared').Floor;
@@ -382,6 +383,8 @@ export interface GameState {
   placedRoomIds: Set<string>;
   /** 已埋葬/丟棄的物品（Issue #232） */
   discardedItems?: Card[];
+  /** 地圖標記（Issue #235 - Secret Passages） */
+  mapTokens?: MapToken[];
 }
 
 // ==================== RNG 系統（Deterministic） ====================

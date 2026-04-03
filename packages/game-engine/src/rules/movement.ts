@@ -25,6 +25,7 @@ import {
   MoveAction,
 } from '../types';
 import { Room } from '@betrayal/shared';
+import { TokenManager } from '../state/mapTokens';
 
 import { TurnManager } from './turn';
 
@@ -95,6 +96,7 @@ export class MovementValidator {
   /**
    * 驗證移動動作
    * Rulebook Page 12-13: Movement rules
+   * 支援秘密通道（Issue #235）
    * 
    * @param state 當前遊戲狀態
    * @param playerId 玩家 ID
@@ -144,41 +146,66 @@ export class MovementValidator {
       return { valid: false, error: 'No room at target position' };
     }
 
-    // 檢查是否為相鄰房間（單步移動）
     const from = player.position;
-    if (!MovementValidator.isAdjacent(from, to)) {
-      return { valid: false, error: 'Can only move to adjacent rooms' };
+
+    // 檢查是否為相鄰房間（單步移動）
+    const isAdjacent = MovementValidator.isAdjacent(from, to);
+    
+    // 檢查是否有秘密通道（Issue #235）
+    const tokenManager = new TokenManager(state.mapTokens || []);
+    const secretPassageDest = tokenManager.getSecretPassageDestination(from);
+    const isSecretPassage = secretPassageDest && 
+      secretPassageDest.x === to.x && 
+      secretPassageDest.y === to.y && 
+      secretPassageDest.floor === to.floor;
+
+    // 如果不是相鄰且不是秘密通道，則拒絕
+    if (!isAdjacent && !isSecretPassage) {
+      return { valid: false, error: 'Can only move to adjacent rooms or through secret passages' };
     }
 
-    // 檢查兩個房間之間是否有門相連
-    const fromTile = MovementValidator.getTileAt(state, from);
-    if (!fromTile || !fromTile.room) {
-      return { valid: false, error: 'Invalid current position' };
+    // 檢查兩個房間之間是否有門相連（僅對相鄰移動）
+    if (isAdjacent) {
+      const fromTile = MovementValidator.getTileAt(state, from);
+      if (!fromTile || !fromTile.room) {
+        return { valid: false, error: 'Invalid current position' };
+      }
+
+      const direction = MovementValidator.getDirection(from, to);
+      if (!direction) {
+        return { valid: false, error: 'Cannot determine direction' };
+      }
+
+      // 檢查是否有門通往該方向
+      if (!MovementValidator.hasConnectingDoor(fromTile.room, targetTile.room, direction)) {
+        return { valid: false, error: 'No connecting door in that direction' };
+      }
+
+      // 計算移動成本
+      const cost = MovementValidator.calculateMoveCost(state, from, to, direction);
+      if (cost === INFINITE_COST) {
+        return { valid: false, error: 'Path is blocked' };
+      }
+
+      // 檢查是否有足夠的移動點數
+      // Rulebook Page 13: "You can move up to a number of spaces equal to your Speed."
+      if (cost > state.turn.movesRemaining) {
+        return { valid: false, error: 'Not enough movement points' };
+      }
+
+      return { valid: true, cost };
     }
 
-    const direction = MovementValidator.getDirection(from, to);
-    if (!direction) {
-      return { valid: false, error: 'Cannot determine direction' };
+    // 秘密通道移動（Issue #235）
+    if (isSecretPassage) {
+      // 秘密通道消耗 1 點移動
+      if (STANDARD_MOVE_COST > state.turn.movesRemaining) {
+        return { valid: false, error: 'Not enough movement points' };
+      }
+      return { valid: true, cost: STANDARD_MOVE_COST };
     }
 
-    // 檢查是否有門通往該方向
-    if (!MovementValidator.hasConnectingDoor(fromTile.room, targetTile.room, direction)) {
-      return { valid: false, error: 'No connecting door in that direction' };
-    }
-
-    // 計算移動成本
-    const cost = MovementValidator.calculateMoveCost(state, from, to, direction);
-    if (cost === INFINITE_COST) {
-      return { valid: false, error: 'Path is blocked' };
-    }
-
-    // 檢查是否有足夠的移動點數
-    // Rulebook Page 13: "You can move up to a number of spaces equal to your Speed."
-    if (cost > state.turn.movesRemaining) {
-      return { valid: false, error: 'Not enough movement points' };
-    }
-
-    return { valid: true, cost };
+    return { valid: false, error: 'Invalid move' };
   }
 
   /**
@@ -532,6 +559,7 @@ export class PathFinder {
   /**
    * 取得所有可移動的位置
    * 尊重門的限制 - 只能通過有門連接的房間移動
+   * 支援秘密通道（Issue #235）
    * 
    * @param state 當前遊戲狀態
    * @param playerId 玩家 ID
@@ -557,10 +585,27 @@ export class PathFinder {
     const startTile = MovementValidator.getTileAt(state, player.position);
     if (!startTile || !startTile.room) return [];
 
+    // 初始化標記管理器
+    const tokenManager = new TokenManager(state.mapTokens || []);
+
     while (queue.length > 0) {
       const current = queue.shift()!;
       const currentTile = MovementValidator.getTileAt(state, current.pos);
       if (!currentTile || !currentTile.room) continue;
+
+      // 檢查是否有秘密通道（Issue #235）
+      const secretPassageDest = tokenManager.getSecretPassageDestination(current.pos);
+      if (secretPassageDest) {
+        const passageKey = `${secretPassageDest.x},${secretPassageDest.y},${secretPassageDest.floor}`;
+        if (!visited.has(passageKey)) {
+          const newCost = current.cost + STANDARD_MOVE_COST;
+          if (newCost <= maxCost) {
+            visited.add(passageKey);
+            reachable.push(secretPassageDest);
+            queue.push({ pos: secretPassageDest, cost: newCost });
+          }
+        }
+      }
 
       const directions: Direction[] = ['north', 'south', 'east', 'west'];
       for (const dir of directions) {
