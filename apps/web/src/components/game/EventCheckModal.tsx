@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card } from '@betrayal/shared';
+import { Card, TieredOutcome } from '@betrayal/shared';
 
 // 屬性類型
 export type StatType = 'speed' | 'might' | 'sanity' | 'knowledge';
@@ -17,6 +17,8 @@ export interface EventCheckResult {
   message: string;
   effectDescription: string;
   statChanges?: Partial<Record<StatType, number>>;
+  // Issue #234: 支援分層結果
+  tieredOutcome?: TieredOutcome;
 }
 
 interface EventCheckModalProps {
@@ -44,6 +46,7 @@ interface EventCheckModalProps {
  * - 骰子滾動動畫
  * - 成功/失敗結果顯示
  * - 自動應用效果
+ * - Issue #234: 支援分層結果顯示
  * 
  * @example
  * <EventCheckModal
@@ -91,13 +94,29 @@ export function EventCheckModal({
   // 如果沒有卡牌，不顯示
   if (!card) return null;
 
-  // 骰子數量：使用 checkResult 中的骰子數量（如果有的話），否則使用 playerStatValue
-  // Issue #164: 必須使用 checkResult.dice.length 來確保失敗時骰子數量正確
-  // 因為失敗時可能會有屬性下降，導致 playerStatValue 改變，但骰子是在屬性變化前擲的
+  // 骰子數量
   const diceCount = checkResult?.dice?.length ?? Math.max(1, playerStatValue);
 
   // 獲取屬性資訊
   const statInfo = getStatInfo(card.rollRequired?.stat);
+
+  // Issue #234: 檢查是否使用分層結果系統
+  const hasTieredOutcomes = !!card.tieredOutcomes && card.tieredOutcomes.length > 0;
+
+  // Issue #234: 取得當前擲骰對應的結果索引
+  const getActiveOutcomeIndex = (): number => {
+    if (!hasTieredOutcomes || !checkResult) return -1;
+    return card.tieredOutcomes!.findIndex(
+      (outcome) => checkResult.roll >= outcome.minRoll && checkResult.roll <= outcome.maxRoll
+    );
+  };
+
+  // Issue #234: 格式化擲骰範圍顯示
+  const formatRollRange = (minRoll: number, maxRoll: number): string => {
+    if (maxRoll >= 8) return `${minRoll}+`;
+    if (minRoll === maxRoll) return `${minRoll}`;
+    return `${minRoll}-${maxRoll}`;
+  };
 
   // 骰子動畫變體
   const diceContainerVariants = {
@@ -179,6 +198,93 @@ export function EventCheckModal({
     );
   };
 
+  // Issue #234: 渲染分層結果預覽（擲骰前顯示）
+  const renderTieredOutcomesPreview = () => {
+    if (!hasTieredOutcomes || checkResult) return null;
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+        className="bg-gray-800/50 rounded-xl p-4 mb-6 border border-gray-600/30"
+      >
+        <p className="text-gray-400 text-sm mb-3 text-center">可能結果</p>
+        <div className="space-y-2">
+          {card.tieredOutcomes!.map((outcome, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-3 p-2 rounded-lg bg-gray-700/30"
+            >
+              <span className="text-sm font-mono text-emerald-400 w-12 text-center">
+                {formatRollRange(outcome.minRoll, outcome.maxRoll)}
+              </span>
+              <span className="text-gray-300 text-sm">{outcome.effect}</span>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+    );
+  };
+
+  // Issue #234: 渲染分層結果（擲骰後顯示，高亮當前結果）
+  const renderTieredOutcomesResult = () => {
+    if (!hasTieredOutcomes || !checkResult) return null;
+
+    const activeIndex = getActiveOutcomeIndex();
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-gray-800/50 rounded-xl p-4 mb-4 border border-gray-600/30"
+      >
+        <p className="text-gray-400 text-sm mb-3 text-center">結果</p>
+        <div className="space-y-2">
+          {card.tieredOutcomes!.map((outcome, index) => {
+            const isActive = index === activeIndex;
+            return (
+              <motion.div
+                key={index}
+                initial={isActive ? { scale: 0.95 } : {}}
+                animate={isActive ? { scale: 1 } : {}}
+                className={`
+                  flex items-center gap-3 p-3 rounded-lg transition-all duration-300
+                  ${isActive 
+                    ? 'bg-emerald-500/20 border border-emerald-500/50 shadow-lg shadow-emerald-500/10' 
+                    : 'bg-gray-700/30 opacity-50'
+                  }
+                `}
+              >
+                <span className={`
+                  text-sm font-mono w-12 text-center
+                  ${isActive ? 'text-emerald-400 font-bold' : 'text-gray-500'}
+                `}>
+                  {formatRollRange(outcome.minRoll, outcome.maxRoll)}
+                </span>
+                <span className={`
+                  text-sm
+                  ${isActive ? 'text-white font-medium' : 'text-gray-400'}
+                `}>
+                  {outcome.effect}
+                </span>
+                {isActive && (
+                  <motion.span
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="ml-auto text-emerald-400"
+                  >
+                    ✓
+                  </motion.span>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+      </motion.div>
+    );
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -251,6 +357,9 @@ export function EventCheckModal({
                   </p>
                 </motion.div>
 
+                {/* Issue #234: 分層結果預覽（擲骰前） */}
+                {renderTieredOutcomesPreview()}
+
                 {/* 骰子區域 */}
                 <div className="mb-6">
                   {isRolling ? (
@@ -274,6 +383,9 @@ export function EventCheckModal({
                   {renderDice()}
                 </div>
 
+                {/* Issue #234: 分層結果顯示（擲骰後） */}
+                {hasTieredOutcomes && showResult && checkResult && renderTieredOutcomesResult()}
+
                 {/* 結果顯示 */}
                 <AnimatePresence>
                   {showResult && checkResult && (
@@ -289,40 +401,62 @@ export function EventCheckModal({
                         <p className="text-4xl font-bold text-white">
                           {checkResult.roll}
                         </p>
-                        <p className="text-gray-500 text-xs mt-1">
-                          （目標 ≥ {checkResult.target}）
-                        </p>
+                        {!hasTieredOutcomes && (
+                          <p className="text-gray-500 text-xs mt-1">
+                            （目標 ≥ {checkResult.target}）
+                          </p>
+                        )}
                       </div>
 
-                      {/* 成功/失敗狀態 */}
-                      {checkResult.success ? (
+                      {/* 成功/失敗狀態 - 只在非分層結果時顯示 */}
+                      {!hasTieredOutcomes && (
+                        checkResult.success ? (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.3 }}
+                            className="bg-green-900/50 border border-green-500/50 rounded-xl p-4 mb-4"
+                          >
+                            <div className="text-4xl mb-2">✅</div>
+                            <h3 className="text-xl font-bold text-green-400 mb-1">
+                              檢定成功！
+                            </h3>
+                            <p className="text-green-300 text-sm">
+                              {checkResult.effectDescription}
+                            </p>
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.3 }}
+                            className="bg-red-900/50 border border-red-500/50 rounded-xl p-4 mb-4"
+                          >
+                            <div className="text-4xl mb-2">❌</div>
+                            <h3 className="text-xl font-bold text-red-400 mb-1">
+                              檢定失敗！
+                            </h3>
+                            <p className="text-red-300 text-sm">
+                              {checkResult.effectDescription}
+                            </p>
+                          </motion.div>
+                        )
+                      )}
+
+                      {/* Issue #234: 分層結果的效果描述 */}
+                      {hasTieredOutcomes && checkResult.tieredOutcome && (
                         <motion.div
                           initial={{ opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
                           transition={{ delay: 0.3 }}
-                          className="bg-green-900/50 border border-green-500/50 rounded-xl p-4 mb-4"
+                          className="bg-emerald-900/50 border border-emerald-500/50 rounded-xl p-4 mb-4"
                         >
-                          <div className="text-4xl mb-2">✅</div>
-                          <h3 className="text-xl font-bold text-green-400 mb-1">
-                            檢定成功！
+                          <div className="text-4xl mb-2">🎯</div>
+                          <h3 className="text-xl font-bold text-emerald-400 mb-1">
+                            結果生效
                           </h3>
-                          <p className="text-green-300 text-sm">
-                            {checkResult.effectDescription}
-                          </p>
-                        </motion.div>
-                      ) : (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: 0.3 }}
-                          className="bg-red-900/50 border border-red-500/50 rounded-xl p-4 mb-4"
-                        >
-                          <div className="text-4xl mb-2">❌</div>
-                          <h3 className="text-xl font-bold text-red-400 mb-1">
-                            檢定失敗！
-                          </h3>
-                          <p className="text-red-300 text-sm">
-                            {checkResult.effectDescription}
+                          <p className="text-emerald-300 text-sm">
+                            {checkResult.tieredOutcome.effect}
                           </p>
                         </motion.div>
                       )}
@@ -336,8 +470,8 @@ export function EventCheckModal({
                         className={`
                           px-8 py-3 rounded-xl font-bold text-white
                           transition-all duration-200
-                          ${checkResult.success 
-                            ? 'bg-green-600 hover:bg-green-500 shadow-lg shadow-green-600/30' 
+                          ${checkResult.success || hasTieredOutcomes
+                            ? 'bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/30' 
                             : 'bg-red-600 hover:bg-red-500 shadow-lg shadow-red-600/30'
                           }
                         `}

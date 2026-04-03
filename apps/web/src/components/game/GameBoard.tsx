@@ -6,7 +6,8 @@ import { Room, Character, Floor, Tile, Direction } from '@betrayal/shared';
 import { RoomTile, EmptyRoomTile } from './RoomTile';
 import { PlayerToken } from './PlayerToken';
 import { AIPawn, AIPawnGroup } from './AIPawn';
-import { STAIR_ROOM_IDS, StairManager, AIPlayerInfo, AIPersonality } from '@betrayal/game-engine';
+import { TokenMarker } from './TokenMarker';
+import { STAIR_ROOM_IDS, StairManager, AIPlayerInfo, AIPersonality, MapToken } from '@betrayal/game-engine';
 
 /** 樓梯房間 ID 列表 */
 const STAIR_ROOM_LIST = [
@@ -62,6 +63,8 @@ interface GameBoardProps {
   currentTurnPlayerId?: string;
   /** Issue #118: 點擊 AI 標記的回調 */
   onAIClick?: (aiId: string) => void;
+  /** Issue #238: 地圖標記列表 */
+  mapTokens?: MapToken[];
 }
 
 /**
@@ -92,6 +95,7 @@ export function GameBoard({
   gameState,
   aiPlayers = [],
   currentTurnPlayerId,
+  mapTokens = [],
   onAIClick,
 }: GameBoardProps) {
   const [selectedRoom, setSelectedRoom] = useState<{ room: Room; x: number; y: number } | null>(null);
@@ -374,6 +378,11 @@ export function GameBoard({
                 // Issue #159: 檢查房間是否已探索（用於視覺區分）
                 const tileExplored = tile?.discovered ?? false;
 
+                // Issue #238: 獲取該位置的標記
+                const tokensAtPosition = mapTokens.filter(
+                  token => token.position.x === x && token.position.y === y && token.position.floor === floor
+                );
+
                 return (
                   <RoomTile
                     key={`${x}-${y}`}
@@ -420,6 +429,14 @@ export function GameBoard({
                           />
                         )}
                       </>
+                    )}
+                    {/* Issue #238: 渲染地圖標記 */}
+                    {tokensAtPosition.length > 0 && (
+                      <div className="absolute top-1 right-1 flex flex-col gap-1">
+                        {tokensAtPosition.map(token => (
+                          <TokenMarker key={token.id} token={token} size="sm" />
+                        ))}
+                      </div>
                     )}
                   </RoomTile>
                 );

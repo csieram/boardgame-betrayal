@@ -11,6 +11,8 @@ import { HauntRollModal } from '@/components/game/HauntRollModal';
 import { HauntRevealScreen } from '@/components/game/HauntRevealScreen';
 import { EventCheckModal, EventCheckResult } from '@/components/game/EventCheckModal';
 import { ItemSelectDialog } from '@/components/game/ItemSelectDialog';
+import { TokenPlacementDialog } from '@/components/game/TokenPlacementDialog';
+import { TokenType, createSecretPassage, MapToken } from '@betrayal/game-engine';
 
 
 import { CharacterTabs, PlayerInfo } from '@/components/game/CharacterTabs';
@@ -396,6 +398,11 @@ export default function SoloGamePage() {
     selectedItem: null,
     discardResult: null,
   });
+
+  // Issue #238: Token 放置對話框狀態
+  const [showTokenDialog, setShowTokenDialog] = useState(false);
+  const [tokenType, setTokenType] = useState<TokenType>('secret_passage');
+  const [mapTokens, setMapTokens] = useState<MapToken[]>([]);
 
   // 當前樓層的地圖（向後兼容）
   // Issue #160-debug: 添加調試日誌追蹤 map 變數
@@ -2076,6 +2083,29 @@ export default function SoloGamePage() {
     updateReachablePositions(updatedMultiFloorMap[targetFloor], { x: targetPosition.x, y: targetPosition.y }, resetMoves, false);
   }, [player, position, currentFloor, multiFloorMap]);
 
+  // Issue #238: 處理創建秘密通道
+  const handleCreateSecretPassage = useCallback((pos1: { x: number; y: number; floor: Floor }, pos2: { x: number; y: number; floor: Floor }) => {
+    // 創建兩個相連的秘密通道標記（createSecretPassage 返回一對標記）
+    const tokens = createSecretPassage(pos1, pos2, 'solo-player');
+    
+    // 添加到地圖標記列表
+    setMapTokens(prev => [...prev, ...tokens]);
+    
+    // 記錄到日誌
+    setLog(prev => [
+      ...prev,
+      `🔮 秘密通道已創建！`,
+      `  位置 1: (${pos1.x}, ${pos1.y}) - ${FLOOR_NAMES[pos1.floor]}`,
+      `  位置 2: (${pos2.x}, ${pos2.y}) - ${FLOOR_NAMES[pos2.floor]}`,
+    ]);
+    
+    // 標記回合結束
+    setTurnState({
+      hasEnded: true,
+      endedByDiscovery: true,
+    });
+  }, []);
+
   // Issue #122: 創建帶有最新位置的 AI 玩家列表（用於 GameBoard）
   // Issue #155: 添加除錯日誌
   // 注意：這個 useMemo 必須在所有 early returns 之前調用，以符合 React Hooks 規則
@@ -2221,6 +2251,13 @@ export default function SoloGamePage() {
         isRolling: false,
         result: null,
       });
+      return;
+    }
+
+    // Issue #238: 檢查是否為 "A Secret Passage" 事件卡
+    if (card?.type === 'event' && card.id === 'event_secret_passage') {
+      setTokenType('secret_passage');
+      setShowTokenDialog(true);
       return;
     }
     
@@ -2837,6 +2874,7 @@ export default function SoloGamePage() {
                   }}
                   aiPlayers={aiPlayersWithLatestPositions}
                   currentTurnPlayerId={currentTurnPlayer}
+                  mapTokens={mapTokens}
                   onAIClick={(aiId) => {
                     const ai = aiPlayers.find(p => p.id === aiId);
                     if (ai?.position) {
@@ -3188,6 +3226,36 @@ export default function SoloGamePage() {
         alternativeLabel={itemDiscardState.discardOption?.alternative?.label}
         alternativeDescription={itemDiscardState.discardOption?.alternative?.description}
         onAlternative={handleDiscardAlternative}
+      />
+
+      {/* Issue #238: Token 放置對話框 */}
+      <TokenPlacementDialog
+        isOpen={showTokenDialog}
+        onClose={() => setShowTokenDialog(false)}
+        tokenType={tokenType}
+        onPlace={(pos1, pos2) => {
+          // Call game engine to create tokens
+          if (pos2) {
+            handleCreateSecretPassage(pos1, pos2);
+          }
+          setShowTokenDialog(false);
+        }}
+        gameState={{
+          map: multiFloorMap,
+          players: [
+            {
+              id: 'solo-player',
+              position: { x: position.x, y: position.y, floor: currentFloor },
+            },
+            ...aiPlayers.map(ai => ({
+              id: ai.id,
+              position: ai.position || { x: 7, y: 7, floor: 'ground' as Floor },
+            })),
+          ],
+          mapTokens,
+        }}
+        currentPlayerId="solo-player"
+        requireLinkedPosition={tokenType === 'secret_passage'}
       />
 
       {/* 作祟檢定結果覆蓋層（舊版，保留用於非預兆卡情況） */}

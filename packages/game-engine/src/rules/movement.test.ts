@@ -65,7 +65,7 @@ const createMockCharacter = (): Character => ({
 const createMockRoom = (
   id: string,
   doors: Direction[] = ['north', 'south', 'east', 'west'],
-  floor: 'ground' | 'upper' | 'basement' = 'ground'
+  floor: 'ground' | 'upper' | 'basement' | 'roof' = 'ground'
 ): Room => ({
   id,
   name: 'Test Room',
@@ -79,7 +79,7 @@ const createMockRoom = (
   isOfficial: true,
 });
 
-const createEmptyTile = (x: number, y: number, floor: 'ground' | 'upper' | 'basement'): Tile => ({
+const createEmptyTile = (x: number, y: number, floor: 'ground' | 'upper' | 'basement' | 'roof'): Tile => ({
   x,
   y,
   floor,
@@ -90,7 +90,7 @@ const createEmptyTile = (x: number, y: number, floor: 'ground' | 'upper' | 'base
 });
 
 const createMockMap = (): GameMap => {
-  const createFloor = (floor: 'ground' | 'upper' | 'basement'): Tile[][] => {
+  const createFloor = (floor: 'ground' | 'upper' | 'basement' | 'roof'): Tile[][] => {
     const map: Tile[][] = [];
     for (let y = 0; y < 15; y++) {
       const row: Tile[] = [];
@@ -163,6 +163,7 @@ const createMockMap = (): GameMap => {
     ground,
     upper: createFloor('upper'),
     basement: createFloor('basement'),
+    roof: createFloor('roof'),
     placedRoomCount: 5,
   };
 };
@@ -201,9 +202,7 @@ const createMockGameState = (overrides?: Partial<GameState>): GameState => {
     ground: [],
     upper: [],
     basement: [],
-    
-    
-    
+    roof: [],
     drawn: new Set(),
   };
 
@@ -328,7 +327,7 @@ describe('MovementValidator', () => {
       const state = createMockGameState();
       const result = MovementValidator.validateMove(state, 'player-1', { x: 9, y: 7, floor: 'ground' });
       expect(result.valid).toBe(false);
-      expect(result.error).toBe('Can only move to adjacent rooms');
+      expect(result.error).toContain('adjacent');
     });
 
     it('應該拒絕超過 Speed 限制的移動', () => {

@@ -1,5 +1,23 @@
 export type CardType = 'event' | 'item' | 'omen';
 
+// 屬性類型
+export type StatType = 'speed' | 'might' | 'sanity' | 'knowledge';
+
+// 分層結果介面 (Issue #234 - Tiered Roll Results)
+export interface TieredOutcome {
+  minRoll: number;
+  maxRoll: number;
+  effect: string;
+  statChange?: {
+    stat: StatType;
+    amount: number;
+  };
+  damage?: {
+    type: 'physical' | 'mental' | 'general';
+    amount: number;
+  };
+}
+
 export interface Card {
   id: string;
   type: CardType;
@@ -11,11 +29,13 @@ export interface Card {
   effect?: string;
   effectEn?: string;
   rollRequired?: {
-    stat: 'speed' | 'might' | 'sanity' | 'knowledge';
+    stat: StatType;
     target: number;
   };
   success?: string;
   failure?: string;
+  // Issue #234: 支援分層結果系統
+  tieredOutcomes?: TieredOutcome[];
 }
 
 // 事件卡 - Betrayal at House on the Hill 2nd Edition (官方事件卡)
@@ -31,6 +51,12 @@ export const EVENT_CARDS: Card[] = [
     rollRequired: { stat: 'sanity', target: 5 },
     success: '5+ 獲得 1 點理智',
     failure: '2-4 承受 1 點精神傷害；0-1 承受 2 點精神傷害',
+    // Issue #234: 分層結果系統
+    tieredOutcomes: [
+      { minRoll: 5, maxRoll: 8, effect: '獲得 1 點理智', statChange: { stat: 'sanity', amount: 1 } },
+      { minRoll: 2, maxRoll: 4, effect: '承受 1 點精神傷害', damage: { type: 'mental', amount: 1 } },
+      { minRoll: 0, maxRoll: 1, effect: '承受 2 點精神傷害', damage: { type: 'mental', amount: 2 } },
+    ],
   },
   {
     id: 'event_funeral',
@@ -413,6 +439,14 @@ export const EVENT_CARDS: Card[] = [
     rollRequired: { stat: 'speed', target: 0 },
     success: '4 無事發生',
     failure: '3 失去 1 點速度；2 失去 1 點理智；1 失去 1 點知識；0 失去 1 點力量',
+    // Issue #234: 分層結果系統 - 每個數字對應不同結果
+    tieredOutcomes: [
+      { minRoll: 4, maxRoll: 4, effect: '無事發生' },
+      { minRoll: 3, maxRoll: 3, effect: '失去 1 點速度', statChange: { stat: 'speed', amount: -1 } },
+      { minRoll: 2, maxRoll: 2, effect: '失去 1 點理智', statChange: { stat: 'sanity', amount: -1 } },
+      { minRoll: 1, maxRoll: 1, effect: '失去 1 點知識', statChange: { stat: 'knowledge', amount: -1 } },
+      { minRoll: 0, maxRoll: 0, effect: '失去 1 點力量', statChange: { stat: 'might', amount: -1 } },
+    ],
   },
   {
     id: 'event_spiders',

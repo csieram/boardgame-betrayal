@@ -11,3 +11,6 @@ export * from './constants';
 
 // Export utils
 export * from './utils';
+
+// Issue #234: Re-export TieredOutcome type from cards
+export type { TieredOutcome, StatType } from './data/cards';
