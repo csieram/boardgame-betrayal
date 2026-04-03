@@ -89,6 +89,14 @@ export function CharacterSelect({
           />
         </div>
       </div>
+
+      {/* 手機端固定底部確認按鈕 */}
+      <MobileStickyConfirmButton
+        character={selectedCharacter}
+        onConfirm={handleConfirm}
+        disabled={disabled || !selectedCharacter}
+        show={showConfirm}
+      />
     </div>
   );
 }
@@ -322,6 +330,38 @@ function CharacterDetailPanel({
           確認選擇 {character.name}
         </Button>
       )}
+    </div>
+  );
+}
+
+/**
+ * 手機端固定底部確認按鈕
+ */
+interface MobileStickyConfirmButtonProps {
+  character?: Character;
+  onConfirm: () => void;
+  disabled: boolean;
+  show: boolean;
+}
+
+function MobileStickyConfirmButton({
+  character,
+  onConfirm,
+  disabled,
+  show,
+}: MobileStickyConfirmButtonProps) {
+  if (!show || !character) return null;
+
+  return (
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-gray-900/95 backdrop-blur-sm border-t border-gray-700 z-50">
+      <Button
+        onClick={onConfirm}
+        disabled={disabled}
+        className="w-full"
+        style={{ backgroundColor: disabled ? undefined : character.color }}
+      >
+        確認選擇 {character.name}
+      </Button>
     </div>
   );
 }
