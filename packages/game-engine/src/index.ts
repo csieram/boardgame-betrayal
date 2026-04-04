@@ -155,7 +155,7 @@ export type {
   PlayerSide,
 } from './data/hauntScenarios';
 
-// Combat System (Issue #103)
+// Combat System (Issue #103, #239)
 export {
   CombatManager,
   initiateCombat,
@@ -171,7 +171,22 @@ export type {
   CombatResult,
   CombatValidation,
   WeaponEffect,
+  WeaponType,
+  WeaponBonusResult,
 } from './rules/combat';
+
+// Combat Types (Issue #239)
+export type {
+  CombatOptions,
+  CombatAction,
+  CombatActionType,
+  PlayerCombatState,
+} from './types/combat';
+export {
+  COMBAT_STAT,
+  RANGED_COMBAT_STAT,
+  DEFAULT_WEAPON_EFFECT,
+} from './types/combat';
 
 // Damage System (Issue #229)
 export {
