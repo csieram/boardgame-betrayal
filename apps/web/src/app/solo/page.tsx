@@ -1089,6 +1089,64 @@ export default function SoloGamePage() {
 
   // ==================== 戰鬥系統 (Issue #103, #241) ====================
 
+  // Issue #241: 更新 AI 玩家屬性（在 useCallback 之前定義以避免循環依賴）
+  const updateAIPlayerStats = (playerId: string, changes: { [stat: string]: number }) => {
+    console.log('[updateAIPlayerStats] Called:', { playerId, changes });
+    
+    const hasChanges = Object.values(changes).some(v => v !== 0);
+    if (!hasChanges) {
+      console.log('[updateAIPlayerStats] No stat changes to apply, skipping');
+      return;
+    }
+    
+    setAiPlayers(prev => {
+      const newPlayers = prev.map(p => {
+        if (p.id !== playerId) return p;
+        
+        if (!p.character || !p.character.stats) {
+          console.error('[updateAIPlayerStats] ERROR: AI player missing character or stats:', p);
+          return p;
+        }
+        
+        const currentSpeed = p.character.stats.speed?.[0] ?? 4;
+        const currentMight = p.character.stats.might?.[0] ?? 4;
+        const currentSanity = p.character.stats.sanity?.[0] ?? 4;
+        const currentKnowledge = p.character.stats.knowledge?.[0] ?? 4;
+        
+        const newSpeed = Math.max(0, Math.min(8, currentSpeed + (changes.speed || 0)));
+        const newMight = Math.max(0, Math.min(8, currentMight + (changes.might || 0)));
+        const newSanity = Math.max(0, Math.min(8, currentSanity + (changes.sanity || 0)));
+        const newKnowledge = Math.max(0, Math.min(8, currentKnowledge + (changes.knowledge || 0)));
+        
+        console.log('[updateAIPlayerStats] Updating AI stats:', {
+          playerId,
+          old: { speed: currentSpeed, might: currentMight, sanity: currentSanity, knowledge: currentKnowledge },
+          new: { speed: newSpeed, might: newMight, sanity: newSanity, knowledge: newKnowledge },
+          changes,
+        });
+        
+        return {
+          ...p,
+          character: {
+            ...p.character,
+            stats: {
+              ...p.character.stats,
+              speed: [newSpeed, p.character.stats.speed?.[1] ?? 4] as [number, number],
+              might: [newMight, p.character.stats.might?.[1] ?? 4] as [number, number],
+              sanity: [newSanity, p.character.stats.sanity?.[1] ?? 4] as [number, number],
+              knowledge: [newKnowledge, p.character.stats.knowledge?.[1] ?? 4] as [number, number],
+            },
+          },
+        };
+      });
+      
+      return newPlayers;
+    });
+    
+    // Issue #199-fix: 增加計數器強制重新渲染
+    setAiStatUpdateCounter(prev => prev + 1);
+  };
+
   // Issue #241: 檢查是否可以攻擊（考慮相鄰和同一房間）
   const canAttack = useCallback((): boolean => {
     if (!hauntState.isActive || !playerState || !player) return false;
@@ -3067,80 +3125,6 @@ export default function SoloGamePage() {
       console.log('[updateAIPlayerPosition] New aiPlayerPositions size:', newMap.size);
       return newMap;
     });
-  };
-
-  // Issue #196: 更新 AI 玩家屬性（當事件檢定有屬性變化時）
-  // Issue #197-fix: 添加詳細除錯日誌並確保狀態正確更新
-  // Issue #198-fix: 確保創建新的陣列引用以觸發重新渲染
-  const updateAIPlayerStats = (playerId: string, changes: { [stat: string]: number }) => {
-    console.log('[updateAIPlayerStats] Called:', { playerId, changes });
-    
-    // Issue #197: 檢查是否有任何變化
-    const hasChanges = Object.values(changes).some(v => v !== 0);
-    if (!hasChanges) {
-      console.log('[updateAIPlayerStats] No stat changes to apply, skipping');
-      return;
-    }
-    
-    setAiPlayers(prev => {
-      console.log('[updateAIPlayerStats] setAiPlayers callback, prev length:', prev.length);
-      
-      // Issue #198-fix: 創建全新的陣列引用
-      const newPlayers = prev.map(p => {
-        if (p.id !== playerId) return p;
-        
-        // Issue #197: 檢查 character 和 stats 是否存在
-        if (!p.character || !p.character.stats) {
-          console.error('[updateAIPlayerStats] ERROR: AI player missing character or stats:', p);
-          return p;
-        }
-        
-        // 計算新的屬性值
-        const currentSpeed = p.character.stats.speed?.[0] ?? 4;
-        const currentMight = p.character.stats.might?.[0] ?? 4;
-        const currentSanity = p.character.stats.sanity?.[0] ?? 4;
-        const currentKnowledge = p.character.stats.knowledge?.[0] ?? 4;
-        
-        const newSpeed = Math.max(0, Math.min(8, currentSpeed + (changes.speed || 0)));
-        const newMight = Math.max(0, Math.min(8, currentMight + (changes.might || 0)));
-        const newSanity = Math.max(0, Math.min(8, currentSanity + (changes.sanity || 0)));
-        const newKnowledge = Math.max(0, Math.min(8, currentKnowledge + (changes.knowledge || 0)));
-        
-        console.log('[updateAIPlayerStats] Updating stats for', p.name, ':', {
-          oldStats: { speed: currentSpeed, might: currentMight, sanity: currentSanity, knowledge: currentKnowledge },
-          newStats: { speed: newSpeed, might: newMight, sanity: newSanity, knowledge: newKnowledge },
-          changes,
-        });
-        
-        // Issue #198-fix: 創建全新的物件引用，確保每層都是新物件
-        const updatedPlayer = {
-          ...p,
-          character: {
-            ...p.character,
-            stats: {
-              speed: [newSpeed, p.character.stats.speed?.[1] ?? newSpeed] as [number, number],
-              might: [newMight, p.character.stats.might?.[1] ?? newMight] as [number, number],
-              sanity: [newSanity, p.character.stats.sanity?.[1] ?? newSanity] as [number, number],
-              knowledge: [newKnowledge, p.character.stats.knowledge?.[1] ?? newKnowledge] as [number, number],
-            },
-          },
-        };
-        
-        console.log('[updateAIPlayerStats] Updated player object:', {
-          id: updatedPlayer.id,
-          name: updatedPlayer.name,
-          newStats: updatedPlayer.character.stats,
-        });
-        
-        return updatedPlayer;
-      });
-      
-      // Issue #198-fix: 返回全新的陣列引用
-      return [...newPlayers];
-    });
-    
-    // Issue #199-fix: 增加計數器強制重新渲染
-    setAiStatUpdateCounter(prev => prev + 1);
   };
 
   return (
