@@ -12,6 +12,7 @@ import { HauntRevealScreen } from '@/components/game/HauntRevealScreen';
 import { EventCheckModal, EventCheckResult } from '@/components/game/EventCheckModal';
 import { ItemSelectDialog } from '@/components/game/ItemSelectDialog';
 import { TokenPlacementDialog } from '@/components/game/TokenPlacementDialog';
+import { CombatModal } from '@/components/game/combat';
 import { TokenType, createSecretPassage, MapToken } from '@betrayal/game-engine';
 
 
@@ -126,13 +127,39 @@ interface HauntState {
   revelation: HauntRevelationResult | null;
 }
 
-/** 戰鬥狀態 (Issue #103) */
+/** 戰鬥目標資訊 (Issue #241) */
+interface CombatTarget {
+  id: string;
+  name: string;
+  type: 'player' | 'monster';
+  position: { x: number; y: number; floor: Floor };
+  might: number;
+  speed: number;
+  isTraitor?: boolean;
+}
+
+/** 戰鬥狀態 (Issue #103, #241) */
 interface CombatUIState {
   showCombatModal: boolean;
   combatResult: CombatResult | null;
   isCombatAnimating: boolean;
-  validTargets: string[];
+  validTargets: CombatTarget[];
   selectedTarget: string | null;
+  selectedWeaponId: string | null;
+  combatLog: CombatLogEntry[];
+}
+
+/** 戰鬥日誌條目 */
+interface CombatLogEntry {
+  timestamp: number;
+  turn: number;
+  attackerId: string;
+  defenderId: string;
+  attackerName: string;
+  defenderName: string;
+  winnerId?: string;
+  damage?: number;
+  message: string;
 }
 
 /** 物品捨棄狀態 (Issue #232) */
@@ -306,13 +333,15 @@ export default function SoloGamePage() {
     revelation: null,
   });
 
-  // 戰鬥系統狀態 (Issue #103)
+  // 戰鬥系統狀態 (Issue #103, #241)
   const [combatState, setCombatState] = useState<CombatUIState>({
     showCombatModal: false,
     combatResult: null,
     isCombatAnimating: false,
     validTargets: [],
     selectedTarget: null,
+    selectedWeaponId: null,
+    combatLog: [],
   });
   const [combatManager] = useState(() => new CombatManager(new SeededRng(Date.now().toString())));
 
@@ -1058,102 +1087,168 @@ export default function SoloGamePage() {
     }
   };
 
-  // ==================== 戰鬥系統 (Issue #103) ====================
+  // ==================== 戰鬥系統 (Issue #103, #241) ====================
 
-  // 檢查是否可以攻擊
+  // Issue #241: 檢查是否可以攻擊（考慮相鄰和同一房間）
   const canAttack = useCallback((): boolean => {
-    if (!hauntState.isActive || !playerState) return false;
+    if (!hauntState.isActive || !playerState || !player) return false;
     
-    // 構建 gameState 用於檢查
-    const gameStateForCombat = {
-      players: [{
-        id: 'solo-player',
-        name: player?.name || '玩家',
-        position: { x: position.x, y: position.y, floor: currentFloor },
-        currentStats: {
-          speed: playerState.stats.speed,
-          might: playerState.stats.might,
-          sanity: playerState.stats.sanity,
-          knowledge: playerState.stats.knowledge,
-        },
-        items: playerState.items,
-        omens: playerState.omens,
-        isTraitor: false,
-        isDead: false,
-      }],
-      haunt: {
-        isActive: hauntState.isActive,
-      },
-    };
+    // 獲取有效目標
+    const targets = getValidCombatTargets();
+    return targets.length > 0;
+  }, [hauntState.isActive, playerState, player, position, currentFloor, aiPlayers, aiPlayerPositions]);
 
-    return combatManager.canAttack(gameStateForCombat as any, 'solo-player');
-  }, [hauntState.isActive, playerState, player, position, currentFloor, combatManager]);
-
-  // 取得有效攻擊目標
-  const getValidTargets = useCallback((): string[] => {
-    if (!hauntState.isActive || !playerState) return [];
+  // Issue #241: 獲取有效戰鬥目標
+  const getValidCombatTargets = useCallback((): CombatTarget[] => {
+    if (!playerState || !player) return [];
     
-    // 在單人模式下，這裡會返回 AI 敵人的 ID
-    // 目前暫時返回空列表，等待 AI 系統整合
-    return [];
-  }, [hauntState.isActive, playerState]);
+    const targets: CombatTarget[] = [];
+    const playerPos = { x: position.x, y: position.y, floor: currentFloor };
+    
+    // 檢查 AI 玩家
+    for (const aiPlayer of aiPlayers) {
+      if (!aiPlayer.isAlive) continue;
+      
+      const aiPos = aiPlayerPositions.get(aiPlayer.id) || aiPlayer.position;
+      if (!aiPos) continue;
+      
+      // 檢查是否在同一房間或相鄰
+      const isSameRoom = aiPos.x === playerPos.x && aiPos.y === playerPos.y && aiPos.floor === playerPos.floor;
+      const isAdjacent = aiPos.floor === playerPos.floor && 
+        ((Math.abs(aiPos.x - playerPos.x) === 1 && aiPos.y === playerPos.y) ||
+         (Math.abs(aiPos.y - playerPos.y) === 1 && aiPos.x === playerPos.x));
+      
+      if (isSameRoom || isAdjacent) {
+        targets.push({
+          id: aiPlayer.id,
+          name: aiPlayer.name,
+          type: 'player',
+          position: aiPos,
+          might: aiPlayer.character?.stats?.might?.[0] || 4,
+          speed: aiPlayer.character?.stats?.speed?.[0] || 4,
+          isTraitor: hauntState.revelation?.traitorId === aiPlayer.id,
+        });
+      }
+    }
+    
+    return targets;
+  }, [playerState, player, position, currentFloor, aiPlayers, aiPlayerPositions, hauntState.revelation]);
 
-  // 發起戰鬥
-  const initiateCombat = useCallback((targetId: string) => {
-    if (!playerState || !hauntState.isActive) return;
-
+  // Issue #241: 打開戰鬥模態框
+  const openCombatModal = useCallback(() => {
+    const targets = getValidCombatTargets();
+    
     setCombatState(prev => ({
       ...prev,
       showCombatModal: true,
-      isCombatAnimating: true,
+      validTargets: targets,
+      selectedTarget: targets.length === 1 ? targets[0].id : null,
+      selectedWeaponId: null,
+      combatResult: null,
+    }));
+  }, [getValidCombatTargets]);
+
+  // Issue #241: 選擇戰鬥目標
+  const handleSelectCombatTarget = useCallback((targetId: string) => {
+    setCombatState(prev => ({
+      ...prev,
       selectedTarget: targetId,
+    }));
+  }, []);
+
+  // Issue #241: 選擇武器
+  const handleSelectCombatWeapon = useCallback((weaponId: string | null) => {
+    setCombatState(prev => ({
+      ...prev,
+      selectedWeaponId: weaponId,
+    }));
+  }, []);
+
+  // Issue #241: 執行戰鬥
+  const executeCombat = useCallback(() => {
+    if (!playerState || !player || !combatState.selectedTarget) return;
+    
+    const targetId = combatState.selectedTarget;
+    const weaponId = combatState.selectedWeaponId || undefined;
+    
+    setCombatState(prev => ({
+      ...prev,
+      isCombatAnimating: true,
     }));
 
     // 構建 gameState
-    const gameStateForCombat = {
+    const gameStateForCombat = createCombatGameState(targetId);
+
+    // 模擬戰鬥動畫延遲
+    setTimeout(() => {
+      // 執行戰鬥
+      const result = combatManager.initiateCombat(gameStateForCombat as any, 'solo-player', targetId, weaponId);
+      
+      setCombatState(prev => ({
+        ...prev,
+        combatResult: result,
+        isCombatAnimating: false,
+      }));
+
+      // 處理戰鬥結果
+      processCombatResult(result, targetId);
+    }, 2000);
+  }, [playerState, player, combatState.selectedTarget, combatState.selectedWeaponId, combatManager]);
+
+  // Issue #241: 創建戰鬥用的 gameState
+  const createCombatGameState = (targetId: string): any => {
+    const target = aiPlayers.find(p => p.id === targetId);
+    const targetPos = aiPlayerPositions.get(targetId) || target?.position || { x: 7, y: 7, floor: 'ground' };
+    
+    return {
       gameId: 'solo-game',
       version: '1.0.0',
       phase: 'haunt',
       result: 'ongoing',
-      config: { playerCount: 1, enableAI: true, seed: gameState.seed, maxTurns: 100 },
+      config: { playerCount: 2, enableAI: true, seed: gameState.seed, maxTurns: 100 },
       map: {
         ground: multiFloorMap.ground,
         upper: multiFloorMap.upper,
         basement: multiFloorMap.basement,
         placedRoomCount: gameState.placedRoomIds.size,
       },
-      players: [{
-        id: 'solo-player',
-        name: player?.name || '玩家',
-        character: {
-          id: player?.id || '',
-          name: player?.name || '',
-          nameEn: player?.nameEn || '',
-          age: player?.age || 30,
-          description: player?.description || '',
-          color: player?.color || '#000',
-          stats: {
-            speed: player?.stats.speed || [0, 0, 0, 0, 0, 0, 0, 0],
-            might: player?.stats.might || [0, 0, 0, 0, 0, 0, 0, 0],
-            sanity: player?.stats.sanity || [0, 0, 0, 0, 0, 0, 0, 0],
-            knowledge: player?.stats.knowledge || [0, 0, 0, 0, 0, 0, 0, 0],
+      players: [
+        {
+          id: 'solo-player',
+          name: player?.name || '玩家',
+          character: player!,
+          position: { x: position.x, y: position.y, floor: currentFloor },
+          currentStats: {
+            speed: playerState!.stats.speed,
+            might: playerState!.stats.might,
+            sanity: playerState!.stats.sanity,
+            knowledge: playerState!.stats.knowledge,
           },
-          statTrack: player?.statTrack || { speed: [], might: [], sanity: [], knowledge: [] },
+          items: playerState!.items,
+          omens: playerState!.omens,
+          isTraitor: hauntState.revelation?.traitorId === 'solo-player',
+          isDead: false,
+          usedItemsThisTurn: [],
         },
-        position: { x: position.x, y: position.y, floor: currentFloor },
-        currentStats: {
-          speed: playerState.stats.speed,
-          might: playerState.stats.might,
-          sanity: playerState.stats.sanity,
-          knowledge: playerState.stats.knowledge,
+        {
+          id: targetId,
+          name: target?.name || '敵人',
+          character: target?.character || player!,
+          position: targetPos,
+          currentStats: {
+            speed: target?.character?.stats?.speed?.[0] || 4,
+            might: target?.character?.stats?.might?.[0] || 4,
+            sanity: target?.character?.stats?.sanity?.[0] || 4,
+            knowledge: target?.character?.stats?.knowledge?.[0] || 4,
+          },
+          items: target?.items || [],
+          omens: target?.omens || [],
+          isTraitor: hauntState.revelation?.traitorId === targetId,
+          isDead: false,
+          usedItemsThisTurn: [],
         },
-        items: playerState.items,
-        omens: playerState.omens,
-        isTraitor: false,
-        isDead: false,
-        usedItemsThisTurn: [],
-      }],
-      playerOrder: ['solo-player'],
+      ],
+      playerOrder: ['solo-player', targetId],
       turn: {
         currentPlayerId: 'solo-player',
         turnNumber: turn,
@@ -1164,22 +1259,18 @@ export default function SoloGamePage() {
         usedSpecialActions: [],
         usedItems: [],
       },
-      cardDecks: {
-        event: { remaining: [], drawn: [], discarded: [] },
-        item: { remaining: [], drawn: [], discarded: [] },
-        omen: { remaining: [], drawn: [], discarded: [] },
-      },
+      cardDecks: gameState.cardDecks,
       roomDeck: {
         drawn: gameState.drawn,
       },
       haunt: {
         isActive: hauntState.isActive,
         type: 'single_traitor',
-        hauntNumber: null,
-        traitorPlayerId: null,
+        hauntNumber: hauntState.revelation?.scenario?.id || null,
+        traitorPlayerId: hauntState.revelation?.traitorId || null,
         omenCount: cardManager.getDeckStatus().omenCount,
-        heroObjective: null,
-        traitorObjective: null,
+        heroObjective: hauntState.revelation?.scenario?.heroObjective || null,
+        traitorObjective: hauntState.revelation?.scenario?.traitorObjective || null,
       },
       combat: {
         isActive: true,
@@ -1196,42 +1287,338 @@ export default function SoloGamePage() {
       rngState: { seed: gameState.seed, count: 0, internalState: [] },
       placedRoomIds: gameState.placedRoomIds,
     };
+  };
 
-    // 模擬戰鬥動畫延遲
-    setTimeout(() => {
-      // 執行戰鬥
-      const result = combatManager.initiateCombat(gameStateForCombat as any, 'solo-player', targetId);
+  // Issue #241: 處理戰鬥結果
+  const processCombatResult = (result: CombatResult, targetId: string) => {
+    const target = aiPlayers.find(p => p.id === targetId);
+    
+    if (result.success) {
+      const attackerTotal = result.attackerRoll?.total || 0;
+      const defenderTotal = result.defenderRoll?.total || 0;
       
-      setCombatState(prev => ({
-        ...prev,
-        combatResult: result,
-        isCombatAnimating: false,
-      }));
-
-      // 更新日誌
-      if (result.success) {
-        const attackerTotal = result.attackerRoll?.total || 0;
-        const defenderTotal = result.defenderRoll?.total || 0;
+      // 添加到戰鬥日誌
+      const combatLogEntry: CombatLogEntry = {
+        timestamp: Date.now(),
+        turn,
+        attackerId: 'solo-player',
+        defenderId: targetId,
+        attackerName: player?.name || '你',
+        defenderName: target?.name || '敵人',
+        winnerId: result.winner?.id,
+        damage: result.damage,
+        message: '',
+      };
+      
+      if (result.winner) {
+        const winnerName = result.winner.id === 'solo-player' ? '你' : target?.name || '敵人';
+        const damage = result.damage || 0;
         
-        if (result.winner) {
-          const winnerName = result.winner.id === 'solo-player' ? '你' : '敵人';
-          const damage = result.damage || 0;
-          setLog(prev => [
-            ...prev,
-            `⚔️ 戰鬥結果: ${winnerName} 獲勝！`,
-            `  你的擲骰: ${attackerTotal} | 敵人擲骰: ${defenderTotal}`,
-            `  造成傷害: ${damage}`,
-          ]);
+        combatLogEntry.message = `${winnerName} 獲勝，造成 ${damage} 點傷害`;
+        setCombatState(prev => ({
+          ...prev,
+          combatLog: [...prev.combatLog, combatLogEntry],
+        }));
+        
+        setLog(prev => [
+          ...prev,
+          `⚔️ 戰鬥結果: ${winnerName} 獲勝！`,
+          `  你的擲骰: ${attackerTotal} | 敵人擲骰: ${defenderTotal}`,
+          `  造成傷害: ${damage}`,
+        ]);
 
-          // 如果玩家受傷，更新狀態
-          if (result.loser?.id === 'solo-player' && result.damage) {
-            const newMight = Math.max(0, playerState.stats.might - result.damage);
+        // 如果玩家受傷，更新狀態
+        if (result.loser?.id === 'solo-player' && result.damage) {
+          const newMight = Math.max(0, playerState!.stats.might - result.damage);
+          setPlayerState(prev => prev ? {
+            ...prev,
+            stats: { ...prev.stats, might: newMight },
+          } : null);
+          setPlayer(prev => prev ? {
+            ...prev,
+            stats: {
+              ...prev.stats,
+              might: [newMight, prev.stats.might[1]],
+            },
+          } : null);
+          setLog(prev => [...prev, `💔 你的力量從 ${playerState!.stats.might} 降至 ${newMight}`]);
+        }
+        
+        // 如果 AI 受傷，更新 AI 狀態
+        if (result.loser?.id === targetId && result.damage && target) {
+          const currentMight = target.character?.stats?.might?.[0] || 4;
+          const newMight = Math.max(0, currentMight - result.damage);
+          
+          updateAIPlayerStats(targetId, { might: -result.damage });
+          setLog(prev => [...prev, `💔 ${target.name} 的力量從 ${currentMight} 降至 ${newMight}`]);
+          
+          // 檢查 AI 是否死亡
+          if (newMight <= 0) {
+            setAiPlayers(prev => prev.map(p => 
+              p.id === targetId ? { ...p, isAlive: false } : p
+            ));
+            setLog(prev => [...prev, `☠️ ${target.name} 被擊敗！`]);
+          }
+        }
+      } else {
+        combatLogEntry.message = '戰鬥平手，雙方各受 1 點傷害';
+        setCombatState(prev => ({
+          ...prev,
+          combatLog: [...prev.combatLog, combatLogEntry],
+        }));
+        
+        setLog(prev => [
+          ...prev,
+          `⚔️ 戰鬥平手！`,
+          `  你的擲骰: ${attackerTotal} | 敵人擲骰: ${defenderTotal}`,
+          `  雙方各受 1 點傷害`,
+        ]);
+        
+        // 應用平手傷害
+        if (result.attackerDamage && result.attackerDamage > 0) {
+          const newMight = Math.max(0, playerState!.stats.might - result.attackerDamage);
+          setPlayerState(prev => prev ? {
+            ...prev,
+            stats: { ...prev.stats, might: newMight },
+          } : null);
+          setPlayer(prev => prev ? {
+            ...prev,
+            stats: {
+              ...prev.stats,
+              might: [newMight, prev.stats.might[1]],
+            },
+          } : null);
+        }
+        
+        if (result.defenderDamage && result.defenderDamage > 0 && target) {
+          updateAIPlayerStats(targetId, { might: -result.defenderDamage });
+        }
+      }
+    } else {
+      setLog(prev => [...prev, `❌ 戰鬥失敗: ${result.error}`]);
+    }
+  };
+
+  // Issue #241: 關閉戰鬥模態框
+  const handleCloseCombat = useCallback(() => {
+    setCombatState(prev => ({
+      ...prev,
+      showCombatModal: false,
+      combatResult: null,
+      selectedTarget: null,
+      selectedWeaponId: null,
+    }));
+  }, []);
+
+  // Issue #241: 確認戰鬥結果
+  const handleConfirmCombatResult = useCallback(() => {
+    setCombatState(prev => ({
+      ...prev,
+      showCombatModal: false,
+      combatResult: null,
+      selectedTarget: null,
+      selectedWeaponId: null,
+    }));
+  }, []);
+
+  // Issue #241: AI 執行戰鬥
+  const executeAICombat = useCallback(async (aiPlayerId: string, targetId: string) => {
+    const aiPlayer = aiPlayers.find(p => p.id === aiPlayerId);
+    const target = targetId === 'solo-player' 
+      ? { id: 'solo-player', name: player?.name || '玩家' }
+      : aiPlayers.find(p => p.id === targetId);
+    
+    if (!aiPlayer || !target) return;
+    
+    setLog(prev => [...prev, `⚔️ ${aiPlayer.name} 向 ${target.name} 發起攻擊！`]);
+    
+    // AI 選擇最佳武器
+    const aiItems = aiPlayer.items || [];
+    const aiOmens = aiPlayer.omens || [];
+    let selectedWeapon: string | undefined;
+    
+    // 簡單的 AI 武器選擇邏輯：選擇加成最高的武器
+    let bestBonus = 0;
+    for (const item of [...aiItems, ...aiOmens]) {
+      const weaponEffect = combatManager.getWeaponInfo(item.id);
+      if (weaponEffect) {
+        const bonus = weaponEffect.extraDice + weaponEffect.rollBonus;
+        if (bonus > bestBonus) {
+          bestBonus = bonus;
+          selectedWeapon = item.id;
+        }
+      }
+    }
+    
+    // 構建戰鬥 gameState
+    const aiPos = aiPlayerPositions.get(aiPlayerId) || aiPlayer.position || { x: 7, y: 7, floor: 'ground' };
+    const targetPos = targetId === 'solo-player'
+      ? { x: position.x, y: position.y, floor: currentFloor }
+      : (aiPlayerPositions.get(targetId) || { x: 7, y: 7, floor: 'ground' });
+    
+    const gameStateForCombat = {
+      gameId: 'solo-game',
+      version: '1.0.0',
+      phase: 'haunt',
+      result: 'ongoing',
+      config: { playerCount: 2, enableAI: true, seed: gameState.seed, maxTurns: 100 },
+      map: {
+        ground: multiFloorMap.ground,
+        upper: multiFloorMap.upper,
+        basement: multiFloorMap.basement,
+        placedRoomCount: gameState.placedRoomIds.size,
+      },
+      players: [
+        {
+          id: aiPlayerId,
+          name: aiPlayer.name,
+          character: aiPlayer.character,
+          position: aiPos,
+          currentStats: {
+            speed: aiPlayer.character?.stats?.speed?.[0] || 4,
+            might: aiPlayer.character?.stats?.might?.[0] || 4,
+            sanity: aiPlayer.character?.stats?.sanity?.[0] || 4,
+            knowledge: aiPlayer.character?.stats?.knowledge?.[0] || 4,
+          },
+          items: aiPlayer.items || [],
+          omens: aiPlayer.omens || [],
+          isTraitor: hauntState.revelation?.traitorId === aiPlayerId,
+          isDead: false,
+          usedItemsThisTurn: [],
+        },
+        {
+          id: targetId,
+          name: targetId === 'solo-player' ? (player?.name || '玩家') : (target as AIPlayerInfo).name,
+          character: targetId === 'solo-player' ? player! : (target as AIPlayerInfo).character,
+          position: targetPos,
+          currentStats: targetId === 'solo-player' ? {
+            speed: playerState!.stats.speed,
+            might: playerState!.stats.might,
+            sanity: playerState!.stats.sanity,
+            knowledge: playerState!.stats.knowledge,
+          } : {
+            speed: (target as AIPlayerInfo).character?.stats?.speed?.[0] || 4,
+            might: (target as AIPlayerInfo).character?.stats?.might?.[0] || 4,
+            sanity: (target as AIPlayerInfo).character?.stats?.sanity?.[0] || 4,
+            knowledge: (target as AIPlayerInfo).character?.stats?.knowledge?.[0] || 4,
+          },
+          items: targetId === 'solo-player' ? playerState!.items : (target as AIPlayerInfo).items || [],
+          omens: targetId === 'solo-player' ? playerState!.omens : (target as AIPlayerInfo).omens || [],
+          isTraitor: hauntState.revelation?.traitorId === targetId,
+          isDead: false,
+          usedItemsThisTurn: [],
+        },
+      ],
+      playerOrder: [aiPlayerId, targetId],
+      turn: {
+        currentPlayerId: aiPlayerId,
+        turnNumber: turn,
+        movesRemaining: 0,
+        hasDiscoveredRoom: false,
+        hasDrawnCard: false,
+        hasEnded: false,
+        usedSpecialActions: [],
+        usedItems: [],
+      },
+      cardDecks: gameState.cardDecks,
+      roomDeck: { drawn: gameState.drawn },
+      haunt: {
+        isActive: hauntState.isActive,
+        type: 'single_traitor',
+        hauntNumber: hauntState.revelation?.scenario?.id || null,
+        traitorPlayerId: hauntState.revelation?.traitorId || null,
+        omenCount: cardManager.getDeckStatus().omenCount,
+        heroObjective: hauntState.revelation?.scenario?.heroObjective || null,
+        traitorObjective: hauntState.revelation?.scenario?.traitorObjective || null,
+      },
+      combat: {
+        isActive: true,
+        attackerId: aiPlayerId,
+        defenderId: targetId,
+        usedStat: null,
+        attackerRoll: null,
+        defenderRoll: null,
+        damage: null,
+      },
+      log: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      rngState: { seed: gameState.seed, count: 0, internalState: [] },
+      placedRoomIds: gameState.placedRoomIds,
+    };
+    
+    // 執行戰鬥
+    const result = combatManager.initiateCombat(gameStateForCombat as any, aiPlayerId, targetId, selectedWeapon);
+    
+    // 顯示戰鬥結果在日誌
+    if (result.success) {
+      const attackerTotal = result.attackerRoll?.total || 0;
+      const defenderTotal = result.defenderRoll?.total || 0;
+      
+      if (result.winner) {
+        const winnerName = result.winner.id === aiPlayerId ? aiPlayer.name : target.name;
+        const damage = result.damage || 0;
+        
+        setLog(prev => [
+          ...prev,
+          `  🎲 ${aiPlayer.name}: ${attackerTotal} vs ${target.name}: ${defenderTotal}`,
+          `  🏆 ${winnerName} 獲勝，造成 ${damage} 點傷害`,
+        ]);
+        
+        // 如果玩家受傷
+        if (result.loser?.id === 'solo-player' && result.damage) {
+          const newMight = Math.max(0, playerState!.stats.might - result.damage);
+          setPlayerState(prev => prev ? {
+            ...prev,
+            stats: { ...prev.stats, might: newMight },
+          } : null);
+          setPlayer(prev => prev ? {
+            ...prev,
+            stats: {
+              ...prev.stats,
+              might: [newMight, prev.stats.might[1]],
+            },
+          } : null);
+          setLog(prev => [...prev, `💔 你的力量從 ${playerState!.stats.might} 降至 ${newMight}`]);
+        }
+        
+        // 如果 AI 受傷
+        if (result.loser && result.loser.id !== 'solo-player' && result.damage) {
+          const loserId = result.loser.id;
+          const loser = aiPlayers.find(p => p.id === loserId);
+          if (loser) {
+            const currentMight = loser.character?.stats?.might?.[0] || 4;
+            const newMight = Math.max(0, currentMight - result.damage);
+            updateAIPlayerStats(loserId, { might: -result.damage });
+            setLog(prev => [...prev, `💔 ${loser.name} 的力量從 ${currentMight} 降至 ${newMight}`]);
+            
+            if (newMight <= 0) {
+              setAiPlayers(prev => prev.map(p => 
+                p.id === loserId ? { ...p, isAlive: false } : p
+              ));
+              setLog(prev => [...prev, `☠️ ${loser.name} 被擊敗！`]);
+            }
+          }
+        }
+      } else {
+        setLog(prev => [
+          ...prev,
+          `  🎲 ${aiPlayer.name}: ${attackerTotal} vs ${target.name}: ${defenderTotal}`,
+          `  🤝 平手！雙方各受 1 點傷害`,
+        ]);
+        
+        // 應用平手傷害
+        if (result.attackerDamage && result.attackerDamage > 0) {
+          updateAIPlayerStats(aiPlayerId, { might: -result.attackerDamage });
+        }
+        
+        if (result.defenderDamage && result.defenderDamage > 0) {
+          if (targetId === 'solo-player') {
+            const newMight = Math.max(0, playerState!.stats.might - result.defenderDamage);
             setPlayerState(prev => prev ? {
               ...prev,
               stats: { ...prev.stats, might: newMight },
             } : null);
-            // Issue #115: 同步更新 player (Character) 的 stats
-            // 注意：stats[0] 是當前值（UI 顯示用），stats[1] 是初始值
             setPlayer(prev => prev ? {
               ...prev,
               stats: {
@@ -1239,30 +1626,15 @@ export default function SoloGamePage() {
                 might: [newMight, prev.stats.might[1]],
               },
             } : null);
-            setLog(prev => [...prev, `💔 你的力量從 ${playerState.stats.might} 降至 ${newMight}`]);
+          } else {
+            updateAIPlayerStats(targetId, { might: -result.defenderDamage });
           }
-        } else {
-          setLog(prev => [
-            ...prev,
-            `⚔️ 戰鬥平手！`,
-            `  你的擲骰: ${attackerTotal} | 敵人擲骰: ${defenderTotal}`,
-          ]);
         }
-      } else {
-        setLog(prev => [...prev, `❌ 戰鬥失敗: ${result.error}`]);
       }
-    }, 2000);
-  }, [playerState, hauntState.isActive, gameState, player, position, currentFloor, turn, moves, discovered, combatManager, cardManager]);
-
-  // 關閉戰鬥模態框
-  const handleCloseCombat = useCallback(() => {
-    setCombatState(prev => ({
-      ...prev,
-      showCombatModal: false,
-      combatResult: null,
-      selectedTarget: null,
-    }));
-  }, []);
+    } else {
+      setLog(prev => [...prev, `  ❌ 戰鬥失敗: ${result.error}`]);
+    }
+  }, [aiPlayers, player, playerState, position, currentFloor, combatManager, gameState, hauntState, cardManager, updateAIPlayerStats]);
 
   // 繼續到下一回合（保留用於其他情況）
   const continueToNextTurn = () => {
@@ -2889,16 +3261,16 @@ export default function SoloGamePage() {
             {/* 移動控制 */}
             <div className="mt-4 bg-gray-800/50 rounded-xl p-3 sm:p-4 border border-gray-700">
               <div className="flex justify-center gap-3">
-                {/* 戰鬥按鈕 (Issue #103) - 只在作祟階段顯示 */}
-                {hauntState.isActive && (
+                {/* Issue #241: 戰鬥按鈕 - 只在作祟階段且有有效目標時顯示 */}
+                {hauntState.isActive && canAttack() && (
                   <Button
-                    onClick={() => initiateCombat('ai-enemy-1')}
+                    onClick={openCombatModal}
                     variant="danger"
                     size="sm"
                     className="h-10 sm:h-12 text-xs sm:text-sm bg-red-600 hover:bg-red-700"
                     disabled={combatState.isCombatAnimating}
                   >
-                    {combatState.isCombatAnimating ? '戰鬥中...' : '⚔️ 攻擊'}
+                    {combatState.isCombatAnimating ? '戰鬥中...' : `⚔️ 攻擊 (${getValidCombatTargets().length})`}
                   </Button>
                 )}
                 
@@ -3283,119 +3655,56 @@ export default function SoloGamePage() {
         )}
       </AnimatePresence>
 
-      {/* 戰鬥模態框 (Issue #103) */}
-      <AnimatePresence>
-        {combatState.showCombatModal && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={handleCloseCombat}
-          >
-            <motion.div
-              className="bg-gray-800 rounded-xl p-6 max-w-md w-full border border-gray-600"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={e => e.stopPropagation()}
-            >
-              <h2 className="text-2xl font-bold text-center mb-6">⚔️ 戰鬥</h2>
-              
-              {combatState.isCombatAnimating ? (
-                <div className="text-center py-8">
-                  <motion.div
-                    className="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full mx-auto mb-4"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                  />
-                  <p className="text-gray-300">戰鬥進行中...</p>
-                </div>
-              ) : combatState.combatResult ? (
-                <div className="space-y-4">
-                  {/* 擲骰結果 */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-gray-700/50 rounded-lg p-3 text-center">
-                      <p className="text-sm text-gray-400 mb-1">你的擲骰</p>
-                      <p className="text-2xl font-bold text-blue-400">
-                        {combatState.combatResult.attackerRoll?.total || 0}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        [{combatState.combatResult.attackerRoll?.results.join(', ') || ''}]
-                      </p>
-                    </div>
-                    <div className="bg-gray-700/50 rounded-lg p-3 text-center">
-                      <p className="text-sm text-gray-400 mb-1">敵人擲骰</p>
-                      <p className="text-2xl font-bold text-red-400">
-                        {combatState.combatResult.defenderRoll?.total || 0}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        [{combatState.combatResult.defenderRoll?.results.join(', ') || ''}]
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* 勝負結果 */}
-                  {combatState.combatResult.winner ? (
-                    <div className={`rounded-lg p-4 text-center ${
-                      combatState.combatResult.winner.id === 'solo-player'
-                        ? 'bg-green-900/50 border border-green-500'
-                        : 'bg-red-900/50 border border-red-500'
-                    }`}>
-                      <p className="text-lg font-bold">
-                        {combatState.combatResult.winner.id === 'solo-player' ? '🎉 你獲勝！' : '💀 你輸了！'}
-                      </p>
-                      {combatState.combatResult.damage && combatState.combatResult.damage > 0 && (
-                        <p className="text-sm mt-2">
-                          造成 <span className="font-bold text-yellow-400">{combatState.combatResult.damage}</span> 點傷害
-                        </p>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="bg-yellow-900/50 border border-yellow-500 rounded-lg p-4 text-center">
-                      <p className="text-lg font-bold">🤝 平手！</p>
-                      <p className="text-sm mt-2 text-gray-300">雙方勢均力敵，沒有傷害</p>
-                    </div>
-                  )}
-
-                  {/* 武器加成顯示 */}
-                  {playerState && (
-                    <div className="bg-gray-700/30 rounded-lg p-3">
-                      <p className="text-xs text-gray-400 mb-2">武器加成</p>
-                      {(() => {
-                        const bonus = calculateWeaponBonus(playerState.items, playerState.omens);
-                        return bonus.weapons.length > 0 ? (
-                          <div className="flex flex-wrap gap-2">
-                            {bonus.weapons.map((weapon, i) => (
-                              <span key={i} className="text-xs bg-blue-900/50 px-2 py-1 rounded">
-                                {weapon} (+{bonus.mightBonus > 0 ? bonus.mightBonus : bonus.damageBonus})
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-xs text-gray-500">無武器</p>
-                        );
-                      })()}
-                    </div>
-                  )}
-
-                  <Button
-                    onClick={handleCloseCombat}
-                    variant="primary"
-                    className="w-full mt-4"
-                  >
-                    確認
-                  </Button>
-                </div>
-              ) : (
-                <div className="text-center py-4">
-                  <p className="text-gray-400">準備戰鬥...</p>
-                </div>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Issue #241: CombatModal 組件 */}
+      {combatState.showCombatModal && combatState.selectedTarget && (
+        <CombatModal
+          isOpen={combatState.showCombatModal}
+          onClose={handleCloseCombat}
+          attacker={{
+            id: 'solo-player',
+            name: player?.name || '玩家',
+            character: player!,
+            position: { x: position.x, y: position.y, floor: currentFloor },
+            currentStats: {
+              speed: playerState?.stats.speed || 0,
+              might: playerState?.stats.might || 0,
+              sanity: playerState?.stats.sanity || 0,
+              knowledge: playerState?.stats.knowledge || 0,
+            },
+            items: playerState?.items || [],
+            omens: playerState?.omens || [],
+            isTraitor: hauntState.revelation?.traitorId === 'solo-player',
+            isDead: false,
+            usedItemsThisTurn: [],
+          }}
+          defender={(() => {
+            const target = aiPlayers.find(p => p.id === combatState.selectedTarget);
+            const targetPos = aiPlayerPositions.get(combatState.selectedTarget!) || target?.position || { x: 7, y: 7, floor: 'ground' as Floor };
+            return {
+              id: target?.id || combatState.selectedTarget!,
+              name: target?.name || '敵人',
+              character: target?.character || player!,
+              position: targetPos,
+              currentStats: {
+                speed: target?.character?.stats?.speed?.[0] || 4,
+                might: target?.character?.stats?.might?.[0] || 4,
+                sanity: target?.character?.stats?.sanity?.[0] || 4,
+                knowledge: target?.character?.stats?.knowledge?.[0] || 4,
+              },
+              items: target?.items || [],
+              omens: target?.omens || [],
+              isTraitor: hauntState.revelation?.traitorId === target?.id,
+              isDead: false,
+              usedItemsThisTurn: [],
+            };
+          })()}
+          onCombatComplete={(result) => {
+            // 處理戰鬥結果
+            processCombatResult(result, combatState.selectedTarget!);
+            handleConfirmCombatResult();
+          }}
+        />
+      )}
 
 
     </main>
