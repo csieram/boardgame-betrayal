@@ -22,6 +22,27 @@ export type {
   TokenPlacementResult,
 } from './state/mapTokens';
 
+// Corpse Looting System (Issue #242)
+export {
+  CorpseManager,
+  canLootCorpse,
+  validateLootCorpse,
+  lootItemFromCorpse,
+  lootItemFromCorpseByType,
+  createCorpseState,
+  hasLootableCorpseAtPosition,
+  getLootableItemCountAtPosition,
+  formatCorpseDescription,
+  canLootAnyCorpse,
+  getLootableItemsAtPosition,
+} from './state/corpses';
+export type {
+  Corpse,
+  CorpseState,
+  LootResult,
+  LootValidation,
+} from './state/corpses';
+
 // Types
 export * from './types';
 
