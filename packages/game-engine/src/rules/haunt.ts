@@ -31,7 +31,7 @@ import { SeededRng } from '../core/GameState';
 export const HAUNT_ROLL_THRESHOLD = 5;
 
 /** 預兆卡總數（當所有預兆都被發現時自動觸發作祟） */
-export const TOTAL_OMEN_CARDS = 13;
+export const TOTAL_OMEN_CARDS = 9;
 
 // ==================== 類型定義 ====================
 
