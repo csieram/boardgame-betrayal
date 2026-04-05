@@ -14,6 +14,7 @@ import { ItemSelectDialog } from '@/components/game/ItemSelectDialog';
 import { TokenPlacementDialog } from '@/components/game/TokenPlacementDialog';
 import { CombatModal } from '@/components/game/combat';
 import { TokenType, createSecretPassage, MapToken } from '@betrayal/game-engine';
+import { CorpseLootDialog } from '@/components/game/CorpseLootDialog';
 
 
 import { CharacterTabs, PlayerInfo } from '@/components/game/CharacterTabs';
@@ -64,6 +65,12 @@ import {
   getPersonalityColor,
   AIPersonality,
   AIDifficulty,
+  // Corpse Looting System (Issue #243)
+  CorpseManager,
+  canLootCorpse,
+  lootItemFromCorpse,
+  Corpse,
+  LootResult,
 } from '@betrayal/game-engine';
 
 // 地圖大小
@@ -169,6 +176,13 @@ interface ItemDiscardState {
   discardOption: EventDiscardOption | null;
   selectedItem: Card | null;
   discardResult: DiscardItemResult | null;
+}
+
+/** 屍體搜刮狀態 (Issue #243) */
+interface CorpseLootState {
+  showDialog: boolean;
+  selectedCorpse: Corpse | null;
+  lootResult: LootResult | null;
 }
 
 /**
@@ -432,6 +446,15 @@ export default function SoloGamePage() {
   const [showTokenDialog, setShowTokenDialog] = useState(false);
   const [tokenType, setTokenType] = useState<TokenType>('secret_passage');
   const [mapTokens, setMapTokens] = useState<MapToken[]>([]);
+
+  // Issue #243: 屍體搜刮系統狀態
+  const [corpseManager] = useState(() => new CorpseManager());
+  const [corpses, setCorpses] = useState<Corpse[]>([]);
+  const [corpseLootState, setCorpseLootState] = useState<CorpseLootState>({
+    showDialog: false,
+    selectedCorpse: null,
+    lootResult: null,
+  });
 
   // 當前樓層的地圖（向後兼容）
   // Issue #160-debug: 添加調試日誌追蹤 map 變數
@@ -1412,10 +1435,12 @@ export default function SoloGamePage() {
           
           // 檢查 AI 是否死亡
           if (newMight <= 0) {
-            setAiPlayers(prev => prev.map(p => 
+            setAiPlayers(prev => prev.map(p =>
               p.id === targetId ? { ...p, isAlive: false } : p
             ));
             setLog(prev => [...prev, `☠️ ${target.name} 被擊敗！`]);
+            // Issue #243: 創建屍體
+            createCorpseForDeadAI(target);
           }
         }
       } else {
@@ -1651,10 +1676,12 @@ export default function SoloGamePage() {
             setLog(prev => [...prev, `💔 ${loser.name} 的力量從 ${currentMight} 降至 ${newMight}`]);
             
             if (newMight <= 0) {
-              setAiPlayers(prev => prev.map(p => 
+              setAiPlayers(prev => prev.map(p =>
                 p.id === loserId ? { ...p, isAlive: false } : p
               ));
               setLog(prev => [...prev, `☠️ ${loser.name} 被擊敗！`]);
+              // Issue #243: 創建屍體
+              createCorpseForDeadAI(loser);
             }
           }
         }
@@ -1706,6 +1733,142 @@ export default function SoloGamePage() {
     setLog(prev => [...prev, `回合 ${turn + 1}`]);
     updateReachablePositions(multiFloorMap[currentFloor], position, player!.stats.speed[0], false);
   };
+
+  // ==================== 屍體搜刮系統 (Issue #243) ====================
+
+  // Issue #243: 處理屍體標記點擊
+  const handleCorpseClick = useCallback((corpse: Corpse) => {
+    // 檢查玩家是否與屍體在同一位置
+    const canLoot = corpse.position.x === position.x &&
+                    corpse.position.y === position.y &&
+                    corpse.position.floor === currentFloor;
+
+    if (!canLoot) {
+      setLog(prev => [...prev, `💀 ${corpse.playerName} 的屍體在 (${corpse.position.x}, ${corpse.position.y})，你必須在同一位置才能搜刮`]);
+      return;
+    }
+
+    setCorpseLootState({
+      showDialog: true,
+      selectedCorpse: corpse,
+      lootResult: null,
+    });
+  }, [position, currentFloor]);
+
+  // Issue #243: 處理搜刮物品
+  const handleLootItem = useCallback((itemId: string, cardType: 'item' | 'omen') => {
+    if (!corpseLootState.selectedCorpse || !player || !playerState) return;
+
+    const corpse = corpseLootState.selectedCorpse;
+    const looterPosition = { x: position.x, y: position.y, floor: currentFloor };
+
+    // 執行搜刮
+    const result = lootItemFromCorpse(
+      corpse.id,
+      itemId,
+      corpseManager,
+      looterPosition
+    );
+
+    if (result.success && result.item) {
+      // 更新玩家物品
+      const newItem = result.item;
+      if (cardType === 'item') {
+        setPlayerState(prev => prev ? {
+          ...prev,
+          items: [...prev.items, newItem],
+        } : null);
+      } else {
+        setPlayerState(prev => prev ? {
+          ...prev,
+          omens: [...prev.omens, newItem],
+        } : null);
+      }
+
+      // 更新屍體列表
+      setCorpses(prev => {
+        const updatedCorpses = corpseManager.getAllCorpses();
+        return [...updatedCorpses];
+      });
+
+      // 記錄到日誌
+      const itemTypeName = cardType === 'item' ? '物品' : '預兆';
+      setLog(prev => [...prev, `💀 從 ${corpse.playerName} 的屍體上搜刮了 ${itemTypeName}: ${newItem.name}`]);
+
+      // 關閉對話框（如果屍體已空）
+      const updatedCorpse = corpseManager.getCorpseById(corpse.id);
+      if (!updatedCorpse || (updatedCorpse.items.length === 0 && updatedCorpse.omens.length === 0)) {
+        setCorpseLootState({
+          showDialog: false,
+          selectedCorpse: null,
+          lootResult: result,
+        });
+        setLog(prev => [...prev, `💀 ${corpse.playerName} 的屍體已被搜刮一空`]);
+      } else {
+        // 更新對話框中的屍體狀態
+        setCorpseLootState(prev => ({
+          ...prev,
+          selectedCorpse: updatedCorpse,
+          lootResult: result,
+        }));
+      }
+    } else {
+      // 搜刮失敗
+      setLog(prev => [...prev, `❌ 搜刮失敗: ${result.error || '未知錯誤'}`]);
+    }
+  }, [corpseLootState.selectedCorpse, player, playerState, position, currentFloor, corpseManager]);
+
+  // Issue #243: 關閉屍體搜刮對話框
+  const handleCloseCorpseLootDialog = useCallback(() => {
+    setCorpseLootState({
+      showDialog: false,
+      selectedCorpse: null,
+      lootResult: null,
+    });
+  }, []);
+
+  // Issue #243: 檢查當前位置是否有可搜刮的屍體
+  const canLootCorpseAtCurrentPosition = useCallback((): boolean => {
+    const currentPosition = { x: position.x, y: position.y, floor: currentFloor };
+    const corpsesAtPosition = corpseManager.getCorpsesAtPosition(currentPosition);
+    return corpsesAtPosition.some(
+      corpse => corpse.items.length > 0 || corpse.omens.length > 0
+    );
+  }, [position, currentFloor, corpseManager]);
+
+  // Issue #243: 獲取當前位置的可搜刮屍體
+  const getLootableCorpsesAtCurrentPosition = useCallback((): Corpse[] => {
+    const currentPosition = { x: position.x, y: position.y, floor: currentFloor };
+    const corpsesAtPosition = corpseManager.getCorpsesAtPosition(currentPosition);
+    return corpsesAtPosition.filter(
+      corpse => corpse.items.length > 0 || corpse.omens.length > 0
+    );
+  }, [position, currentFloor, corpseManager]);
+
+  // Issue #243: 當 AI 玩家死亡時創建屍體
+  const createCorpseForDeadAI = useCallback((aiPlayer: AIPlayerInfo) => {
+    if (!aiPlayer.position || !aiPlayer.character) return;
+
+    const mockPlayer = {
+      id: aiPlayer.id,
+      name: aiPlayer.name,
+      items: aiPlayer.items || [],
+      omens: aiPlayer.omens || [],
+    };
+
+    const corpse = corpseManager.createCorpse(
+      mockPlayer as any,
+      aiPlayer.position
+    );
+
+    setCorpses(prev => [...prev, corpse]);
+    setLog(prev => [...prev, `💀 ${aiPlayer.name} 死亡，留下了屍體（${corpse.items.length + corpse.omens.length} 個物品）`]);
+  }, [corpseManager]);
+
+  // Issue #243: 更新屍體列表（用於同步 CorpseManager 狀態）
+  const refreshCorpses = useCallback(() => {
+    setCorpses(corpseManager.getAllCorpses());
+  }, [corpseManager]);
 
   // 從牌堆抽取房間（使用 ALL_ROOMS 和 floors 陣列過濾）
   // Issue #179: 支援新的 65 房間多樓層系統
@@ -3238,13 +3401,15 @@ export default function SoloGamePage() {
                       setLog(prev => [...prev, `👀 查看 ${ai.name} 的位置`])
                     }
                   }}
+                  corpses={corpses}
+                  onCorpseClick={handleCorpseClick}
                 />
               </div>
             </div>
 
             {/* 移動控制 */}
             <div className="mt-4 bg-gray-800/50 rounded-xl p-3 sm:p-4 border border-gray-700">
-              <div className="flex justify-center gap-3">
+              <div className="flex justify-center gap-3 flex-wrap">
                 {/* Issue #241: 戰鬥按鈕 - 只在作祟階段且有有效目標時顯示 */}
                 {hauntState.isActive && canAttack() && (
                   <Button
@@ -3257,7 +3422,24 @@ export default function SoloGamePage() {
                     {combatState.isCombatAnimating ? '戰鬥中...' : `⚔️ 攻擊 (${getValidCombatTargets().length})`}
                   </Button>
                 )}
-                
+
+                {/* Issue #243: 搜刮屍體按鈕 - 當當前位置有可搜刮的屍體時顯示 */}
+                {canLootCorpseAtCurrentPosition() && (
+                  <Button
+                    onClick={() => {
+                      const lootableCorpses = getLootableCorpsesAtCurrentPosition();
+                      if (lootableCorpses.length > 0) {
+                        handleCorpseClick(lootableCorpses[0]);
+                      }
+                    }}
+                    variant="primary"
+                    size="sm"
+                    className="h-10 sm:h-12 text-xs sm:text-sm bg-amber-600 hover:bg-amber-500"
+                  >
+                    💀 搜刮屍體 ({getLootableCorpsesAtCurrentPosition().reduce((total, c) => total + c.items.length + c.omens.length, 0)})
+                  </Button>
+                )}
+
                 {/* Hero AI 測試按鈕 (Issue #109) */}
                 {hauntState.isActive && heroAIs.size > 0 && (
                   <Button
@@ -3645,43 +3827,23 @@ export default function SoloGamePage() {
           isOpen={combatState.showCombatModal}
           onClose={handleCloseCombat}
           attacker={{
-            id: 'solo-player',
-            name: player?.name || '玩家',
             character: player!,
-            position: { x: position.x, y: position.y, floor: currentFloor },
-            currentStats: {
-              speed: playerState?.stats.speed || 0,
-              might: playerState?.stats.might || 0,
-              sanity: playerState?.stats.sanity || 0,
-              knowledge: playerState?.stats.knowledge || 0,
-            },
+            position: { x: position.x, y: position.y },
             items: playerState?.items || [],
             omens: playerState?.omens || [],
             isTraitor: hauntState.revelation?.traitorId === 'solo-player',
-            isDead: false,
-            usedItemsThisTurn: [],
           }}
           defender={(() => {
             const target = aiPlayers.find(p => p.id === combatState.selectedTarget);
-            const targetPos = aiPlayerPositions.get(combatState.selectedTarget!) || target?.position || { x: 7, y: 7, floor: 'ground' as Floor };
             return {
-              id: target?.id || combatState.selectedTarget!,
-              name: target?.name || '敵人',
               character: target?.character || player!,
-              position: targetPos,
-              currentStats: {
-                speed: target?.character?.stats?.speed?.[0] || 4,
-                might: target?.character?.stats?.might?.[0] || 4,
-                sanity: target?.character?.stats?.sanity?.[0] || 4,
-                knowledge: target?.character?.stats?.knowledge?.[0] || 4,
-              },
+              position: { x: target?.position?.x ?? 7, y: target?.position?.y ?? 7 },
               items: target?.items || [],
               omens: target?.omens || [],
               isTraitor: hauntState.revelation?.traitorId === target?.id,
-              isDead: false,
-              usedItemsThisTurn: [],
             };
           })()}
+          attackerWeapons={playerState?.items || []}
           onCombatComplete={(result) => {
             // 處理戰鬥結果
             processCombatResult(result, combatState.selectedTarget!);
@@ -3690,6 +3852,20 @@ export default function SoloGamePage() {
         />
       )}
 
+      {/* Issue #243: 屍體搜刮對話框 */}
+      {corpseLootState.showDialog && corpseLootState.selectedCorpse && player && (
+        <CorpseLootDialog
+          isOpen={corpseLootState.showDialog}
+          onClose={handleCloseCorpseLootDialog}
+          corpse={corpseLootState.selectedCorpse}
+          looter={{
+            id: 'solo-player',
+            name: player?.name || '玩家',
+            character: player,
+          }}
+          onLootItem={handleLootItem}
+        />
+      )}
 
     </main>
   );

@@ -7,7 +7,8 @@ import { RoomTile, EmptyRoomTile } from './RoomTile';
 import { PlayerToken } from './PlayerToken';
 import { AIPawn, AIPawnGroup } from './AIPawn';
 import { TokenMarker } from './TokenMarker';
-import { STAIR_ROOM_IDS, StairManager, AIPlayerInfo, AIPersonality, MapToken } from '@betrayal/game-engine';
+import { CorpseMarker } from './CorpseMarker';
+import { STAIR_ROOM_IDS, StairManager, AIPlayerInfo, AIPersonality, MapToken, Corpse } from '@betrayal/game-engine';
 
 /** 樓梯房間 ID 列表 */
 const STAIR_ROOM_LIST = [
@@ -65,6 +66,10 @@ interface GameBoardProps {
   onAIClick?: (aiId: string) => void;
   /** Issue #238: 地圖標記列表 */
   mapTokens?: MapToken[];
+  /** Issue #243: 屍體列表 */
+  corpses?: Corpse[];
+  /** Issue #243: 點擊屍體標記的回調 */
+  onCorpseClick?: (corpse: Corpse) => void;
 }
 
 /**
@@ -97,6 +102,8 @@ export function GameBoard({
   currentTurnPlayerId,
   mapTokens = [],
   onAIClick,
+  corpses = [],
+  onCorpseClick,
 }: GameBoardProps) {
   const [selectedRoom, setSelectedRoom] = useState<{ room: Room; x: number; y: number } | null>(null);
   const [activeFloor, setActiveFloor] = useState<Floor>(currentFloor);
@@ -242,6 +249,21 @@ export function GameBoard({
     return getAIPlayersAt(x, y, floor).length > 0;
   };
 
+  // Issue #243: 獲取指定位置的屍體
+  const getCorpsesAt = (x: number, y: number, floor: Floor) => {
+    return corpses.filter(
+      corpse =>
+        corpse.position.x === x &&
+        corpse.position.y === y &&
+        corpse.position.floor === floor
+    );
+  };
+
+  // Issue #243: 檢查位置是否有屍體
+  const hasCorpseAt = (x: number, y: number, floor: Floor) => {
+    return getCorpsesAt(x, y, floor).length > 0;
+  };
+
   // 檢查玩家是否在樓梯房間
   useEffect(() => {
     if (!gameState) return;
@@ -383,6 +405,10 @@ export function GameBoard({
                   token => token.position.x === x && token.position.y === y && token.position.floor === floor
                 );
 
+                // Issue #243: 獲取該位置的屍體
+                const corpsesAtPosition = getCorpsesAt(x, y, floor);
+                const hasCorpse = corpsesAtPosition.length > 0;
+
                 return (
                   <RoomTile
                     key={`${x}-${y}`}
@@ -435,6 +461,18 @@ export function GameBoard({
                       <div className="absolute top-1 right-1 flex flex-col gap-1">
                         {tokensAtPosition.map(token => (
                           <TokenMarker key={token.id} token={token} size="sm" />
+                        ))}
+                      </div>
+                    )}
+                    {/* Issue #243: 渲染屍體標記 */}
+                    {hasCorpse && (
+                      <div className="absolute bottom-1 left-1 flex flex-col gap-1">
+                        {corpsesAtPosition.map(corpse => (
+                          <CorpseMarker
+                            key={corpse.id}
+                            corpse={corpse}
+                            onClick={() => onCorpseClick?.(corpse)}
+                          />
                         ))}
                       </div>
                     )}
