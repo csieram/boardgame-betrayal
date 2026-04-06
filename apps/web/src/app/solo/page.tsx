@@ -2965,7 +2965,8 @@ export default function SoloGamePage() {
       case 'trigger_haunt': {
         // 觸發作祟檢定 - 執行實際的作祟擲骰
         const omenCount = cardManager.getDeckStatus().omenCount;
-        const hauntResult = makeHauntRoll(omenCount, gameState.seed);
+        const rng = new SeededRng(gameState.seed);
+        const hauntResult = makeHauntRoll(omenCount, rng);
 
         setHauntState(prev => ({
           ...prev,
