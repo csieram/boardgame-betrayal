@@ -19,7 +19,7 @@ import { TokenType, createSecretPassage, MapToken } from '@betrayal/game-engine'
 import { CorpseLootDialog } from '@/components/game/CorpseLootDialog';
 // Issue #270: Import DamageDialog for event card damage
 import { DamageDialog } from '@/components/game/DamageDialog';
-import { DamageAllocation, createDamageAllocation } from '@betrayal/game-engine';
+import { DamageAllocation, createDamageAllocation, getAvailableTraitsForDamage } from '@betrayal/game-engine';
 
 
 import { CharacterTabs, PlayerInfo } from '@/components/game/CharacterTabs';
@@ -1203,6 +1203,38 @@ export default function SoloGamePage() {
     
     // Issue #199-fix: 增加計數器強制重新渲染
     setAiStatUpdateCounter(prev => prev + 1);
+  };
+
+  // Issue #273: 應用 AI 事件卡傷害
+  const applyAIDamage = (aiPlayerId: string, damage: { type: 'physical' | 'mental' | 'general'; amount: number }) => {
+    const aiPlayer = aiPlayers.find(p => p.id === aiPlayerId);
+    if (!aiPlayer) return;
+
+    // AI 自動選擇數值最高的屬性
+    const availableTraits = getAvailableTraitsForDamage(damage.type);
+    let bestTrait = availableTraits[0];
+    let bestValue = -1;
+
+    for (const trait of availableTraits) {
+      const value = aiPlayer.character?.stats?.[trait]?.[0] || 0;
+      if (value > bestValue) {
+        bestValue = value;
+        bestTrait = trait;
+      }
+    }
+
+    // 應用傷害到最佳屬性
+    updateAIPlayerStats(aiPlayerId, { [bestTrait]: -damage.amount });
+
+    // 記錄動作
+    const statNames: Record<string, string> = {
+      speed: '速度',
+      might: '力量',
+      sanity: '理智',
+      knowledge: '知識',
+    };
+    const timeStr = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+    setLog(prev => [...prev, `[${timeStr}] AI ${aiPlayer.name} 承受 ${damage.amount} 點${damage.type === 'mental' ? '精神' : '物理'}傷害，${statNames[bestTrait]} 降低`]);
   };
 
   // Issue #241: 檢查是否可以攻擊（考慮相鄰和同一房間）
@@ -2554,6 +2586,11 @@ export default function SoloGamePage() {
                   return { ...p, omens: [...(p.omens || []), newItem] };
                 }
               }));
+            }
+
+            // Issue #273: 處理 AI 事件卡傷害
+            if (result.eventCheckResult?.damage) {
+              applyAIDamage(result.playerId, result.eventCheckResult.damage);
             }
 
             setAiCardDrawState({

@@ -174,6 +174,11 @@ export interface TurnExecutionResult {
     success: boolean;
     effect: string;
     statChanges?: Partial<Record<'speed' | 'might' | 'sanity' | 'knowledge', number>>;
+    /** Issue #273: 傷害分配 */
+    damage?: {
+      type: 'physical' | 'mental' | 'general';
+      amount: number;
+    };
   };
 }
 
@@ -661,13 +666,17 @@ export class AIPlayer {
                   const effect = success ? (card.success || '') : (card.failure || '');
                   const statChanges = parseStatChanges(effect);
 
+                  // Issue #273: 檢查效果字串是否包含傷害（讓玩家/AI選擇屬性）
+                  const damage = parseDamageFromEffect(effect);
+
                   // Issue #199: Debug logging for statChanges
                   console.log('[AI Engine] parseStatChanges result:', statChanges);
                   console.log('[AI Engine] statChanges keys:', Object.keys(statChanges));
                   console.log('[AI Engine] effect string:', effect);
 
                   // Update player stats based on check result
-                  if (statChanges && Object.keys(statChanges).length > 0) {
+                  // Issue #273: 如果有傷害，不直接應用屬性變化，而是讓前端處理
+                  if (!damage && statChanges && Object.keys(statChanges).length > 0) {
                     Object.entries(statChanges).forEach(([stat, change]) => {
                       const statKey = stat as keyof typeof currentPlayer.currentStats;
                       const newValue = Math.max(0, currentPlayer.currentStats[statKey] + change);
@@ -685,6 +694,7 @@ export class AIPlayer {
                     success,
                     effect,
                     statChanges: statChanges ? { ...statChanges } : undefined,
+                    damage: damage,
                   };
 
                   // Issue #199: Debug logging for eventCheckResult
@@ -1523,6 +1533,54 @@ function parseStatChanges(effect: string): { [stat: string]: number } {
   }
 
   return changes;
+}
+
+/**
+ * Issue #273: 從效果字串解析傷害資訊
+ * 
+ * 支援格式：
+ * - "受到 1 點物理傷害" → { type: 'physical', amount: 1 }
+ * - "受到 2 點精神傷害" → { type: 'mental', amount: 2 }
+ * - "失去 1 點體力" → { type: 'physical', amount: 1 } (體力/力量 = 物理)
+ * - "失去 1 點理智" → { type: 'mental', amount: 1 } (理智 = 精神)
+ * 
+ * @param effect 效果描述字串
+ * @returns 傷害資訊或 undefined
+ */
+function parseDamageFromEffect(effect: string): { type: 'physical' | 'mental' | 'general'; amount: number } | undefined {
+  if (!effect) return undefined;
+
+  const lowerEffect = effect.toLowerCase();
+
+  // 檢查明確的傷害描述
+  const physicalDamageMatch = lowerEffect.match(/受到\s*(\d+)\s*點\s*(物理)?\s*傷害/);
+  if (physicalDamageMatch) {
+    return { type: 'physical', amount: parseInt(physicalDamageMatch[1]) };
+  }
+
+  const mentalDamageMatch = lowerEffect.match(/受到\s*(\d+)\s*點\s*(精神|mental)?\s*傷害/);
+  if (mentalDamageMatch) {
+    return { type: 'mental', amount: parseInt(mentalDamageMatch[1]) };
+  }
+
+  const generalDamageMatch = lowerEffect.match(/受到\s*(\d+)\s*點\s*(一般|general)?\s*傷害/);
+  if (generalDamageMatch) {
+    return { type: 'general', amount: parseInt(generalDamageMatch[1]) };
+  }
+
+  // 檢查體力/力量損失（視為物理傷害）
+  const mightLossMatch = lowerEffect.match(/失去\s*(\d+)\s*點(體力|力量)/);
+  if (mightLossMatch) {
+    return { type: 'physical', amount: parseInt(mightLossMatch[1]) };
+  }
+
+  // 檢查理智損失（視為精神傷害）
+  const sanityLossMatch = lowerEffect.match(/失去\s*(\d+)\s*點理智/);
+  if (sanityLossMatch) {
+    return { type: 'mental', amount: parseInt(sanityLossMatch[1]) };
+  }
+
+  return undefined;
 }
 
 /**
