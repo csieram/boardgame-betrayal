@@ -1206,35 +1206,41 @@ export default function SoloGamePage() {
   };
 
   // Issue #273: 應用 AI 事件卡傷害
+  // Issue #278: 添加詳細除錯日誌
   const applyAIDamage = (aiPlayerId: string, damage: { type: 'physical' | 'mental' | 'general'; amount: number }) => {
-    console.log('[AI Damage Debug] applyAIDamage called:', { aiPlayerId, damage });
+    console.log('[AI Damage Debug] Function called with:', { aiPlayerId, damage });
     const aiPlayer = aiPlayers.find(p => p.id === aiPlayerId);
+    console.log('[AI Damage Debug] AI player found:', !!aiPlayer);
+    console.log('[AI Damage Debug] AI player name:', aiPlayer?.name);
     if (!aiPlayer) {
       console.log('[AI Damage Debug] AI player not found:', aiPlayerId);
       return;
     }
-    console.log('[AI Damage Debug] Found AI player:', aiPlayer.name);
 
     // AI 自動選擇數值最高的屬性
     const availableTraits = getAvailableTraitsForDamage(damage.type);
     console.log('[AI Damage Debug] Available traits for', damage.type, ':', availableTraits);
+    console.log('[AI Damage Debug] AI current stats:', {
+      might: aiPlayer.character?.stats?.might?.[0],
+      speed: aiPlayer.character?.stats?.speed?.[0],
+      knowledge: aiPlayer.character?.stats?.knowledge?.[0],
+      sanity: aiPlayer.character?.stats?.sanity?.[0],
+    });
     let bestTrait = availableTraits[0];
     let bestValue = -1;
 
     for (const trait of availableTraits) {
       const value = aiPlayer.character?.stats?.[trait]?.[0] || 0;
-      console.log('[AI Damage Debug] Trait', trait, 'value:', value);
       if (value > bestValue) {
         bestValue = value;
         bestTrait = trait;
       }
     }
-    console.log('[AI Damage Debug] Selected best trait:', bestTrait, 'with value:', bestValue);
+    console.log('[AI Damage Debug] Selected trait:', bestTrait, 'with value:', bestValue);
 
     // 應用傷害到最佳屬性
-    console.log('[AI Damage Debug] Applying damage:', { aiPlayerId, bestTrait, damageAmount: -damage.amount });
     updateAIPlayerStats(aiPlayerId, { [bestTrait]: -damage.amount });
-    console.log('[AI Damage Debug] Damage applied successfully');
+    console.log('[AI Damage Debug] Called updateAIPlayerStats with:', { [bestTrait]: -damage.amount });
 
     // 記錄動作
     const statNames: Record<string, string> = {
@@ -2599,6 +2605,10 @@ export default function SoloGamePage() {
             }
 
             // Issue #273: 處理 AI 事件卡傷害
+            // Issue #278: 添加詳細除錯日誌
+            console.log('[AI Event Debug] eventCheckResult:', result.eventCheckResult);
+            console.log('[AI Event Debug] Has damage?', !!result.eventCheckResult?.damage);
+            console.log('[AI Event Debug] Damage object:', result.eventCheckResult?.damage);
             console.log('[AI Damage Debug] Checking for AI damage:', {
               hasEventCheckResult: !!result.eventCheckResult,
               hasDamage: !!result.eventCheckResult?.damage,
