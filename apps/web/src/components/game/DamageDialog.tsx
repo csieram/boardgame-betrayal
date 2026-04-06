@@ -80,6 +80,10 @@ export function DamageDialog({
   onConfirm,
   onCancel,
 }: DamageDialogProps) {
+  // Issue #274: Debug logging
+  console.log('[DEBUG #274] DamageDialog rendered, isOpen:', isOpen);
+  console.log('[DEBUG #274] DamageDialog props:', { isOpen, damage, currentStats });
+  
   const [selectedTrait, setSelectedTrait] = useState<StatType | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
 

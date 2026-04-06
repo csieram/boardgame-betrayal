@@ -3085,6 +3085,13 @@ export default function SoloGamePage() {
 
     // 執行檢定
     const result = effectApplier.performEventCheck(eventCheckState.card, playerState);
+    
+    // Issue #274: Debug logging for event damage
+    console.log('[DEBUG #274] Event check result:', result);
+    console.log('[DEBUG #274] Result.damage:', result.damage);
+    console.log('[DEBUG #274] Has damage?', !!result.damage);
+    console.log('[DEBUG #274] Result type:', typeof result);
+    console.log('[DEBUG #274] Result keys:', Object.keys(result));
 
     // Issue #113: Debug logging for dice sum calculation
     console.log('[EventCheck] Dice roll result:', {
@@ -3156,6 +3163,11 @@ export default function SoloGamePage() {
     // Issue #190: 檢定完成後，關閉 EventCheckModal 並在 CardDisplay 中顯示結果
     // Issue #270: 如果有傷害，顯示 DamageDialog 讓玩家選擇屬性
     setTimeout(() => {
+      // Issue #274: Debug logging in setTimeout
+      console.log('[DEBUG #274] In setTimeout, checking damage');
+      console.log('[DEBUG #274] result.damage:', result.damage);
+      console.log('[DEBUG #274] Has damage in setTimeout?', !!result.damage);
+      
       // 關閉 EventCheckModal
       setEventCheckState({
         showModal: false,
@@ -3165,12 +3177,23 @@ export default function SoloGamePage() {
       });
 
       // Issue #270: 檢查是否有傷害需要分配
-      if (result.damage) {
-        console.log('[EventCheck] Damage detected, showing DamageDialog:', result.damage);
+      // Issue #274: Also check for damage.amount to ensure it's valid
+      // Issue #274-fix: Check for result.damage.type and result.damage.amount
+      const hasDamage = result.damage && 
+                        typeof result.damage === 'object' && 
+                        result.damage.type && 
+                        typeof result.damage.amount === 'number' && 
+                        result.damage.amount > 0;
+      
+      if (hasDamage) {
+        console.log('[DEBUG #274] Damage detected, showing DamageDialog:', result.damage);
         // 顯示 DamageDialog 讓玩家選擇屬性
+        // Issue #274-fix: Use createDamageAllocation to ensure correct structure with availableTraits
+        const damageAllocation = createDamageAllocation(result.damage.type, result.damage.amount);
+        console.log('[DEBUG #274] Created damageAllocation:', damageAllocation);
         setEventDamageState({
           showDialog: true,
-          damage: createDamageAllocation(result.damage.type, result.damage.amount),
+          damage: damageAllocation,
           pendingEventResult: {
             success: result.success,
             roll: result.roll,
@@ -3181,7 +3204,10 @@ export default function SoloGamePage() {
             effectDescription: result.effectDescription,
           },
         });
+        console.log('[DEBUG #274] eventDamageState set with showDialog: true');
         return;
+      } else {
+        console.log('[DEBUG #274] No valid damage in result:', result.damage);
       }
 
       // 重新顯示卡牌彈窗，並帶上檢定結果
