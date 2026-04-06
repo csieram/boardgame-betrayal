@@ -11,6 +11,8 @@ import { HauntRollModal } from '@/components/game/HauntRollModal';
 import { HauntRevealScreen } from '@/components/game/HauntRevealScreen';
 import { EventCheckModal, EventCheckResult } from '@/components/game/EventCheckModal';
 import { ItemSelectDialog } from '@/components/game/ItemSelectDialog';
+// Issue #271: Import EventChoiceDialog for choice-based event cards
+import { EventChoiceDialog, EventChoice } from '@/components/game/EventChoiceDialog';
 import { TokenPlacementDialog } from '@/components/game/TokenPlacementDialog';
 import { CombatModal } from '@/components/game/combat';
 import { TokenType, createSecretPassage, MapToken } from '@betrayal/game-engine';
@@ -449,6 +451,17 @@ export default function SoloGamePage() {
   const [showTokenDialog, setShowTokenDialog] = useState(false);
   const [tokenType, setTokenType] = useState<TokenType>('secret_passage');
   const [mapTokens, setMapTokens] = useState<MapToken[]>([]);
+
+  // Issue #271: 事件選擇對話框狀態
+  const [eventChoiceState, setEventChoiceState] = useState<{
+    showDialog: boolean;
+    card: Card | null;
+    choices: EventChoice[];
+  }>({
+    showDialog: false,
+    card: null,
+    choices: [],
+  });
 
   // Issue #243: 屍體搜刮系統狀態
   const [corpseManager] = useState(() => new CorpseManager());
@@ -2857,6 +2870,17 @@ export default function SoloGamePage() {
       }
     }
 
+    // Issue #271: 檢查事件卡是否有選擇選項
+    if (card?.type === 'event' && card.choices && card.choices.length > 0) {
+      // 顯示事件選擇對話框
+      setEventChoiceState({
+        showDialog: true,
+        card: card,
+        choices: card.choices,
+      });
+      return;
+    }
+
     // Issue #104: 檢查事件卡是否需要屬性檢定
     if (card?.type === 'event' && card.rollRequired && playerState) {
       // 顯示事件卡檢定模態框
@@ -2881,6 +2905,117 @@ export default function SoloGamePage() {
       hasEnded: true,
       endedByDiscovery: true,
     });
+  };
+
+  // Issue #271: 處理事件選擇
+  const handleEventChoice = (choiceId: string) => {
+    if (!eventChoiceState.card || !playerState) return;
+
+    const card = eventChoiceState.card;
+    const choice = eventChoiceState.choices.find(c => c.id === choiceId);
+    
+    if (!choice) return;
+
+    // 關閉選擇對話框
+    setEventChoiceState({
+      showDialog: false,
+      card: null,
+      choices: [],
+    });
+
+    // 根據選擇執行相應效果
+    switch (choiceId) {
+      case 'trigger_haunt':
+        // 觸發作祟檢定
+        setCardDrawState(prev => ({
+          ...prev,
+          isHauntRoll: true,
+        }));
+        break;
+
+      case 'gain_sanity':
+        // 獲得 1 點理智
+        setPlayerState(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            stats: {
+              ...prev.stats,
+              sanity: prev.stats.sanity + 1,
+            },
+          };
+        });
+        setPlayer(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            stats: {
+              ...prev.stats,
+              sanity: [prev.stats.sanity[0] + 1, prev.stats.sanity[1]],
+            },
+          };
+        });
+        setLog(prev => [...prev, '獲得 1 點理智']);
+        // 結束回合
+        setTurnState({
+          hasEnded: true,
+          endedByDiscovery: true,
+        });
+        break;
+
+      case 'take_damage':
+        // 承受 1 點物理傷害
+        setLog(prev => [...prev, '承受 1 點物理傷害']);
+        // 結束回合
+        setTurnState({
+          hasEnded: true,
+          endedByDiscovery: true,
+        });
+        break;
+
+      case 'bury_item':
+        // 顯示物品捨棄對話框
+        const discardOption = getEventDiscardOption(card.id);
+        if (discardOption) {
+          setItemDiscardState({
+            showDialog: true,
+            currentCard: card,
+            discardOption,
+            selectedItem: null,
+            discardResult: null,
+          });
+        }
+        break;
+
+      case 'roll_for_item':
+      case 'roll_speed':
+      case 'roll_might':
+      case 'roll_sanity':
+      case 'roll_knowledge':
+        // 需要檢定的選項，顯示檢定對話框
+        if (choice.requiresRoll && choice.rollStat) {
+          setEventCheckState({
+            showModal: true,
+            card: {
+              ...card,
+              rollRequired: {
+                stat: choice.rollStat,
+                target: choice.rollTarget || 0,
+              },
+            },
+            isRolling: false,
+            result: null,
+          });
+        }
+        break;
+
+      default:
+        // 預設行為：結束回合
+        setTurnState({
+          hasEnded: true,
+          endedByDiscovery: true,
+        });
+    }
   };
 
   // Issue #104: 處理事件卡檢定擲骰
@@ -3868,6 +4003,15 @@ export default function SoloGamePage() {
         isRolling={eventCheckState.isRolling}
         onClose={handleCloseEventCheck}
         onRoll={handleEventCheckRoll}
+      />
+
+      {/* Issue #271: 事件選擇對話框 */}
+      <EventChoiceDialog
+        isOpen={eventChoiceState.showDialog}
+        onClose={() => setEventChoiceState({ showDialog: false, card: null, choices: [] })}
+        eventCard={eventChoiceState.card}
+        choices={eventChoiceState.choices}
+        onSelect={handleEventChoice}
       />
 
       {/* Issue #189: AI 抽卡顯示 */}
