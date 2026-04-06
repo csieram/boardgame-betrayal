@@ -2925,13 +2925,35 @@ export default function SoloGamePage() {
 
     // 根據選擇執行相應效果
     switch (choiceId) {
-      case 'trigger_haunt':
-        // 觸發作祟檢定
-        setCardDrawState(prev => ({
+      case 'trigger_haunt': {
+        // 觸發作祟檢定 - 執行實際的作祟擲骰
+        const omenCount = cardManager.getDeckStatus().omenCount;
+        const hauntResult = makeHauntRoll(omenCount, gameState.seed);
+
+        setHauntState(prev => ({
           ...prev,
-          isHauntRoll: true,
+          showRollModal: true,
+          isRolling: true,
+          rollResult: null,
         }));
+
+        // 動畫擲骰然後顯示結果
+        setTimeout(() => {
+          setHauntState(prev => ({
+            ...prev,
+            isRolling: false,
+            rollResult: hauntResult,
+          }));
+
+          // 如果作祟觸發，記錄到日誌
+          if (hauntResult.hauntBegins) {
+            setLog(prev => [...prev, `⚠️ 作祟觸發！擲出 ${hauntResult.total} < ${hauntResult.threshold}`]);
+          } else {
+            setLog(prev => [...prev, `作祟未觸發，擲出 ${hauntResult.total} >= ${hauntResult.threshold}`]);
+          }
+        }, 2000);
         break;
+      }
 
       case 'gain_sanity':
         // 獲得 1 點理智
