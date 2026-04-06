@@ -673,6 +673,8 @@ export class AIPlayer {
                   console.log('[AI Engine] parseStatChanges result:', statChanges);
                   console.log('[AI Engine] statChanges keys:', Object.keys(statChanges));
                   console.log('[AI Engine] effect string:', effect);
+                  // Issue #280: Debug logging for damage
+                  console.log('[AI Engine] parseDamageFromEffect result:', damage);
 
                   // Update player stats based on check result
                   // Issue #273: 如果有傷害，不直接應用屬性變化，而是讓前端處理
@@ -701,6 +703,9 @@ export class AIPlayer {
                   console.log('[AI Engine] eventCheckResult set:', result.eventCheckResult);
                   console.log('[AI Engine] has statChanges:', !!result.eventCheckResult.statChanges);
                   console.log('[AI Engine] statChanges content:', result.eventCheckResult.statChanges);
+                  // Issue #280: Debug logging for damage in eventCheckResult
+                  console.log('[AI Engine] has damage:', !!result.eventCheckResult.damage);
+                  console.log('[AI Engine] damage content:', result.eventCheckResult.damage);
 
                   // Log the result
                   const statNameMap: Record<string, string> = {
@@ -1541,6 +1546,7 @@ function parseStatChanges(effect: string): { [stat: string]: number } {
  * 支援格式：
  * - "受到 1 點物理傷害" → { type: 'physical', amount: 1 }
  * - "受到 2 點精神傷害" → { type: 'mental', amount: 2 }
+ * - "承受 1 點精神傷害" → { type: 'mental', amount: 1 } (Issue #280-fix: 添加承受關鍵字)
  * - "失去 1 點體力" → { type: 'physical', amount: 1 } (體力/力量 = 物理)
  * - "失去 1 點理智" → { type: 'mental', amount: 1 } (理智 = 精神)
  * 
@@ -1566,6 +1572,22 @@ function parseDamageFromEffect(effect: string): { type: 'physical' | 'mental' | 
   const generalDamageMatch = lowerEffect.match(/受到\s*(\d+)\s*點\s*(一般|general)?\s*傷害/);
   if (generalDamageMatch) {
     return { type: 'general', amount: parseInt(generalDamageMatch[1]) };
+  }
+
+  // Issue #280-fix: 添加對「承受」關鍵字的支援
+  const endurePhysicalMatch = lowerEffect.match(/承受\s*(\d+)\s*點\s*(物理)?\s*傷害/);
+  if (endurePhysicalMatch) {
+    return { type: 'physical', amount: parseInt(endurePhysicalMatch[1]) };
+  }
+
+  const endureMentalMatch = lowerEffect.match(/承受\s*(\d+)\s*點\s*(精神|mental)?\s*傷害/);
+  if (endureMentalMatch) {
+    return { type: 'mental', amount: parseInt(endureMentalMatch[1]) };
+  }
+
+  const endureGeneralMatch = lowerEffect.match(/承受\s*(\d+)\s*點\s*(一般|general)?\s*傷害/);
+  if (endureGeneralMatch) {
+    return { type: 'general', amount: parseInt(endureGeneralMatch[1]) };
   }
 
   // 檢查體力/力量損失（視為物理傷害）
