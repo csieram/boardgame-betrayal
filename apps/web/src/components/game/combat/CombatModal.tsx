@@ -2,8 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Player, Card } from '@betrayal/shared';
-import { CombatResult, CombatOptions, initiateCombat } from '@betrayal/game-engine';
+import { Card } from '@betrayal/shared';
+import { 
+  CombatResult, 
+  CombatManager, 
+  SeededRng,
+  Player,
+  GameState 
+} from '@betrayal/game-engine';
 import { CombatCard } from './CombatCard';
 import { WeaponSelector } from './WeaponSelector';
 import { Button } from '@betrayal/ui';
@@ -14,6 +20,7 @@ interface CombatModalProps {
   attacker: Player;
   defender: Player;
   attackerWeapons: Card[];
+  gameState: GameState;
   onCombatComplete: (result: CombatResult) => void;
 }
 
@@ -28,6 +35,7 @@ export function CombatModal({
   attacker,
   defender,
   attackerWeapons,
+  gameState,
   onCombatComplete,
 }: CombatModalProps) {
   const [selectedWeapon, setSelectedWeapon] = useState<Card | undefined>();
@@ -60,26 +68,25 @@ export function CombatModal({
     setTimeout(() => {
       clearInterval(rollInterval);
       
-      const options: CombatOptions = {
-        attackerId: attacker.id,
-        defenderId: defender.id,
-        weapon: selectedWeapon,
-      };
-
-      // 這裡應該調用實際的戰鬥邏輯
-      // 現在使用模擬結果
-      const result: CombatResult = {
-        winner: Math.random() > 0.5 ? 'attacker' : 'defender',
-        attackerRoll: Math.floor(Math.random() * 6) + 1,
-        defenderRoll: Math.floor(Math.random() * 6) + 1,
-        damage: Math.floor(Math.random() * 3) + 1,
-        damageType: 'physical',
-      };
+      // 使用真正的戰鬥引擎
+      const combatManager = new CombatManager(SeededRng.fromState(gameState.rngState));
+      const result = combatManager.initiateCombat(
+        gameState,
+        attacker.id,
+        defender.id,
+        selectedWeapon?.id
+      );
 
       setCombatResult(result);
       setIsRolling(false);
-      setAttackerRoll([result.attackerRoll]);
-      setDefenderRoll([result.defenderRoll]);
+      
+      // 設置擲骰顯示結果
+      if (result.attackerRoll) {
+        setAttackerRoll(result.attackerRoll.dice || [result.attackerRoll.total || 0]);
+      }
+      if (result.defenderRoll) {
+        setDefenderRoll(result.defenderRoll.dice || [result.defenderRoll.total || 0]);
+      }
     }, 2000);
   };
 
@@ -138,27 +145,38 @@ export function CombatModal({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className={`p-4 rounded-xl text-center ${
-                combatResult.winner === 'attacker'
+                combatResult.winnerType === 'attacker'
                   ? 'bg-green-900/30 border border-green-700'
-                  : combatResult.winner === 'defender'
+                  : combatResult.winnerType === 'defender'
                   ? 'bg-red-900/30 border border-red-700'
                   : 'bg-yellow-900/30 border border-yellow-700'
               }`}
             >
               <h3 className="text-xl font-bold mb-2">
-                {combatResult.winner === 'attacker'
+                {combatResult.winnerType === 'attacker'
                   ? '🏆 攻擊者勝利！'
-                  : combatResult.winner === 'defender'
+                  : combatResult.winnerType === 'defender'
                   ? '🛡️ 防守者勝利！'
                   : '🤝 平手！'}
               </h3>
               <p className="text-gray-300">
-                {combatResult.winner === 'attacker'
+                {combatResult.winnerType === 'attacker'
                   ? `${defender.name} 受到 ${combatResult.damage} 點物理傷害`
-                  : combatResult.winner === 'defender'
+                  : combatResult.winnerType === 'defender'
                   ? `${attacker.name} 受到 ${combatResult.damage} 點物理傷害`
-                  : '雙方都受到傷害'}
+                  : combatResult.winnerType === 'tie'
+                  ? '平手！雙方各受 1 點傷害'
+                  : '戰鬥結束'}
               </p>
+              {/* 顯示擲骰詳情 */}
+              <div className="mt-3 text-sm text-gray-400">
+                <p>攻擊者擲骰: {combatResult.attackerRoll?.total || 0} 
+                  {combatResult.attackerRoll?.dice && ` (${combatResult.attackerRoll.dice.join(', ')})`}
+                </p>
+                <p>防守者擲骰: {combatResult.defenderRoll?.total || 0}
+                  {combatResult.defenderRoll?.dice && ` (${combatResult.defenderRoll.dice.join(', ')})`}
+                </p>
+              </div>
             </motion.div>
           )}
 

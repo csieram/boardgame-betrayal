@@ -3827,23 +3827,27 @@ export default function SoloGamePage() {
           isOpen={combatState.showCombatModal}
           onClose={handleCloseCombat}
           attacker={{
+            id: 'solo-player',
             character: player!,
-            position: { x: position.x, y: position.y },
+            position: { x: position.x, y: position.y, floor: currentFloor },
             items: playerState?.items || [],
             omens: playerState?.omens || [],
             isTraitor: hauntState.revelation?.traitorId === 'solo-player',
           }}
           defender={(() => {
             const target = aiPlayers.find(p => p.id === combatState.selectedTarget);
+            const targetPos = aiPlayerPositions.get(combatState.selectedTarget!) || target?.position || { x: 7, y: 7, floor: 'ground' };
             return {
+              id: combatState.selectedTarget!,
               character: target?.character || player!,
-              position: { x: target?.position?.x ?? 7, y: target?.position?.y ?? 7 },
+              position: targetPos,
               items: target?.items || [],
               omens: target?.omens || [],
               isTraitor: hauntState.revelation?.traitorId === target?.id,
             };
           })()}
           attackerWeapons={playerState?.items || []}
+          gameState={createCombatGameState(combatState.selectedTarget!)}
           onCombatComplete={(result) => {
             // 處理戰鬥結果
             processCombatResult(result, combatState.selectedTarget!);
