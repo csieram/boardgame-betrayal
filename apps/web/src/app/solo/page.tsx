@@ -15,6 +15,9 @@ import { TokenPlacementDialog } from '@/components/game/TokenPlacementDialog';
 import { CombatModal } from '@/components/game/combat';
 import { TokenType, createSecretPassage, MapToken } from '@betrayal/game-engine';
 import { CorpseLootDialog } from '@/components/game/CorpseLootDialog';
+// Issue #270: Import DamageDialog for event card damage
+import { DamageDialog } from '@/components/game/DamageDialog';
+import { DamageAllocation, createDamageAllocation } from '@betrayal/game-engine';
 
 
 import { CharacterTabs, PlayerInfo } from '@/components/game/CharacterTabs';
@@ -454,6 +457,25 @@ export default function SoloGamePage() {
     showDialog: false,
     selectedCorpse: null,
     lootResult: null,
+  });
+
+  // Issue #270: 事件卡傷害對話框狀態
+  const [eventDamageState, setEventDamageState] = useState<{
+    showDialog: boolean;
+    damage: DamageAllocation | null;
+    pendingEventResult: {
+      success: boolean;
+      roll: number;
+      dice: number[];
+      stat: 'speed' | 'might' | 'sanity' | 'knowledge';
+      target: number;
+      message: string;
+      effectDescription: string;
+    } | null;
+  }>({
+    showDialog: false,
+    damage: null,
+    pendingEventResult: null,
   });
 
   // 當前樓層的地圖（向後兼容）
@@ -2938,7 +2960,7 @@ export default function SoloGamePage() {
     }));
 
     // Issue #190: 檢定完成後，關閉 EventCheckModal 並在 CardDisplay 中顯示結果
-    // 延遲一下讓玩家看到檢定動畫
+    // Issue #270: 如果有傷害，顯示 DamageDialog 讓玩家選擇屬性
     setTimeout(() => {
       // 關閉 EventCheckModal
       setEventCheckState({
@@ -2947,6 +2969,26 @@ export default function SoloGamePage() {
         isRolling: false,
         result: null,
       });
+
+      // Issue #270: 檢查是否有傷害需要分配
+      if (result.damage) {
+        console.log('[EventCheck] Damage detected, showing DamageDialog:', result.damage);
+        // 顯示 DamageDialog 讓玩家選擇屬性
+        setEventDamageState({
+          showDialog: true,
+          damage: createDamageAllocation(result.damage.type, result.damage.amount),
+          pendingEventResult: {
+            success: result.success,
+            roll: result.roll,
+            dice: result.dice,
+            stat: result.stat,
+            target: result.target,
+            message: result.message,
+            effectDescription: result.effectDescription,
+          },
+        });
+        return;
+      }
 
       // 重新顯示卡牌彈窗，並帶上檢定結果
       setCardDrawState(prev => ({
@@ -2979,6 +3021,93 @@ export default function SoloGamePage() {
       hasEnded: true,
       endedByDiscovery: true,
     });
+  };
+
+  // Issue #270: 處理事件卡傷害確認
+  const handleEventDamageConfirm = (result: any, chosenTrait: any) => {
+    if (!eventDamageState.damage || !playerState || !player) return;
+
+    console.log('[EventDamage] Player chose trait:', chosenTrait);
+    console.log('[EventDamage] Damage result:', result);
+
+    // 應用傷害到玩家屬性
+    if (result.newStats) {
+      setPlayerState(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          stats: result.newStats,
+        };
+      });
+
+      // 同步更新 player (Character) 的 stats
+      setPlayer(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          stats: {
+            speed: [result.newStats.speed, prev.stats.speed[1]],
+            might: [result.newStats.might, prev.stats.might[1]],
+            sanity: [result.newStats.sanity, prev.stats.sanity[1]],
+            knowledge: [result.newStats.knowledge, prev.stats.knowledge[1]],
+          },
+        };
+      });
+
+      // 記錄到日誌
+      const statNames: Record<string, string> = {
+        speed: '速度',
+        might: '力量',
+        sanity: '理智',
+        knowledge: '知識',
+      };
+      setLog(prev => [
+        ...prev,
+        `💔 受到 ${eventDamageState.damage!.amount} 點${eventDamageState.damage!.type === 'mental' ? '精神' : eventDamageState.damage!.type === 'physical' ? '物理' : ''}傷害，${statNames[chosenTrait]}降至 ${result.newStats[chosenTrait]}`
+      ]);
+
+      // 檢查玩家是否死亡
+      if (result.playerDied) {
+        setLog(prev => [...prev, `☠️ ${player.name} 已死亡！`]);
+      }
+    }
+
+    // 關閉 DamageDialog
+    const pendingResult = eventDamageState.pendingEventResult;
+    setEventDamageState({
+      showDialog: false,
+      damage: null,
+      pendingEventResult: null,
+    });
+
+    // 顯示卡牌彈窗，帶上檢定結果
+    if (pendingResult) {
+      setCardDrawState(prev => ({
+        ...prev,
+        showCard: true,
+        eventCheckResult: pendingResult,
+      }));
+    }
+  };
+
+  // Issue #270: 處理事件卡傷害取消
+  const handleEventDamageCancel = () => {
+    // 關閉 DamageDialog
+    const pendingResult = eventDamageState.pendingEventResult;
+    setEventDamageState({
+      showDialog: false,
+      damage: null,
+      pendingEventResult: null,
+    });
+
+    // 顯示卡牌彈窗，帶上檢定結果
+    if (pendingResult) {
+      setCardDrawState(prev => ({
+        ...prev,
+        showCard: true,
+        eventCheckResult: pendingResult,
+      }));
+    }
   };
 
   // Issue #232: 處理物品捨棄選擇
@@ -3868,6 +3997,19 @@ export default function SoloGamePage() {
             character: player,
           }}
           onLootItem={handleLootItem}
+        />
+      )}
+
+      {/* Issue #270: 事件卡傷害對話框 */}
+      {playerState && (
+        <DamageDialog
+          isOpen={eventDamageState.showDialog}
+          damage={eventDamageState.damage}
+          currentStats={playerState.stats}
+          isHauntActive={hauntState.isActive}
+          playerName={player?.name || '玩家'}
+          onConfirm={handleEventDamageConfirm}
+          onCancel={handleEventDamageCancel}
         />
       )}
 

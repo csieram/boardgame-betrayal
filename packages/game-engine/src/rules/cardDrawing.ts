@@ -499,6 +499,11 @@ export class CardEffectApplier {
     message: string;
     effectDescription: string;
     statChanges?: Partial<Record<'speed' | 'might' | 'sanity' | 'knowledge', number>>;
+    // Issue #270: 支援傷害分配（讓玩家選擇屬性）
+    damage?: {
+      type: 'physical' | 'mental' | 'general';
+      amount: number;
+    };
   } {
     if (!card.rollRequired) {
       throw new Error(`Card ${card.name} does not require a roll`);
@@ -510,7 +515,62 @@ export class CardEffectApplier {
     // 執行檢定擲骰
     const rollResult = this.performRoll(stat, target, playerStatValue);
     
-    // 根據成功/失敗決定效果
+    // Issue #270: 優先使用 tieredOutcomes 系統
+    if (card.tieredOutcomes && card.tieredOutcomes.length > 0) {
+      // 根據擲骰結果找到對應的 outcome
+      const outcome = card.tieredOutcomes.find(
+        o => rollResult.roll >= o.minRoll && rollResult.roll <= o.maxRoll
+      );
+      
+      if (outcome) {
+        console.log(`[CardEffectApplier] Tiered outcome found: ${outcome.effect}`);
+        
+        // Issue #270: 檢查是否有 damage 欄位
+        if (outcome.damage) {
+          console.log(`[CardEffectApplier] Damage outcome: ${outcome.damage.type} ${outcome.damage.amount}`);
+          return {
+            success: rollResult.success,
+            roll: rollResult.roll,
+            dice: rollResult.dice,
+            stat,
+            target,
+            message: rollResult.message,
+            effectDescription: outcome.effect,
+            damage: outcome.damage,
+          };
+        }
+        
+        // 檢查是否有 statChange 欄位
+        if (outcome.statChange) {
+          const statChanges: Partial<Record<'speed' | 'might' | 'sanity' | 'knowledge', number>> = {
+            [outcome.statChange.stat]: outcome.statChange.amount,
+          };
+          return {
+            success: rollResult.success,
+            roll: rollResult.roll,
+            dice: rollResult.dice,
+            stat,
+            target,
+            message: rollResult.message,
+            effectDescription: outcome.effect,
+            statChanges,
+          };
+        }
+        
+        // 只有效果描述，沒有數值變化
+        return {
+          success: rollResult.success,
+          roll: rollResult.roll,
+          dice: rollResult.dice,
+          stat,
+          target,
+          message: rollResult.message,
+          effectDescription: outcome.effect,
+        };
+      }
+    }
+    
+    // 根據成功/失敗決定效果（舊版邏輯，向後兼容）
     let effectDescription = '';
     let statChanges: Partial<Record<'speed' | 'might' | 'sanity' | 'knowledge', number>> | undefined;
     
