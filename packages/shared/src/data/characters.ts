@@ -1,162 +1,164 @@
+export interface CharacterStat {
+  values: number[];  // 8個數值，從高到低
+  startIndex: number; // 起始索引（0-based）
+}
+
 export interface Character {
   id: string;
   name: string;
-  nameEn: string;
-  age: number;
+  emoji: string;
   description: string;
-  color: string;
-  // Gallery SVG 路徑
-  portraitSvg?: string;
-  fullSvg?: string;
-  // 兼容舊代碼
-  avatar?: string;
-  // 屬性: 初始值, 當前值
   stats: {
-    speed: [number, number];      // 速度
-    might: [number, number];      // 力量
-    sanity: [number, number];     // 理智
-    knowledge: [number, number];  // 知識
-  };
-  // 屬性軌道（用於升降）
-  statTrack: {
-    speed: number[];
-    might: number[];
-    sanity: number[];
-    knowledge: number[];
+    might: CharacterStat;
+    speed: CharacterStat;
+    sanity: CharacterStat;
+    knowledge: CharacterStat;
   };
 }
 
 export const CHARACTERS: Character[] = [
   {
-    id: 'persephone',
-    name: '波瑟芬妮·佛奇',
-    nameEn: 'Persephone Fauci',
-    age: 29,
-    description: '一位神秘的考古學家，專門研究古代神秘儀式。她相信這棟房子隱藏著某種古老的秘密。',
-    color: '#8B4513',
-    portraitSvg: '/gallery/characters/char-persephone-portrait.svg',
-    fullSvg: '/gallery/characters/char-persephone-full.svg',
+    id: 'brandon_jaspers',
+    name: 'Brandon Jaspers',
+    emoji: '👦',
+    description: 'A young boy with a curious mind.',
     stats: {
-      speed: [3, 3],
-      might: [2, 2],
-      sanity: [4, 4],
-      knowledge: [5, 5],
-    },
-    statTrack: {
-      speed: [0, 3, 3, 4, 5, 6, 6, 7],
-      might: [0, 2, 2, 3, 3, 4, 4, 5],
-      sanity: [0, 4, 5, 5, 6, 6, 7, 8],
-      knowledge: [0, 5, 5, 5, 6, 6, 7, 8],
+      might: { values: [7, 5, 4, 4, 4, 3, 3, 2], startIndex: 2 },
+      speed: { values: [5, 4, 4, 4, 3, 3, 2, 2], startIndex: 1 },
+      sanity: { values: [6, 5, 4, 3, 3, 3, 2, 2], startIndex: 2 },
+      knowledge: { values: [5, 5, 3, 4, 3, 3, 2, 2], startIndex: 2 },
     },
   },
   {
-    id: 'josef',
-    name: '約瑟夫·比利·鮑伯·胡珀',
-    nameEn: 'Josef Billy-Bob Hooper',
-    age: 45,
-    description: '一位粗獷的獵人，聲稱見過各種超自然生物。他的直覺總是異常準確。',
-    color: '#228B22',
-    portraitSvg: '/gallery/characters/char-josef-portrait.svg',
-    fullSvg: '/gallery/characters/char-josef-full.svg',
+    id: 'peter_akimoto',
+    name: 'Peter Akimoto',
+    emoji: '👦',
+    description: 'A clever boy who loves solving puzzles.',
     stats: {
-      speed: [4, 4],
-      might: [4, 4],
-      sanity: [3, 3],
-      knowledge: [2, 2],
-    },
-    statTrack: {
-      speed: [0, 4, 4, 5, 5, 6, 7, 7],
-      might: [0, 4, 5, 5, 6, 6, 7, 8],
-      sanity: [0, 3, 3, 4, 4, 5, 6, 6],
-      knowledge: [0, 2, 3, 3, 4, 4, 5, 5],
+      might: { values: [6, 5, 5, 3, 4, 3, 3, 2], startIndex: 3 },
+      speed: { values: [6, 5, 4, 4, 4, 3, 3, 3], startIndex: 3 },
+      sanity: { values: [6, 5, 4, 4, 3, 3, 3, 2], startIndex: 2 },
+      knowledge: { values: [5, 5, 4, 3, 4, 3, 3, 2], startIndex: 3 },
     },
   },
   {
-    id: 'ace',
-    name: '艾斯·瓊斯',
-    nameEn: 'Ace Jones',
-    age: 32,
-    description: '一位魅力十足的騙子，靠著牌技和口才維生。他的運氣似乎總是在最關鍵的時刻轉向。',
-    color: '#DC143C',
-    portraitSvg: '/gallery/characters/char-ace-portrait.svg',
-    fullSvg: '/gallery/characters/char-ace-full.svg',
+    id: 'vivian_lopez',
+    name: 'Vivian Lopez',
+    emoji: '👧',
+    description: 'A smart girl who loves reading books.',
     stats: {
-      speed: [5, 5],
-      might: [3, 3],
-      sanity: [3, 3],
-      knowledge: [2, 2],
-    },
-    statTrack: {
-      speed: [0, 5, 5, 6, 6, 7, 7, 8],
-      might: [0, 3, 3, 4, 4, 5, 6, 6],
-      sanity: [0, 3, 4, 4, 5, 5, 6, 7],
-      knowledge: [0, 2, 3, 3, 4, 5, 5, 6],
+      might: { values: [4, 4, 4, 2, 3, 2, 2, 2], startIndex: 3 },
+      speed: { values: [6, 5, 4, 4, 4, 3, 2, 2], startIndex: 3 },
+      sanity: { values: [7, 6, 5, 4, 5, 4, 3, 3], startIndex: 3 },
+      knowledge: { values: [8, 7, 6, 5, 5, 5, 4, 4], startIndex: 4 },
     },
   },
   {
-    id: 'rochelle',
-    name: '羅雪兒·夢露',
-    nameEn: 'Rochelle Monroe',
-    age: 26,
-    description: '一位充滿熱情的靈異調查員，經營著一個小有名氣的超自然部落格。她來這裡是為了尋找下一個爆紅的故事。',
-    color: '#9370DB',
-    portraitSvg: '/gallery/characters/char-rochelle-portrait.svg',
-    fullSvg: '/gallery/characters/char-rochelle-full.svg',
+    id: 'darrin_flash_williams',
+    name: 'Darrin "Flash" Williams',
+    emoji: '👦',
+    description: 'The fastest kid in school.',
     stats: {
-      speed: [4, 4],
-      might: [2, 2],
-      sanity: [4, 4],
-      knowledge: [3, 3],
-    },
-    statTrack: {
-      speed: [0, 4, 4, 5, 6, 6, 7, 8],
-      might: [0, 2, 3, 3, 4, 4, 5, 5],
-      sanity: [0, 4, 4, 5, 6, 6, 7, 7],
-      knowledge: [0, 3, 4, 4, 5, 5, 6, 7],
+      might: { values: [6, 5, 3, 4, 3, 3, 2, 2], startIndex: 2 },
+      speed: { values: [8, 7, 6, 6, 5, 5, 4, 4], startIndex: 2 },
+      sanity: { values: [5, 4, 3, 3, 3, 2, 2, 1], startIndex: 2 },
+      knowledge: { values: [5, 4, 3, 3, 3, 2, 2, 1], startIndex: 2 },
     },
   },
   {
-    id: 'anita',
-    name: '安妮塔·赫南德茲',
-    nameEn: 'Anita Hernandez',
-    age: 38,
-    description: '一位經驗豐富的房地產經紀人，專門處理「問題房產」。她見過很多奇怪的房子，但這棟是最糟糕的。',
-    color: '#FF69B4',
-    portraitSvg: '/gallery/characters/char-anita-portrait.svg',
-    fullSvg: '/gallery/characters/char-anita-full.svg',
+    id: 'heather_granville',
+    name: 'Heather Granville',
+    emoji: '👩',
+    description: 'A popular girl with hidden depths.',
     stats: {
-      speed: [3, 3],
-      might: [3, 3],
-      sanity: [4, 4],
-      knowledge: [3, 3],
-    },
-    statTrack: {
-      speed: [0, 3, 4, 4, 5, 5, 6, 7],
-      might: [0, 3, 3, 4, 4, 5, 6, 6],
-      sanity: [0, 4, 4, 5, 5, 6, 7, 7],
-      knowledge: [0, 3, 4, 4, 5, 6, 6, 7],
+      might: { values: [5, 4, 3, 3, 3, 2, 2, 2], startIndex: 2 },
+      speed: { values: [6, 5, 4, 3, 4, 3, 3, 2], startIndex: 3 },
+      sanity: { values: [6, 5, 4, 3, 4, 3, 2, 2], startIndex: 3 },
+      knowledge: { values: [8, 7, 6, 5, 5, 4, 4, 3], startIndex: 4 },
     },
   },
   {
-    id: 'dan',
-    name: '丹·阮醫師',
-    nameEn: 'Dan Nguyen M.D.',
-    age: 52,
-    description: '一位冷靜沉著的精神科醫師，專門研究集體歇斯底里和幻覺現象。他來這裡是為了證明一切都有科學解釋。',
-    color: '#4682B4',
-    portraitSvg: '/gallery/characters/char-dan-portrait.svg',
-    fullSvg: '/gallery/characters/char-dan-full.svg',
+    id: 'jenny_leclerc',
+    name: 'Jenny LeClerc',
+    emoji: '👩',
+    description: 'A quiet girl with a strong will.',
     stats: {
-      speed: [2, 2],
-      might: [2, 2],
-      sanity: [5, 5],
-      knowledge: [5, 5],
+      might: { values: [4, 4, 3, 3, 3, 2, 2, 1], startIndex: 2 },
+      speed: { values: [8, 6, 5, 4, 4, 4, 3, 2], startIndex: 3 },
+      sanity: { values: [6, 5, 4, 5, 4, 3, 2, 2], startIndex: 3 },
+      knowledge: { values: [6, 5, 4, 3, 3, 3, 2, 2], startIndex: 3 },
     },
-    statTrack: {
-      speed: [0, 2, 3, 3, 4, 4, 5, 6],
-      might: [0, 2, 2, 3, 3, 4, 5, 5],
-      sanity: [0, 5, 5, 6, 6, 7, 7, 8],
-      knowledge: [0, 5, 5, 6, 6, 7, 8, 8],
+  },
+  {
+    id: 'zoe_ingstrom',
+    name: 'Zoe Ingstrom',
+    emoji: '👧',
+    description: 'A sweet girl who loves animals.',
+    stats: {
+      might: { values: [5, 4, 3, 3, 3, 3, 2, 2], startIndex: 2 },
+      speed: { values: [5, 4, 4, 4, 3, 3, 3, 2], startIndex: 3 },
+      sanity: { values: [7, 6, 5, 5, 4, 4, 3, 3], startIndex: 3 },
+      knowledge: { values: [5, 5, 4, 3, 3, 3, 2, 2], startIndex: 3 },
+    },
+  },
+  {
+    id: 'ox_bellows',
+    name: 'Ox Bellows',
+    emoji: '👨',
+    description: 'A strong man who works at the docks.',
+    stats: {
+      might: { values: [8, 7, 6, 5, 5, 5, 4, 4], startIndex: 3 },
+      speed: { values: [5, 5, 3, 4, 3, 3, 2, 2], startIndex: 2 },
+      sanity: { values: [5, 4, 3, 3, 2, 2, 1, 1], startIndex: 2 },
+      knowledge: { values: [4, 3, 2, 3, 2, 2, 1, 1], startIndex: 2 },
+    },
+  },
+  {
+    id: 'father_rhinehardt',
+    name: 'Father Rhinehardt',
+    emoji: '👨',
+    description: 'A priest seeking to understand the darkness.',
+    stats: {
+      might: { values: [4, 4, 2, 3, 2, 2, 1, 1], startIndex: 2 },
+      speed: { values: [5, 4, 4, 3, 3, 2, 2, 1], startIndex: 3 },
+      sanity: { values: [7, 6, 6, 5, 5, 4, 3, 3], startIndex: 3 },
+      knowledge: { values: [6, 6, 5, 4, 4, 4, 3, 2], startIndex: 3 },
+    },
+  },
+  {
+    id: 'professor_longfellow',
+    name: 'Professor Longfellow',
+    emoji: '👨',
+    description: 'A professor fascinated by the occult.',
+    stats: {
+      might: { values: [4, 3, 2, 2, 2, 2, 1, 1], startIndex: 2 },
+      speed: { values: [4, 4, 2, 3, 2, 2, 1, 1], startIndex: 2 },
+      sanity: { values: [6, 6, 5, 4, 5, 4, 3, 3], startIndex: 3 },
+      knowledge: { values: [8, 7, 6, 6, 5, 5, 4, 4], startIndex: 4 },
+    },
+  },
+  {
+    id: 'missy_dubourde',
+    name: 'Missy Dubourde',
+    emoji: '👩',
+    description: 'A girl who loves sports and adventure.',
+    stats: {
+      might: { values: [5, 4, 3, 4, 3, 3, 2, 2], startIndex: 2 },
+      speed: { values: [6, 5, 4, 4, 4, 3, 2, 2], startIndex: 3 },
+      sanity: { values: [5, 4, 3, 3, 3, 2, 2, 1], startIndex: 2 },
+      knowledge: { values: [6, 5, 5, 4, 4, 3, 3, 2], startIndex: 3 },
+    },
+  },
+  {
+    id: 'madame_zostra',
+    name: 'Madame Zostra',
+    emoji: '👩',
+    description: 'A mysterious woman with psychic abilities.',
+    stats: {
+      might: { values: [6, 5, 4, 4, 4, 3, 3, 2], startIndex: 2 },
+      speed: { values: [5, 5, 3, 4, 3, 3, 2, 2], startIndex: 2 },
+      sanity: { values: [7, 6, 5, 5, 4, 4, 3, 3], startIndex: 3 },
+      knowledge: { values: [7, 6, 5, 4, 4, 4, 3, 2], startIndex: 3 },
     },
   },
 ];
