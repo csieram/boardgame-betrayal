@@ -82,6 +82,10 @@ export const EVENT_CARDS: Card[] = [
     rollRequired: { stat: 'knowledge', target: 5 },
     success: '5+ 獲得 1 點知識',
     failure: '0-4 承受 1 點精神傷害',
+    tieredOutcomes: [
+      { minRoll: 5, maxRoll: 8, effect: '獲得 1 點知識', statChange: { stat: 'knowledge', amount: 1 } },
+      { minRoll: 0, maxRoll: 4, effect: '承受 1 點精神傷害', damage: { type: 'mental', amount: 1 } },
+    ],
   },
   {
     id: 'event_hanged_men',
@@ -106,6 +110,10 @@ export const EVENT_CARDS: Card[] = [
     rollRequired: { stat: 'knowledge', target: 5 },
     success: '5+ 獲得 1 點知識',
     failure: '0-4 承受 1 點精神傷害',
+    tieredOutcomes: [
+      { minRoll: 5, maxRoll: 8, effect: '獲得 1 點知識', statChange: { stat: 'knowledge', amount: 1 } },
+      { minRoll: 0, maxRoll: 4, effect: '承受 1 點精神傷害', damage: { type: 'mental', amount: 1 } },
+    ],
   },
   {
     id: 'event_jonahs_turn',
@@ -118,6 +126,10 @@ export const EVENT_CARDS: Card[] = [
     rollRequired: { stat: 'knowledge', target: 5 },
     success: '5+ 獲得 1 點知識',
     failure: '0-4 承受 1 點精神傷害',
+    tieredOutcomes: [
+      { minRoll: 5, maxRoll: 8, effect: '獲得 1 點知識', statChange: { stat: 'knowledge', amount: 1 } },
+      { minRoll: 0, maxRoll: 4, effect: '承受 1 點精神傷害', damage: { type: 'mental', amount: 1 } },
+    ],
   },
   {
     id: 'event_moment_of_hope',
@@ -141,6 +153,10 @@ export const EVENT_CARDS: Card[] = [
     rollRequired: { stat: 'sanity', target: 5 },
     success: '5+ 獲得 1 點理智',
     failure: '0-4 承受 1 點精神傷害',
+    tieredOutcomes: [
+      { minRoll: 5, maxRoll: 8, effect: '獲得 1 點理智', statChange: { stat: 'sanity', amount: 1 } },
+      { minRoll: 0, maxRoll: 4, effect: '承受 1 點精神傷害', damage: { type: 'mental', amount: 1 } },
+    ],
   },
   {
     id: 'event_deepest_closet',
@@ -153,6 +169,10 @@ export const EVENT_CARDS: Card[] = [
     rollRequired: { stat: 'speed', target: 4 },
     success: '4+ 無事發生',
     failure: '0-3 承受 1 點物理傷害',
+    tieredOutcomes: [
+      { minRoll: 4, maxRoll: 8, effect: '無事發生' },
+      { minRoll: 0, maxRoll: 3, effect: '承受 1 點物理傷害', damage: { type: 'physical', amount: 1 } },
+    ],
   },
   {
     id: 'event_lab_of_organs',
@@ -165,6 +185,10 @@ export const EVENT_CARDS: Card[] = [
     rollRequired: { stat: 'might', target: 5 },
     success: '5+ 獲得 1 點力量',
     failure: '0-4 承受 1 點物理傷害',
+    tieredOutcomes: [
+      { minRoll: 5, maxRoll: 8, effect: '獲得 1 點力量', statChange: { stat: 'might', amount: 1 } },
+      { minRoll: 0, maxRoll: 4, effect: '承受 1 點物理傷害', damage: { type: 'physical', amount: 1 } },
+    ],
   },
   {
     id: 'event_severed_hand',
@@ -177,6 +201,10 @@ export const EVENT_CARDS: Card[] = [
     rollRequired: { stat: 'might', target: 5 },
     success: '5+ 獲得 1 點物理特質',
     failure: '0-4 承受 1 點物理傷害',
+    tieredOutcomes: [
+      { minRoll: 5, maxRoll: 8, effect: '獲得 1 點物理特質', statChange: { stat: 'might', amount: 1 } },
+      { minRoll: 0, maxRoll: 4, effect: '承受 1 點物理傷害', damage: { type: 'physical', amount: 1 } },
+    ],
   },
   // Mini Batch 3 - 5 張事件卡
   {
@@ -190,6 +218,10 @@ export const EVENT_CARDS: Card[] = [
     rollRequired: { stat: 'sanity', target: 5 },
     success: '5+ 獲得 1 點理智',
     failure: '0-4 承受 1 點精神傷害',
+    tieredOutcomes: [
+      { minRoll: 5, maxRoll: 8, effect: '獲得 1 點理智', statChange: { stat: 'sanity', amount: 1 } },
+      { minRoll: 0, maxRoll: 4, effect: '承受 1 點精神傷害', damage: { type: 'mental', amount: 1 } },
+    ],
   },
   {
     id: 'event_forbidden_knowledge',
@@ -202,6 +234,11 @@ export const EVENT_CARDS: Card[] = [
     rollRequired: { stat: 'knowledge', target: 5 },
     success: '5+ 獲得 1 點知識',
     failure: '2-4 失去 1 點理智；0-1 承受 2 點精神傷害',
+    tieredOutcomes: [
+      { minRoll: 5, maxRoll: 8, effect: '獲得 1 點知識', statChange: { stat: 'knowledge', amount: 1 } },
+      { minRoll: 2, maxRoll: 4, effect: '失去 1 點理智', statChange: { stat: 'sanity', amount: -1 } },
+      { minRoll: 0, maxRoll: 1, effect: '承受 2 點精神傷害', damage: { type: 'mental', amount: 2 } },
+    ],
   },
   {
     id: 'event_flickering_lights',
@@ -214,6 +251,10 @@ export const EVENT_CARDS: Card[] = [
     rollRequired: { stat: 'speed', target: 5 },
     success: '5+ 獲得 1 點速度',
     failure: '0-4 承受 1 點物理傷害',
+    tieredOutcomes: [
+      { minRoll: 5, maxRoll: 8, effect: '獲得 1 點速度', statChange: { stat: 'speed', amount: 1 } },
+      { minRoll: 0, maxRoll: 4, effect: '承受 1 點物理傷害', damage: { type: 'physical', amount: 1 } },
+    ],
   },
   {
     id: 'event_brain_food',
@@ -226,6 +267,10 @@ export const EVENT_CARDS: Card[] = [
     rollRequired: { stat: 'knowledge', target: 5 },
     success: '5+ 獲得 1 點知識',
     failure: '0-4 承受 1 點精神傷害',
+    tieredOutcomes: [
+      { minRoll: 5, maxRoll: 8, effect: '獲得 1 點知識', statChange: { stat: 'knowledge', amount: 1 } },
+      { minRoll: 0, maxRoll: 4, effect: '承受 1 點精神傷害', damage: { type: 'mental', amount: 1 } },
+    ],
   },
   {
     id: 'event_cassette_player',
@@ -238,6 +283,10 @@ export const EVENT_CARDS: Card[] = [
     rollRequired: { stat: 'knowledge', target: 5 },
     success: '5+ 獲得 1 點知識',
     failure: '0-4 承受 1 點精神傷害',
+    tieredOutcomes: [
+      { minRoll: 5, maxRoll: 8, effect: '獲得 1 點知識', statChange: { stat: 'knowledge', amount: 1 } },
+      { minRoll: 0, maxRoll: 4, effect: '承受 1 點精神傷害', damage: { type: 'mental', amount: 1 } },
+    ],
   },
   // Mini Batch 4 - 5 張事件卡
   {
@@ -251,6 +300,10 @@ export const EVENT_CARDS: Card[] = [
     rollRequired: { stat: 'knowledge', target: 5 },
     success: '5+ 獲得 1 點理智',
     failure: '0-4 承受 1 點精神傷害',
+    tieredOutcomes: [
+      { minRoll: 5, maxRoll: 8, effect: '獲得 1 點理智', statChange: { stat: 'sanity', amount: 1 } },
+      { minRoll: 0, maxRoll: 4, effect: '承受 1 點精神傷害', damage: { type: 'mental', amount: 1 } },
+    ],
   },
   {
     id: 'event_mysterious_fluid',
@@ -287,6 +340,10 @@ export const EVENT_CARDS: Card[] = [
     rollRequired: { stat: 'knowledge', target: 5 },
     success: '5-6 獲得 1 點知識',
     failure: '0-4 承受 1 點精神傷害',
+    tieredOutcomes: [
+      { minRoll: 5, maxRoll: 6, effect: '獲得 1 點知識', statChange: { stat: 'knowledge', amount: 1 } },
+      { minRoll: 0, maxRoll: 4, effect: '承受 1 點精神傷害', damage: { type: 'mental', amount: 1 } },
+    ],
   },
   {
     id: 'event_meat_moss',
@@ -299,6 +356,10 @@ export const EVENT_CARDS: Card[] = [
     rollRequired: { stat: 'knowledge', target: 3 },
     success: '3+ 獲得 1 點任意特質',
     failure: '0-2 承受 2 點精神傷害',
+    tieredOutcomes: [
+      { minRoll: 3, maxRoll: 8, effect: '獲得 1 點任意特質' },
+      { minRoll: 0, maxRoll: 2, effect: '承受 2 點精神傷害', damage: { type: 'mental', amount: 2 } },
+    ],
   },
   // Mini Batch 7 - 5 張事件卡
   {
@@ -312,6 +373,10 @@ export const EVENT_CARDS: Card[] = [
     rollRequired: { stat: 'sanity', target: 5 },
     success: '5+ 獲得 1 點知識',
     failure: '0-4 承受 1 點精神傷害',
+    tieredOutcomes: [
+      { minRoll: 5, maxRoll: 8, effect: '獲得 1 點知識', statChange: { stat: 'knowledge', amount: 1 } },
+      { minRoll: 0, maxRoll: 4, effect: '承受 1 點精神傷害', damage: { type: 'mental', amount: 1 } },
+    ],
   },
   {
     id: 'event_wandering_ghost',
@@ -358,6 +423,10 @@ export const EVENT_CARDS: Card[] = [
     rollRequired: { stat: 'might', target: 5 },
     success: '5+ 獲得 1 點理智',
     failure: '0-4 承受 1 點物理傷害',
+    tieredOutcomes: [
+      { minRoll: 5, maxRoll: 8, effect: '獲得 1 點理智', statChange: { stat: 'sanity', amount: 1 } },
+      { minRoll: 0, maxRoll: 4, effect: '承受 1 點物理傷害', damage: { type: 'physical', amount: 1 } },
+    ],
   },
   {
     id: 'event_secret_passage',
@@ -392,6 +461,9 @@ export const EVENT_CARDS: Card[] = [
     icon: `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="glitchBg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#2A2A2A"/><stop offset="50%" stop-color="#1A1A1A"/><stop offset="100%" stop-color="#0A0A0A"/></linearGradient><linearGradient id="glitchRed" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#FF0000"/><stop offset="50%" stop-color="#8B0000"/><stop offset="100%" stop-color="#4A0000"/></linearGradient><linearGradient id="glitchGreen" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#00FF00"/><stop offset="50%" stop-color="#006400"/><stop offset="100%" stop-color="#003200"/></linearGradient><linearGradient id="glitchBlue" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#0000FF"/><stop offset="50%" stop-color="#00008B"/><stop offset="100%" stop-color="#00004A"/></linearGradient><radialGradient id="staticCenter" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#9370DB" stop-opacity="0.3"/><stop offset="50%" stop-color="#4B0082" stop-opacity="0.2"/><stop offset="100%" stop-color="#2A2A1A" stop-opacity="0.1"/></radialGradient><filter id="glitchShadow"><feDropShadow dx="4" dy="4" stdDeviation="5" flood-opacity="0.5"/></filter><filter id="glitchBlur"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect width="200" height="200" fill="#2A2A1A"/><ellipse cx="100" cy="170" rx="55" ry="12" fill="#1A1A0A" opacity="0.5" filter="url(#glitchShadow)"/><ellipse cx="100" cy="100" rx="60" ry="50" fill="url(#staticCenter)" filter="url(#glitchBlur)"/><rect x="40" y="60" width="120" height="80" fill="url(#glitchBg)" stroke="#333" stroke-width="2" filter="url(#glitchShadow)"/><rect x="45" y="65" width="110" height="70" fill="#0A0A0A"/><path d="M50 75 L70 75 L65 85 L85 85 L80 95 L100 95" stroke="url(#glitchRed)" stroke-width="3" fill="none" filter="url(#glitchBlur)"/><path d="M120 70 L140 70 L135 80 L155 80" stroke="url(#glitchGreen)" stroke-width="3" fill="none" filter="url(#glitchBlur)"/><path d="M60 100 L80 100 L75 110 L95 110 L90 120" stroke="url(#glitchBlue)" stroke-width="3" fill="none" filter="url(#glitchBlur)"/><path d="M130 105 L150 105 L145 115" stroke="url(#glitchRed)" stroke-width="3" fill="none" filter="url(#glitchBlur)"/><rect x="55" y="130" width="90" height="4" fill="#333"/><rect x="55" y="130" width="60" height="4" fill="#FF0000" opacity="0.7"/><rect x="55" y="138" width="90" height="4" fill="#333"/><rect x="55" y="138" width="40" height="4" fill="#00FF00" opacity="0.7"/><rect x="55" y="146" width="90" height="4" fill="#333"/><rect x="55" y="146" width="75" height="4" fill="#0000FF" opacity="0.7"/><circle cx="100" cy="95" r="15" fill="none" stroke="#9370DB" stroke-width="2" opacity="0.5" filter="url(#glitchBlur)"/><path d="M85 95 L115 95 M100 80 L100 110" stroke="#FF0000" stroke-width="2" opacity="0.6"/><path d="M90 85 L110 105 M110 85 L90 105" stroke="#00FF00" stroke-width="2" opacity="0.6"/><circle cx="70" cy="85" r="3" fill="#FF0000" opacity="0.8"/><circle cx="130" cy="95" r="3" fill="#00FF00" opacity="0.8"/><circle cx="85" cy="115" r="3" fill="#0000FF" opacity="0.8"/></svg>`,
     effect: '移動回上一個板塊或上層樓梯。若被迫移動，承受 1 點精神傷害',
     effectEn: 'Move back to previous tile or Upper Landing. Take 1 Mental damage if forced',
+    tieredOutcomes: [
+      { minRoll: 0, maxRoll: 8, effect: '移動回上一個板塊或上層樓梯，承受 1 點精神傷害', damage: { type: 'mental', amount: 1 } },
+    ],
   },
   {
     id: 'event_say_cheese',
@@ -445,6 +517,11 @@ export const EVENT_CARDS: Card[] = [
     rollRequired: { stat: 'might', target: 5 },
     success: '5+ 無事發生',
     failure: '2-4 承受 1 點物理傷害；0-1 承受 2 點物理傷害',
+    tieredOutcomes: [
+      { minRoll: 5, maxRoll: 8, effect: '無事發生' },
+      { minRoll: 2, maxRoll: 4, effect: '承受 1 點物理傷害', damage: { type: 'physical', amount: 1 } },
+      { minRoll: 0, maxRoll: 1, effect: '承受 2 點物理傷害', damage: { type: 'physical', amount: 2 } },
+    ],
   },
   {
     id: 'event_behind_you',
@@ -457,6 +534,10 @@ export const EVENT_CARDS: Card[] = [
     rollRequired: { stat: 'speed', target: 5 },
     success: '5+ 獲得 1 點理智',
     failure: '0-4 承受 1 點物理傷害',
+    tieredOutcomes: [
+      { minRoll: 5, maxRoll: 8, effect: '獲得 1 點理智', statChange: { stat: 'sanity', amount: 1 } },
+      { minRoll: 0, maxRoll: 4, effect: '承受 1 點物理傷害', damage: { type: 'physical', amount: 1 } },
+    ],
   },
   {
     id: 'event_eerie_feeling',
@@ -501,6 +582,10 @@ export const EVENT_CARDS: Card[] = [
     rollRequired: { stat: 'sanity', target: 4 },
     success: '4+ 無事發生',
     failure: '0-3 承受 2 點精神傷害',
+    tieredOutcomes: [
+      { minRoll: 4, maxRoll: 8, effect: '無事發生' },
+      { minRoll: 0, maxRoll: 3, effect: '承受 2 點精神傷害', damage: { type: 'mental', amount: 2 } },
+    ],
   },
   // Mini Batch 5 - 5 張事件卡
   {
@@ -537,6 +622,10 @@ export const EVENT_CARDS: Card[] = [
     rollRequired: { stat: 'knowledge', target: 4 },
     success: '4+ 移動到任意板塊',
     failure: '0-3 承受 1 點精神傷害',
+    tieredOutcomes: [
+      { minRoll: 4, maxRoll: 8, effect: '移動到任意板塊' },
+      { minRoll: 0, maxRoll: 3, effect: '承受 1 點精神傷害', damage: { type: 'mental', amount: 1 } },
+    ],
   },
   {
     id: 'event_bat_out_of_hell',
@@ -548,6 +637,9 @@ export const EVENT_CARDS: Card[] = [
     icon: `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="batBody" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#2A2A2A"/><stop offset="50%" stop-color="#1A1A1A"/><stop offset="100%" stop-color="#0A0A0A"/></linearGradient><linearGradient id="batWing" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4A4A4A"/><stop offset="30%" stop-color="#3A3A3A"/><stop offset="60%" stop-color="#2A2A2A"/><stop offset="100%" stop-color="#1A1A1A"/></linearGradient><linearGradient id="fireFlame" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#8B0000"/><stop offset="30%" stop-color="#FF4500"/><stop offset="60%" stop-color="#FF8C00"/><stop offset="100%" stop-color="#FFD700"/></linearGradient><linearGradient id="fireCore" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#FF6347"/><stop offset="50%" stop-color="#FFA500"/><stop offset="100%" stop-color="#FFFFE0"/></linearGradient><radialGradient id="fireGlowBat" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#FF4500" stop-opacity="0.6"/><stop offset="50%" stop-color="#FF8C00" stop-opacity="0.3"/><stop offset="100%" stop-color="#FFD700" stop-opacity="0.1"/></radialGradient><filter id="batShadow"><feDropShadow dx="4" dy="4" stdDeviation="5" flood-opacity="0.5"/></filter><filter id="fireBlurBat"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect width="200" height="200" fill="#2A2A1A"/><ellipse cx="100" cy="170" rx="55" ry="12" fill="#1A1A0A" opacity="0.5" filter="url(#batShadow)"/><ellipse cx="100" cy="100" rx="60" ry="50" fill="url(#fireGlowBat)" filter="url(#fireBlurBat)"/><path d="M40 100 Q60 60 90 80 Q100 70 110 80 Q140 60 160 100 Q140 90 120 100 Q140 110 160 120 Q130 115 110 110 Q100 120 90 110 Q70 115 40 120 Q60 110 80 100 Q60 90 40 100" fill="url(#batWing)" stroke="#1A1A1A" stroke-width="1" filter="url(#batShadow)"/><ellipse cx="100" cy="95" rx="20" ry="25" fill="url(#batBody)" filter="url(#batShadow)"/><ellipse cx="100" cy="85" rx="15" ry="18" fill="#2A2A2A"/><ellipse cx="93" cy="82" rx="5" ry="6" fill="#FF4500" filter="url(#fireBlurBat)"/><ellipse cx="107" cy="82" rx="5" ry="6" fill="#FF4500" filter="url(#fireBlurBat)"/><circle cx="94" cy="81" r="2" fill="#FFD700"/><circle cx="108" cy="81" r="2" fill="#FFD700"/><ellipse cx="100" cy="95" rx="4" ry="3" fill="#4A0000"/><path d="M95 100 Q100 105 105 100" stroke="#8B0000" stroke-width="2" fill="none"/><path d="M90 75 Q85 55 75 45" stroke="url(#fireFlame)" stroke-width="4" fill="none" filter="url(#fireBlurBat)"/><path d="M110 75 Q115 55 125 45" stroke="url(#fireFlame)" stroke-width="4" fill="none" filter="url(#fireBlurBat)"/><path d="M95 70 Q92 50 88 40" stroke="url(#fireCore)" stroke-width="2" fill="none" filter="url(#fireBlurBat)"/><path d="M105 70 Q108 50 112 40" stroke="url(#fireCore)" stroke-width="2" fill="none" filter="url(#fireBlurBat)"/><circle cx="75" cy="45" r="6" fill="#FF4500" opacity="0.8" filter="url(#fireBlurBat)"/><circle cx="125" cy="45" r="6" fill="#FF4500" opacity="0.8" filter="url(#fireBlurBat)"/><circle cx="88" cy="40" r="4" fill="#FFD700" opacity="0.9" filter="url(#fireBlurBat)"/><circle cx="112" cy="40" r="4" fill="#FFD700" opacity="0.9" filter="url(#fireBlurBat)"/><ellipse cx="70" cy="85" rx="8" ry="12" fill="#FF4500" opacity="0.4" filter="url(#fireBlurBat)" transform="rotate(-20 70 85)"/><ellipse cx="130" cy="85" rx="8" ry="12" fill="#FF4500" opacity="0.4" filter="url(#fireBlurBat)" transform="rotate(20 130 85)"/></svg>`,
     effect: '移動到相鄰板塊，然後承受 1 點物理傷害。',
     effectEn: 'Move to adjacent tile, then take 1 Physical damage.',
+    tieredOutcomes: [
+      { minRoll: 0, maxRoll: 8, effect: '移動到相鄰板塊，承受 1 點物理傷害', damage: { type: 'physical', amount: 1 } },
+    ],
   },
   {
     id: 'event_creaking_door',
@@ -577,6 +669,9 @@ export const EVENT_CARDS: Card[] = [
       { id: 'trigger_haunt', label: '觸發作祟', description: '可能觸發作祟階段', icon: '👻' },
       { id: 'take_damage', label: '承受傷害', description: '承受 1 點物理傷害', icon: '💔' },
     ],
+    tieredOutcomes: [
+      { minRoll: 0, maxRoll: 8, effect: '承受 1 點物理傷害', damage: { type: 'physical', amount: 1 } },
+    ],
   },
   {
     id: 'event_vial_of_dust',
@@ -605,6 +700,10 @@ export const EVENT_CARDS: Card[] = [
     rollRequired: { stat: 'sanity', target: 4 },
     success: '4+ 獲得 1 點速度',
     failure: '0-3 承受 1 點精神傷害',
+    tieredOutcomes: [
+      { minRoll: 4, maxRoll: 8, effect: '獲得 1 點速度', statChange: { stat: 'speed', amount: 1 } },
+      { minRoll: 0, maxRoll: 3, effect: '承受 1 點精神傷害', damage: { type: 'mental', amount: 1 } },
+    ],
   },
   {
     id: 'event_moment_of_clarity',
@@ -629,6 +728,10 @@ export const EVENT_CARDS: Card[] = [
     rollRequired: { stat: 'sanity', target: 5 },
     success: '5+ 獲得 1 點知識',
     failure: '0-4 承受 1 點精神傷害',
+    tieredOutcomes: [
+      { minRoll: 5, maxRoll: 8, effect: '獲得 1 點知識', statChange: { stat: 'knowledge', amount: 1 } },
+      { minRoll: 0, maxRoll: 4, effect: '承受 1 點精神傷害', damage: { type: 'mental', amount: 1 } },
+    ],
   },
 ];
 
