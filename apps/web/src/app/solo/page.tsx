@@ -1207,24 +1207,34 @@ export default function SoloGamePage() {
 
   // Issue #273: 應用 AI 事件卡傷害
   const applyAIDamage = (aiPlayerId: string, damage: { type: 'physical' | 'mental' | 'general'; amount: number }) => {
+    console.log('[AI Damage Debug] applyAIDamage called:', { aiPlayerId, damage });
     const aiPlayer = aiPlayers.find(p => p.id === aiPlayerId);
-    if (!aiPlayer) return;
+    if (!aiPlayer) {
+      console.log('[AI Damage Debug] AI player not found:', aiPlayerId);
+      return;
+    }
+    console.log('[AI Damage Debug] Found AI player:', aiPlayer.name);
 
     // AI 自動選擇數值最高的屬性
     const availableTraits = getAvailableTraitsForDamage(damage.type);
+    console.log('[AI Damage Debug] Available traits for', damage.type, ':', availableTraits);
     let bestTrait = availableTraits[0];
     let bestValue = -1;
 
     for (const trait of availableTraits) {
       const value = aiPlayer.character?.stats?.[trait]?.[0] || 0;
+      console.log('[AI Damage Debug] Trait', trait, 'value:', value);
       if (value > bestValue) {
         bestValue = value;
         bestTrait = trait;
       }
     }
+    console.log('[AI Damage Debug] Selected best trait:', bestTrait, 'with value:', bestValue);
 
     // 應用傷害到最佳屬性
+    console.log('[AI Damage Debug] Applying damage:', { aiPlayerId, bestTrait, damageAmount: -damage.amount });
     updateAIPlayerStats(aiPlayerId, { [bestTrait]: -damage.amount });
+    console.log('[AI Damage Debug] Damage applied successfully');
 
     // 記錄動作
     const statNames: Record<string, string> = {
@@ -2589,8 +2599,16 @@ export default function SoloGamePage() {
             }
 
             // Issue #273: 處理 AI 事件卡傷害
+            console.log('[AI Damage Debug] Checking for AI damage:', {
+              hasEventCheckResult: !!result.eventCheckResult,
+              hasDamage: !!result.eventCheckResult?.damage,
+              damage: result.eventCheckResult?.damage,
+            });
             if (result.eventCheckResult?.damage) {
+              console.log('[AI Damage Debug] Applying AI damage for player:', result.playerId);
               applyAIDamage(result.playerId, result.eventCheckResult.damage);
+            } else {
+              console.log('[AI Damage Debug] No damage found in eventCheckResult');
             }
 
             setAiCardDrawState({
@@ -2985,9 +3003,9 @@ export default function SoloGamePage() {
 
           // 如果作祟觸發，記錄到日誌
           if (hauntResult.hauntBegins) {
-            setLog(prev => [...prev, `⚠️ 作祟觸發！擲出 ${hauntResult.total} < ${hauntResult.threshold}`]);
+            setLog(prev => [...prev, `⚠️ 作祟觸發！擲出 ${hauntResult.total} < 5`]);
           } else {
-            setLog(prev => [...prev, `作祟未觸發，擲出 ${hauntResult.total} >= ${hauntResult.threshold}`]);
+            setLog(prev => [...prev, `作祟未觸發，擲出 ${hauntResult.total} >= 5`]);
           }
         }, 2000);
         break;
