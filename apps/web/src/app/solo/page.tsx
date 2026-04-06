@@ -1207,6 +1207,7 @@ export default function SoloGamePage() {
 
   // Issue #273: 應用 AI 事件卡傷害
   // Issue #278: 添加詳細除錯日誌
+  // Issue #279: 添加特質選擇到遊戲日誌
   const applyAIDamage = (aiPlayerId: string, damage: { type: 'physical' | 'mental' | 'general'; amount: number }) => {
     console.log('[AI Damage Debug] Function called with:', { aiPlayerId, damage });
     const aiPlayer = aiPlayers.find(p => p.id === aiPlayerId);
@@ -1217,6 +1218,14 @@ export default function SoloGamePage() {
       return;
     }
 
+    const statNames: Record<string, string> = {
+      speed: '速度',
+      might: '力量',
+      sanity: '理智',
+      knowledge: '知識',
+    };
+    const timeStr = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+
     // AI 自動選擇數值最高的屬性
     const availableTraits = getAvailableTraitsForDamage(damage.type);
     console.log('[AI Damage Debug] Available traits for', damage.type, ':', availableTraits);
@@ -1226,6 +1235,13 @@ export default function SoloGamePage() {
       knowledge: aiPlayer.character?.stats?.knowledge?.[0],
       sanity: aiPlayer.character?.stats?.sanity?.[0],
     });
+
+    // Issue #279: 在日誌中顯示可選擇的特質
+    const traitOptions = availableTraits.map(t => statNames[t]).join('/');
+    setLog(prev => [...prev, 
+      `[${timeStr}] AI ${aiPlayer.name} 需要承受 ${damage.amount} 點${damage.type === 'mental' ? '精神' : '物理'}傷害，可選擇: ${traitOptions}`
+    ]);
+
     let bestTrait = availableTraits[0];
     let bestValue = -1;
 
@@ -1242,15 +1258,11 @@ export default function SoloGamePage() {
     updateAIPlayerStats(aiPlayerId, { [bestTrait]: -damage.amount });
     console.log('[AI Damage Debug] Called updateAIPlayerStats with:', { [bestTrait]: -damage.amount });
 
-    // 記錄動作
-    const statNames: Record<string, string> = {
-      speed: '速度',
-      might: '力量',
-      sanity: '理智',
-      knowledge: '知識',
-    };
-    const timeStr = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
-    setLog(prev => [...prev, `[${timeStr}] AI ${aiPlayer.name} 承受 ${damage.amount} 點${damage.type === 'mental' ? '精神' : '物理'}傷害，${statNames[bestTrait]} 降低`]);
+    // Issue #279: 在日誌中顯示選擇的特質和變化前後的值
+    const newValue = bestValue - damage.amount;
+    setLog(prev => [...prev, 
+      `[${timeStr}] AI ${aiPlayer.name} 選擇降低 ${statNames[bestTrait]} (${bestValue} → ${newValue})`
+    ]);
   };
 
   // Issue #241: 檢查是否可以攻擊（考慮相鄰和同一房間）
@@ -3214,7 +3226,7 @@ export default function SoloGamePage() {
                         typeof result.damage.amount === 'number' && 
                         result.damage.amount > 0;
       
-      if (hasDamage) {
+      if (hasDamage && result.damage) {
         console.log('[DEBUG #274] Damage detected, showing DamageDialog:', result.damage);
         // 顯示 DamageDialog 讓玩家選擇屬性
         // Issue #274-fix: Use createDamageAllocation to ensure correct structure with availableTraits
@@ -3273,11 +3285,24 @@ export default function SoloGamePage() {
   };
 
   // Issue #270: 處理事件卡傷害確認
+  // Issue #279: 添加特質選擇到遊戲日誌
   const handleEventDamageConfirm = (result: any, chosenTrait: any) => {
     if (!eventDamageState.damage || !playerState || !player) return;
 
     console.log('[EventDamage] Player chose trait:', chosenTrait);
     console.log('[EventDamage] Damage result:', result);
+
+    // Issue #279: 記錄玩家選擇的特質
+    const timeStr = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+    const statNames: Record<string, string> = {
+      speed: '速度',
+      might: '力量',
+      sanity: '理智',
+      knowledge: '知識',
+    };
+    setLog(prev => [...prev, 
+      `[${timeStr}] ${player?.name || '玩家'} 選擇降低 ${statNames[chosenTrait]} 來承受傷害`
+    ]);
 
     // 應用傷害到玩家屬性
     if (result.newStats) {
@@ -3304,12 +3329,6 @@ export default function SoloGamePage() {
       });
 
       // 記錄到日誌
-      const statNames: Record<string, string> = {
-        speed: '速度',
-        might: '力量',
-        sanity: '理智',
-        knowledge: '知識',
-      };
       setLog(prev => [
         ...prev,
         `💔 受到 ${eventDamageState.damage!.amount} 點${eventDamageState.damage!.type === 'mental' ? '精神' : eventDamageState.damage!.type === 'physical' ? '物理' : ''}傷害，${statNames[chosenTrait]}降至 ${result.newStats[chosenTrait]}`
