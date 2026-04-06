@@ -1,0 +1,48 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background - deep purple for bookish/intellectual -->
+  <rect width="200" height="200" fill="#3D2B4F"/>
+  
+  <!-- Neck -->
+  <rect x="87" y="132" width="26" height="22" fill="#F5D0C5"/>
+  
+  <!-- Shirt collar with bow -->
+  <path d="M78 145 L100 158 L122 145 L122 152 L100 165 L78 152 Z" fill="#5B4A6A"/>
+  <circle cx="100" cy="152" r="6" fill="#7B6A8A"/>
+  
+  <!-- Face shape -->
+  <ellipse cx="100" cy="95" rx="36" ry="42" fill="#F5D0C5"/>
+  
+  <!-- Ears -->
+  <ellipse cx="64" cy="95" rx="6" ry="10" fill="#F5D0C5"/>
+  <ellipse cx="136" cy="95" rx="6" ry="10" fill="#F5D0C5"/>
+  
+  <!-- Hair - dark brown, shoulder length with headband -->
+  <path d="M64 90 Q62 65 75 50 Q88 38 100 38 Q112 38 125 50 Q138 65 136 90 Q138 75 130 60 Q116 45 100 45 Q84 45 70 60 Q62 75 64 90" fill="#4A3728"/>
+  <path d="M64 85 Q60 100 62 115 Q64 125 70 130" fill="none" stroke="#4A3728" stroke-width="8" stroke-linecap="round"/>
+  <path d="M136 85 Q140 100 138 115 Q136 125 130 130" fill="none" stroke="#4A3728" stroke-width="8" stroke-linecap="round"/>
+  
+  <!-- Headband -->
+  <path d="M68 55 Q85 48 100 50 Q115 48 132 55" fill="none" stroke="#7B6A8A" stroke-width="6" stroke-linecap="round"/>
+  
+  <!-- Eyes - intelligent, focused -->
+  <ellipse cx="87" cy="92" rx="6" ry="5" fill="#FFF"/>
+  <ellipse cx="113" cy="92" rx="6" ry="5" fill="#FFF"/>
+  <circle cx="87" cy="92" r="3.5" fill="#5D4E37"/>
+  <circle cx="113" cy="92" r="3.5" fill="#5D4E37"/>
+  <circle cx="88" cy="91" r="1.2" fill="#FFF"/>
+  <circle cx="114" cy="91" r="1.2" fill="#FFF"/>
+  
+  <!-- Eyebrows -->
+  <path d="M81 82 Q87 80 93 82" stroke="#4A3728" stroke-width="2" fill="none"/>
+  <path d="M107 82 Q113 80 119 82" stroke="#4A3728" stroke-width="2" fill="none"/>
+  
+  <!-- Nose -->
+  <path d="M100 96 L98 108 L102 108 Z" fill="#E5B8A8"/>
+  
+  <!-- Mouth - gentle smile -->
+  <path d="M90 118 Q100 123 110 118" stroke="#C98B7A" stroke-width="2" fill="none"/>
+  
+  <!-- Book held at chest level (subtle hint) -->
+  <rect x="70" y="155" width="60" height="35" rx="2" fill="#5B4A6A" opacity="0.3"/>
+  <rect x="72" y="157" width="56" height="31" rx="1" fill="#4A3A5A" opacity="0.3"/>
+</svg>

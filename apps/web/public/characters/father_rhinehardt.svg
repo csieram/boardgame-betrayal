@@ -1,0 +1,48 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background - church gold/brown -->
+  <rect width="200" height="200" fill="#5D4E37"/>
+  
+  <!-- Neck -->
+  <rect x="85" y="130" width="30" height="22" fill="#E8C4A0"/>
+  
+  <!-- Priest collar -->
+  <rect x="75" y="145" width="50" height="15" fill="#FFF"/>
+  <rect x="95" y="145" width="10" height="15" fill="#1A1A1A"/>
+  
+  <!-- Face shape - aged, kind -->
+  <ellipse cx="100" cy="95" rx="38" ry="42" fill="#E8C4A0"/>
+  
+  <!-- Wrinkles -->
+  <path d="M75 85 Q85 88 95 85" stroke="#D4A574" stroke-width="1" fill="none" opacity="0.5"/>
+  <path d="M105 85 Q115 88 125 85" stroke="#D4A574" stroke-width="1" fill="none" opacity="0.5"/>
+  <path d="M85 70 Q100 72 115 70" stroke="#D4A574" stroke-width="1" fill="none" opacity="0.4"/>
+  
+  <!-- Ears -->
+  <ellipse cx="62" cy="95" rx="7" ry="10" fill="#E8C4A0"/>
+  <ellipse cx="138" cy="95" rx="7" ry="10" fill="#E8C4A0"/>
+  
+  <!-- Gray/white hair - receding -->
+  <path d="M62 90 Q60 60 75 50 Q88 42 100 42 Q112 42 125 50 Q140 60 138 90 Q138 70 128 58 Q115 48 100 48 Q85 48 72 58 Q62 70 62 90" fill="#C0C0C0"/>
+  <path d="M75 52 Q88 58 100 56 Q112 58 125 52" fill="none" stroke="#A0A0A0" stroke-width="2"/>
+  
+  <!-- Eyes - kind, gentle -->
+  <ellipse cx="87" cy="92" rx="6" ry="5" fill="#FFF"/>
+  <ellipse cx="113" cy="92" rx="6" ry="5" fill="#FFF"/>
+  <circle cx="87" cy="92" r="3.5" fill="#8B7355"/>
+  <circle cx="113" cy="92" r="3.5" fill="#8B7355"/>
+  <circle cx="88" cy="91" r="1.2" fill="#FFF"/>
+  <circle cx="114" cy="91" r="1.2" fill="#FFF"/>
+  
+  <!-- Eyebrows - bushy, white -->
+  <path d="M81 84 Q87 82 93 84" stroke="#C0C0C0" stroke-width="2.5" fill="none"/>
+  <path d="M107 84 Q113 82 119 84" stroke="#C0C0C0" stroke-width="2.5" fill="none"/>
+  
+  <!-- Nose -->
+  <path d="M100 96 L97 110 L103 110 Z" fill="#D4A574"/>
+  
+  <!-- Mouth - warm, kind smile -->
+  <path d="M88 118 Q100 124 112 118" stroke="#C4956A" stroke-width="2" fill="none"/>
+  
+  <!-- Rosary hint -->
+  <circle cx="100" cy="165" r="4" fill="#D4AF37"/>
+</svg>

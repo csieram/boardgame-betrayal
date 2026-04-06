@@ -1,0 +1,53 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background - elegant cream/gold -->
+  <rect width="200" height="200" fill="#C9A227"/>
+  
+  <!-- Neck -->
+  <rect x="87" y="130" width="26" height="22" fill="#F5D0C5"/>
+  
+  <!-- Elegant blouse collar -->
+  <path d="M78 142 L100 155 L122 142 L125 148 L100 162 L75 148 Z" fill="#FFF8E7"/>
+  <circle cx="100" cy="148" r="4" fill="#D4AF37"/>
+  
+  <!-- Face shape -->
+  <ellipse cx="100" cy="92" rx="36" ry="42" fill="#F5D0C5"/>
+  
+  <!-- Ears -->
+  <ellipse cx="64" cy="92" rx="6" ry="10" fill="#F5D0C5"/>
+  <ellipse cx="136" cy="92" rx="6" ry="10" fill="#F5D0C5"/>
+  
+  <!-- Blonde hair - elegant styled -->
+  <path d="M64 88 Q62 60 75 48 Q88 38 100 38 Q112 38 125 48 Q138 60 136 88 Q138 70 130 58 Q116 45 100 45 Q84 45 70 58 Q62 70 64 88" fill="#E8D4A2"/>
+  <path d="M64 80 Q60 100 65 115 Q68 120 72 122" fill="none" stroke="#D4C49A" stroke-width="6" stroke-linecap="round"/>
+  <path d="M136 80 Q140 100 135 115 Q132 120 128 122" fill="none" stroke="#D4C49A" stroke-width="6" stroke-linecap="round"/>
+  <path d="M70 50 Q85 42 100 44 Q115 42 130 50" fill="none" stroke="#F0E4B8" stroke-width="3"/>
+  
+  <!-- Pearl earrings -->
+  <circle cx="62" cy="102" r="3" fill="#FFF8E7"/>
+  <circle cx="138" cy="102" r="3" fill="#FFF8E7"/>
+  
+  <!-- Eyes - elegant, refined -->
+  <ellipse cx="88" cy="90" rx="6" ry="5" fill="#FFF"/>
+  <ellipse cx="112" cy="90" rx="6" ry="5" fill="#FFF"/>
+  <circle cx="88" cy="90" r="3.5" fill="#5D8AA8"/>
+  <circle cx="112" cy="90" r="3.5" fill="#5D8AA8"/>
+  <circle cx="89" cy="89" r="1.2" fill="#FFF"/>
+  <circle cx="113" cy="89" r="1.2" fill="#FFF"/>
+  
+  <!-- Eyelashes -->
+  <path d="M82 86 L80 84" stroke="#4A3728" stroke-width="1"/>
+  <path d="M85 85 L84 83" stroke="#4A3728" stroke-width="1"/>
+  <path d="M118 86 L120 84" stroke="#4A3728" stroke-width="1"/>
+  <path d="M115 85 L116 83" stroke="#4A3728" stroke-width="1"/>
+  
+  <!-- Eyebrows - well-groomed -->
+  <path d="M82 82 Q88 80 94 82" stroke="#C9B896" stroke-width="2" fill="none"/>
+  <path d="M106 82 Q112 80 118 82" stroke="#C9B896" stroke-width="2" fill="none"/>
+  
+  <!-- Nose -->
+  <path d="M100 94 L98 106 L102 106 Z" fill="#E5B8A8"/>
+  
+  <!-- Mouth - elegant smile -->
+  <path d="M92 115 Q100 120 108 115" stroke="#C98B7A" stroke-width="2" fill="none"/>
+  <path d="M94 116 Q100 118 106 116" fill="#E8A090"/>
+</svg>

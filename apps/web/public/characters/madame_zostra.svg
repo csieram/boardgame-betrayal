@@ -1,0 +1,53 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background - deep mystical purple -->
+  <rect width="200" height="200" fill="#2E1A47"/>
+  
+  <!-- Neck -->
+  <rect x="87" y="130" width="26" height="20" fill="#F5D0C5"/>
+  
+  <!-- Mysterious shawl with gold trim -->
+  <path d="M75 140 L100 160 L125 140 L130 150 L100 175 L70 150 Z" fill="#1A0A2E"/>
+  <path d="M78 142 L100 158 L122 142" fill="none" stroke="#D4AF37" stroke-width="2"/>
+  
+  <!-- Face shape -->
+  <ellipse cx="100" cy="92" rx="36" ry="42" fill="#F5D0C5"/>
+  
+  <!-- Ears -->
+  <ellipse cx="64" cy="92" rx="6" ry="10" fill="#F5D0C5"/>
+  <ellipse cx="136" cy="92" rx="6" ry="10" fill="#F5D0C5"/>
+  
+  <!-- Dark hair with streaks -->
+  <path d="M64 88 Q62 58 75 48 Q88 38 100 38 Q112 38 125 48 Q138 58 136 88 Q138 70 130 56 Q116 42 100 42 Q84 42 70 56 Q62 70 64 88" fill="#0D0D1A"/>
+  <path d="M64 75 Q62 90 66 105 Q70 115 78 120" fill="none" stroke="#0D0D1A" stroke-width="7" stroke-linecap="round"/>
+  <path d="M136 75 Q138 90 134 105 Q130 115 122 120" fill="none" stroke="#0D0D1A" stroke-width="7" stroke-linecap="round"/>
+  
+  <!-- Headwrap/turban hint -->
+  <path d="M68 50 Q85 42 100 44 Q115 42 132 50" fill="none" stroke="#4A306D" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="130" cy="48" r="5" fill="#D4AF37"/>
+  
+  <!-- Eyes - mystical, all-seeing -->
+  <ellipse cx="88" cy="90" rx="6" ry="5" fill="#FFF"/>
+  <ellipse cx="112" cy="90" rx="6" ry="5" fill="#FFF"/>
+  <circle cx="88" cy="90" r="3.5" fill="#4A306D"/>
+  <circle cx="112" cy="90" r="3.5" fill="#4A306D"/>
+  <circle cx="89" cy="89" r="1.2" fill="#FFF"/>
+  <circle cx="113" cy="89" r="1.2" fill="#FFF"/>
+  
+  <!-- Heavy eye makeup -->
+  <path d="M82 86 Q88 84 94 86" stroke="#0D0D1A" stroke-width="2" fill="none"/>
+  <path d="M106 86 Q112 84 118 86" stroke="#0D0D1A" stroke-width="2" fill="none"/>
+  
+  <!-- Eyebrows - dramatic arches -->
+  <path d="M82 82 Q88 78 94 82" stroke="#0D0D1A" stroke-width="2" fill="none"/>
+  <path d="M106 82 Q112 78 118 82" stroke="#0D0D1A" stroke-width="2" fill="none"/>
+  
+  <!-- Nose -->
+  <path d="M100 94 L98 106 L102 106 Z" fill="#E5B8A8"/>
+  
+  <!-- Mouth - knowing smile -->
+  <path d="M92 114 Q100 117 108 114" stroke="#C98B7A" stroke-width="2" fill="none"/>
+  
+  <!-- Crystal ball pendant -->
+  <circle cx="100" cy="162" r="6" fill="#9B59B6" opacity="0.9"/>
+  <circle cx="98" cy="160" r="2" fill="#FFF" opacity="0.6"/>
+</svg>

@@ -1,0 +1,46 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background - mystical dark purple -->
+  <rect width="200" height="200" fill="#1A0A2E"/>
+  
+  <!-- Neck -->
+  <rect x="87" y="130" width="26" height="22" fill="#F5D0C5"/>
+  
+  <!-- Dark shawl collar -->
+  <path d="M75 140 L100 158 L125 140 L128 148 L100 168 L72 148 Z" fill="#2D1B4E"/>
+  
+  <!-- Face shape -->
+  <ellipse cx="100" cy="92" rx="36" ry="42" fill="#F5D0C5"/>
+  
+  <!-- Ears -->
+  <ellipse cx="64" cy="92" rx="6" ry="10" fill="#F5D0C5"/>
+  <ellipse cx="136" cy="92" rx="6" ry="10" fill="#F5D0C5"/>
+  
+  <!-- Dark hair - mysterious, flowing -->
+  <path d="M64 88 Q62 58 75 46 Q88 36 100 36 Q112 36 125 46 Q138 58 136 88 Q138 70 130 56 Q116 42 100 42 Q84 42 70 56 Q62 70 64 88" fill="#0D0D1A"/>
+  <path d="M62 75 Q58 95 62 115 Q65 125 72 130" fill="none" stroke="#0D0D1A" stroke-width="8" stroke-linecap="round"/>
+  <path d="M138 75 Q142 95 138 115 Q135 125 128 130" fill="none" stroke="#0D0D1A" stroke-width="8" stroke-linecap="round"/>
+  
+  <!-- Head scarf/band -->
+  <path d="M66 50 Q85 42 100 44 Q115 42 134 50" fill="none" stroke="#4A306D" stroke-width="5" stroke-linecap="round"/>
+  
+  <!-- Eyes - mysterious, knowing -->
+  <ellipse cx="88" cy="90" rx="6" ry="5" fill="#FFF"/>
+  <ellipse cx="112" cy="90" rx="6" ry="5" fill="#FFF"/>
+  <circle cx="88" cy="90" r="3.5" fill="#4A6741"/>
+  <circle cx="112" cy="90" r="3.5" fill="#4A6741"/>
+  <circle cx="89" cy="89" r="1.2" fill="#FFF"/>
+  <circle cx="113" cy="89" r="1.2" fill="#FFF"/>
+  
+  <!-- Eyebrows - arched, mysterious -->
+  <path d="M82 82 Q88 78 94 82" stroke="#0D0D1A" stroke-width="2" fill="none"/>
+  <path d="M106 82 Q112 78 118 82" stroke="#0D0D1A" stroke-width="2" fill="none"/>
+  
+  <!-- Nose -->
+  <path d="M100 94 L98 106 L102 106 Z" fill="#E5B8A8"/>
+  
+  <!-- Mouth - enigmatic smile -->
+  <path d="M92 115 Q100 118 108 115" stroke="#C98B7A" stroke-width="2" fill="none"/>
+  
+  <!-- Crystal pendant hint -->
+  <circle cx="100" cy="155" r="5" fill="#9B59B6" opacity="0.8"/>
+</svg>

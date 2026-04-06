@@ -1,0 +1,43 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background - dark red for strength/power -->
+  <rect width="200" height="200" fill="#8B0000"/>
+  
+  <!-- Thick neck -->
+  <rect x="82" y="125" width="36" height="30" fill="#D4A574"/>
+  
+  <!-- Muscular shoulders -->
+  <path d="M60 145 L100 165 L140 145 L140 155 L100 175 L60 155 Z" fill="#2C3E50"/>
+  
+  <!-- Face shape - square jaw -->
+  <path d="M65 85 Q65 55 100 50 Q135 55 135 85 Q135 115 100 125 Q65 115 65 85" fill="#D4A574"/>
+  
+  <!-- Ears -->
+  <ellipse cx="62" cy="88" rx="7" ry="10" fill="#D4A574"/>
+  <ellipse cx="138" cy="88" rx="7" ry="10" fill="#D4A574"/>
+  
+  <!-- Hair - short, dark, practical -->
+  <path d="M62 80 Q60 50 75 42 Q88 35 100 35 Q112 35 125 42 Q140 50 138 80 Q140 60 130 48 Q116 38 100 38 Q84 38 70 48 Q60 60 62 80" fill="#1A1A1A"/>
+  <path d="M68 48 Q85 42 100 44 Q115 42 132 48" fill="none" stroke="#0A0A0A" stroke-width="2"/>
+  
+  <!-- Eyes - tough, determined -->
+  <ellipse cx="87" cy="85" rx="7" ry="5" fill="#FFF"/>
+  <ellipse cx="113" cy="85" rx="7" ry="5" fill="#FFF"/>
+  <circle cx="87" cy="85" r="4" fill="#4A6741"/>
+  <circle cx="113" cy="85" r="4" fill="#4A6741"/>
+  <circle cx="88" cy="84" r="1.5" fill="#FFF"/>
+  <circle cx="114" cy="84" r="1.5" fill="#FFF"/>
+  
+  <!-- Heavy eyebrows -->
+  <path d="M80 76 Q87 74 94 76" stroke="#1A1A1A" stroke-width="3.5" fill="none"/>
+  <path d="M106 76 Q113 74 120 76" stroke="#1A1A1A" stroke-width="3.5" fill="none"/>
+  
+  <!-- Nose - broad -->
+  <path d="M100 88 L96 102 L104 102 Z" fill="#B8956A"/>
+  <rect x="96" y="95" width="8" height="8" rx="2" fill="#B8956A"/>
+  
+  <!-- Mouth - firm, strong -->
+  <path d="M90 112 Q100 115 110 112" stroke="#8B6914" stroke-width="2.5" fill="none"/>
+  
+  <!-- Scar on cheek -->
+  <path d="M120 95 L128 100" stroke="#B8956A" stroke-width="1.5" opacity="0.6"/>
+</svg>

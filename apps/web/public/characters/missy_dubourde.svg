@@ -1,0 +1,53 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background - warm peach/southern charm -->
+  <rect width="200" height="200" fill="#E8A87C"/>
+  
+  <!-- Neck -->
+  <rect x="87" y="130" width="26" height="22" fill="#F5D0C5"/>
+  
+  <!-- Southern style dress collar -->
+  <path d="M78 142 L100 158 L122 142 L125 150 L100 168 L75 150 Z" fill="#FFF5EE"/>
+  <circle cx="100" cy="152" r="5" fill="#D4A574"/>
+  
+  <!-- Face shape -->
+  <ellipse cx="100" cy="92" rx="36" ry="42" fill="#F5D0C5"/>
+  
+  <!-- Ears -->
+  <ellipse cx="64" cy="92" rx="6" ry="10" fill="#F5D0C5"/>
+  <ellipse cx="136" cy="92" rx="6" ry="10" fill="#F5D0C5"/>
+  
+  <!-- Hair - auburn/red, styled southern belle -->
+  <path d="M64 88 Q62 58 75 48 Q88 38 100 38 Q112 38 125 48 Q138 58 136 88 Q138 70 130 56 Q116 42 100 42 Q84 42 70 56 Q62 70 64 88" fill="#A0522D"/>
+  <path d="M64 80 Q62 95 68 108 Q72 115 78 118" fill="none" stroke="#8B4513" stroke-width="6" stroke-linecap="round"/>
+  <path d="M136 80 Q138 95 132 108 Q128 115 122 118" fill="none" stroke="#8B4513" stroke-width="6" stroke-linecap="round"/>
+  <path d="M70 52 Q85 45 100 47 Q115 45 130 52" fill="none" stroke="#CD853F" stroke-width="2"/>
+  
+  <!-- Flower in hair -->
+  <circle cx="128" cy="55" r="6" fill="#FFB6C1"/>
+  <circle cx="128" cy="55" r="3" fill="#FFF"/>
+  
+  <!-- Eyes - warm, charming -->
+  <ellipse cx="88" cy="90" rx="6" ry="5" fill="#FFF"/>
+  <ellipse cx="112" cy="90" rx="6" ry="5" fill="#FFF"/>
+  <circle cx="88" cy="90" r="3.5" fill="#8B4513"/>
+  <circle cx="112" cy="90" r="3.5" fill="#8B4513"/>
+  <circle cx="89" cy="89" r="1.2" fill="#FFF"/>
+  <circle cx="113" cy="89" r="1.2" fill="#FFF"/>
+  
+  <!-- Eyelashes -->
+  <path d="M83 87 L81 85" stroke="#A0522D" stroke-width="1"/>
+  <path d="M86 86 L85 84" stroke="#A0522D" stroke-width="1"/>
+  <path d="M117 87 L119 85" stroke="#A0522D" stroke-width="1"/>
+  <path d="M114 86 L115 84" stroke="#A0522D" stroke-width="1"/>
+  
+  <!-- Eyebrows -->
+  <path d="M82 82 Q88 80 94 82" stroke="#A0522D" stroke-width="2" fill="none"/>
+  <path d="M106 82 Q112 80 118 82" stroke="#A0522D" stroke-width="2" fill="none"/>
+  
+  <!-- Nose -->
+  <path d="M100 94 L98 106 L102 106 Z" fill="#E5B8A8"/>
+  
+  <!-- Mouth - charming smile -->
+  <path d="M92 114 Q100 120 108 114" stroke="#C98B7A" stroke-width="2" fill="none"/>
+  <path d="M94 115 Q100 117 106 115" fill="#E8A090"/>
+</svg>

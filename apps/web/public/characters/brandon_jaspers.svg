@@ -1,0 +1,45 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background - warm brown for adventurous spirit -->
+  <rect width="200" height="200" fill="#4A3728"/>
+  
+  <!-- Neck -->
+  <rect x="85" y="130" width="30" height="25" fill="#E8C4A0"/>
+  
+  <!-- Shirt collar -->
+  <path d="M75 145 L100 160 L125 145 L125 155 L100 170 L75 155 Z" fill="#D35400"/>
+  
+  <!-- Face shape -->
+  <ellipse cx="100" cy="95" rx="40" ry="45" fill="#E8C4A0"/>
+  
+  <!-- Ears -->
+  <ellipse cx="60" cy="95" rx="8" ry="12" fill="#E8C4A0"/>
+  <ellipse cx="140" cy="95" rx="8" ry="12" fill="#E8C4A0"/>
+  
+  <!-- Hair - messy brown for adventurous boy -->
+  <path d="M60 85 Q55 60 70 45 Q85 35 100 35 Q115 35 130 45 Q145 60 140 85 Q145 70 135 55 Q120 40 100 40 Q80 40 65 55 Q55 70 60 85" fill="#5D4037"/>
+  <path d="M65 55 Q75 45 85 50 Q95 40 105 50 Q115 45 125 55 Q135 65 130 80" fill="none" stroke="#4A3728" stroke-width="2"/>
+  
+  <!-- Eyes - curious expression -->
+  <ellipse cx="85" cy="90" rx="8" ry="6" fill="#FFF"/>
+  <ellipse cx="115" cy="90" rx="8" ry="6" fill="#FFF"/>
+  <circle cx="85" cy="90" r="4" fill="#4A90A4"/>
+  <circle cx="115" cy="90" r="4" fill="#4A90A4"/>
+  <circle cx="86" cy="89" r="1.5" fill="#FFF"/>
+  <circle cx="116" cy="89" r="1.5" fill="#FFF"/>
+  
+  <!-- Eyebrows - raised for curiosity -->
+  <path d="M78 80 Q85 75 92 80" stroke="#5D4037" stroke-width="2.5" fill="none"/>
+  <path d="M108 78 Q115 73 122 78" stroke="#5D4037" stroke-width="2.5" fill="none"/>
+  
+  <!-- Nose -->
+  <path d="M100 95 L96 110 L104 110 Z" fill="#D4A574"/>
+  
+  <!-- Mouth - slight smile -->
+  <path d="M88 118 Q100 125 112 118" stroke="#C17F59" stroke-width="2.5" fill="none"/>
+  
+  <!-- Freckles -->
+  <circle cx="75" cy="105" r="1" fill="#C17F59" opacity="0.6"/>
+  <circle cx="80" cy="108" r="1" fill="#C17F59" opacity="0.6"/>
+  <circle cx="125" cy="105" r="1" fill="#C17F59" opacity="0.6"/>
+  <circle cx="120" cy="108" r="1" fill="#C17F59" opacity="0.6"/>
+</svg>

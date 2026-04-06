@@ -1,0 +1,44 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background - soft lavender for spiritual innocence -->
+  <rect width="200" height="200" fill="#6B5B95"/>
+  
+  <!-- Neck -->
+  <rect x="88" y="132" width="24" height="20" fill="#F5D0C5"/>
+  
+  <!-- Simple dress collar -->
+  <path d="M80 145 L100 158 L120 145 L120 152 L100 165 L80 152 Z" fill="#E8E4F3"/>
+  
+  <!-- Face shape -->
+  <ellipse cx="100" cy="95" rx="34" ry="40" fill="#F5D0C5"/>
+  
+  <!-- Ears -->
+  <ellipse cx="66" cy="95" rx="6" ry="9" fill="#F5D0C5"/>
+  <ellipse cx="134" cy="95" rx="6" ry="9" fill="#F5D0C5"/>
+  
+  <!-- Hair - light brown, simple style -->
+  <path d="M66 92 Q64 65 76 52 Q88 42 100 42 Q112 42 124 52 Q136 65 134 92 Q136 75 128 62 Q115 48 100 48 Q85 48 72 62 Q64 75 66 92" fill="#A0826D"/>
+  <path d="M66 85 Q64 100 68 112" fill="none" stroke="#8B7355" stroke-width="5" stroke-linecap="round"/>
+  <path d="M134 85 Q136 100 132 112" fill="none" stroke="#8B7355" stroke-width="5" stroke-linecap="round"/>
+  
+  <!-- Hair bow -->
+  <path d="M92 48 L100 42 L108 48" fill="none" stroke="#E8E4F3" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="100" cy="45" r="3" fill="#D4C4E0"/>
+  
+  <!-- Eyes - innocent, wide -->
+  <ellipse cx="89" cy="92" rx="6" ry="5" fill="#FFF"/>
+  <ellipse cx="111" cy="92" rx="6" ry="5" fill="#FFF"/>
+  <circle cx="89" cy="92" r="3.5" fill="#7B9E87"/>
+  <circle cx="111" cy="92" r="3.5" fill="#7B9E87"/>
+  <circle cx="90" cy="91" r="1.2" fill="#FFF"/>
+  <circle cx="112" cy="91" r="1.2" fill="#FFF"/>
+  
+  <!-- Eyebrows - gentle -->
+  <path d="M84 85 Q89 83 94 85" stroke="#8B7355" stroke-width="1.5" fill="none"/>
+  <path d="M106 85 Q111 83 116 85" stroke="#8B7355" stroke-width="1.5" fill="none"/>
+  
+  <!-- Nose -->
+  <path d="M100 96 L98 106 L102 106 Z" fill="#E5B8A8"/>
+  
+  <!-- Mouth - sweet smile -->
+  <path d="M93 116 Q100 120 107 116" stroke="#C98B7A" stroke-width="2" fill="none"/>
+</svg>

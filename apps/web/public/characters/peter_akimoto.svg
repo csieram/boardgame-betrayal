@@ -1,0 +1,46 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background - cool blue for intellectual -->
+  <rect width="200" height="200" fill="#2C3E50"/>
+  
+  <!-- Neck -->
+  <rect x="85" y="130" width="30" height="25" fill="#F5D0A9"/>
+  
+  <!-- Shirt collar -->
+  <path d="M75 145 L100 160 L125 145 L125 155 L100 170 L75 155 Z" fill="#34495E"/>
+  
+  <!-- Face shape -->
+  <ellipse cx="100" cy="95" rx="38" ry="44" fill="#F5D0A9"/>
+  
+  <!-- Ears -->
+  <ellipse cx="62" cy="95" rx="7" ry="11" fill="#F5D0A9"/>
+  <ellipse cx="138" cy="95" rx="7" ry="11" fill="#F5D0A9"/>
+  
+  <!-- Hair - neat black hair -->
+  <path d="M62 85 Q58 60 72 48 Q85 38 100 38 Q115 38 128 48 Q142 60 138 85 Q140 70 132 58 Q118 45 100 45 Q82 45 68 58 Q60 70 62 85" fill="#1A1A2E"/>
+  <path d="M68 58 Q80 50 100 52 Q120 50 132 58" fill="none" stroke="#0F0F1A" stroke-width="1"/>
+  
+  <!-- Glasses - rectangular frames -->
+  <rect x="72" y="82" width="26" height="18" rx="3" fill="none" stroke="#2C3E50" stroke-width="2.5"/>
+  <rect x="102" y="82" width="26" height="18" rx="3" fill="none" stroke="#2C3E50" stroke-width="2.5"/>
+  <line x1="98" y1="91" x2="102" y2="91" stroke="#2C3E50" stroke-width="2"/>
+  <line x1="72" y1="88" x2="65" y2="85" stroke="#2C3E50" stroke-width="1.5"/>
+  <line x1="128" y1="88" x2="135" y2="85" stroke="#2C3E50" stroke-width="1.5"/>
+  
+  <!-- Eyes behind glasses -->
+  <ellipse cx="85" cy="91" rx="5" ry="4" fill="#FFF"/>
+  <ellipse cx="115" cy="91" rx="5" ry="4" fill="#FFF"/>
+  <circle cx="85" cy="91" r="3" fill="#5D4E37"/>
+  <circle cx="115" cy="91" r="3" fill="#5D4E37"/>
+  <circle cx="86" cy="90" r="1" fill="#FFF"/>
+  <circle cx="116" cy="90" r="1" fill="#FFF"/>
+  
+  <!-- Eyebrows -->
+  <path d="M78 78 Q85 76 92 78" stroke="#1A1A2E" stroke-width="2" fill="none"/>
+  <path d="M108 78 Q115 76 122 78" stroke="#1A1A2E" stroke-width="2" fill="none"/>
+  
+  <!-- Nose -->
+  <path d="M100 95 L97 108 L103 108 Z" fill="#E5B895"/>
+  
+  <!-- Mouth - thoughtful expression -->
+  <path d="M92 118 Q100 120 108 118" stroke="#C4956A" stroke-width="2" fill="none"/>
+</svg>
