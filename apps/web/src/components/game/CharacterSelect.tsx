@@ -281,26 +281,30 @@ function CharacterDetailPanel({
         <div className="space-y-3">
           <StatTrack 
             label="速度 Speed" 
-            value={character.stats.speed[0]} 
-            track={character.statTrack.speed}
+            value={character.stats.speed.values[character.stats.speed.startIndex]} 
+            track={character.stats.speed.values}
+            startIndex={character.stats.speed.startIndex}
             color="#3B82F6"
           />
           <StatTrack 
             label="力量 Might" 
-            value={character.stats.might[0]} 
-            track={character.statTrack.might}
+            value={character.stats.might.values[character.stats.might.startIndex]} 
+            track={character.stats.might.values}
+            startIndex={character.stats.might.startIndex}
             color="#EF4444"
           />
           <StatTrack 
             label="理智 Sanity" 
-            value={character.stats.sanity[0]} 
-            track={character.statTrack.sanity}
+            value={character.stats.sanity.values[character.stats.sanity.startIndex]} 
+            track={character.stats.sanity.values}
+            startIndex={character.stats.sanity.startIndex}
             color="#8B5CF6"
           />
           <StatTrack 
             label="知識 Knowledge" 
-            value={character.stats.knowledge[0]} 
-            track={character.statTrack.knowledge}
+            value={character.stats.knowledge.values[character.stats.knowledge.startIndex]} 
+            track={character.stats.knowledge.values}
+            startIndex={character.stats.knowledge.startIndex}
             color="#10B981"
           />
         </div>
@@ -373,15 +377,11 @@ interface StatTrackProps {
   label: string;
   value: number;
   track: number[];
+  startIndex: number;
   color: string;
 }
 
-function StatTrack({ label, value, track, color }: StatTrackProps) {
-  // 找到當前值在軌道中的位置
-  const currentIndex = track.indexOf(value);
-  // 過濾掉 0（死亡值），只顯示有效值
-  const displayTrack = track.filter(v => v > 0);
-  
+function StatTrack({ label, value, track, startIndex, color }: StatTrackProps) {
   return (
     <div>
       <div className="flex justify-between text-xs mb-1">
@@ -389,9 +389,9 @@ function StatTrack({ label, value, track, color }: StatTrackProps) {
         <span className="font-bold" style={{ color }}>{value}</span>
       </div>
       <div className="flex gap-1">
-        {displayTrack.map((val, idx) => {
-          const isCurrent = val === value;
-          const isBelow = idx < displayTrack.indexOf(value);
+        {track.map((val, idx) => {
+          const isCurrent = idx === startIndex;
+          const isSkull = idx === 0; // 骷髏在 index 0（最低值）
           return (
             <div
               key={idx}
@@ -399,17 +399,24 @@ function StatTrack({ label, value, track, color }: StatTrackProps) {
                 isCurrent ? 'ring-2 ring-white' : ''
               }`}
               style={{
-                backgroundColor: isCurrent ? color : (isBelow ? `${color}30` : `${color}60`),
+                backgroundColor: isSkull ? '#1a1a1a' : (isCurrent ? color : `${color}60`),
               }}
-              title={`值: ${val}`}
+              title={`值: ${val}${isSkull ? ' (💀)' : ''}${isCurrent ? ' (⭐)' : ''}`}
             />
           );
         })}
       </div>
       <div className="flex justify-between text-[10px] text-gray-500 mt-1">
-        {displayTrack.map((val, idx) => (
-          <span key={idx} className="flex-1 text-center" style={{ opacity: val === value ? 1 : 0.5 }}>
-            {val}
+        {track.map((val, idx) => (
+          <span 
+            key={idx} 
+            className="flex-1 text-center"
+            style={{ 
+              opacity: idx === startIndex ? 1 : 0.5,
+              fontWeight: idx === startIndex ? 'bold' : 'normal'
+            }}
+          >
+            {idx === 0 ? '💀' : (idx === startIndex ? '⭐' : val)}
           </span>
         ))}
       </div>
