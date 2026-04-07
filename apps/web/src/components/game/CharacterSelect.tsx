@@ -164,15 +164,52 @@ function CharacterSelectCard({
           <p className="text-gray-400 text-sm truncate">{character.nameEn}</p>
           <p className="text-gray-500 text-xs mt-1">{character.age} 歲</p>
           
-          {/* 屬性預覽 */}
-          <div className="grid grid-cols-4 gap-1 mt-3">
-            <StatBadge label="速" value={character.stats.speed.values[character.stats.speed.startIndex]} color="#3B82F6" />
-            <StatBadge label="力" value={character.stats.might.values[character.stats.might.startIndex]} color="#EF4444" />
-            <StatBadge label="理" value={character.stats.sanity.values[character.stats.sanity.startIndex]} color="#8B5CF6" />
-            <StatBadge label="知" value={character.stats.knowledge.values[character.stats.knowledge.startIndex]} color="#10B981" />
+          {/* 屬性軌道 */}
+          <div className="mt-3 space-y-1">
+            <MiniStatTrack label="速" track={character.stats.speed.values} startIndex={character.stats.speed.startIndex} color="#3B82F6" />
+            <MiniStatTrack label="力" track={character.stats.might.values} startIndex={character.stats.might.startIndex} color="#EF4444" />
+            <MiniStatTrack label="理" track={character.stats.sanity.values} startIndex={character.stats.sanity.startIndex} color="#8B5CF6" />
+            <MiniStatTrack label="知" track={character.stats.knowledge.values} startIndex={character.stats.knowledge.startIndex} color="#10B981" />
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * 小型屬性軌道（用於角色卡片）
+ */
+interface MiniStatTrackProps {
+  label: string;
+  track: number[];
+  startIndex: number;
+  color: string;
+}
+
+function MiniStatTrack({ label, track, startIndex, color }: MiniStatTrackProps) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-[10px] text-gray-500 w-3">{label}</span>
+      <div className="flex gap-0.5 flex-1">
+        {track.map((val, idx) => {
+          const isCurrent = idx === startIndex;
+          const isSkull = idx === 0;
+          return (
+            <div
+              key={idx}
+              className={`flex-1 h-1.5 rounded-sm ${isCurrent ? 'ring-1 ring-white' : ''}`}
+              style={{
+                backgroundColor: isSkull ? '#374151' : (isCurrent ? color : `${color}40`),
+              }}
+              title={`${isSkull ? '💀 ' : ''}${isCurrent ? '⭐ ' : ''}${val}`}
+            />
+          );
+        })}
+      </div>
+      <span className="text-[10px] font-bold" style={{ color, width: '16px', textAlign: 'right' }}>
+        {track[startIndex]}
+      </span>
     </div>
   );
 }
