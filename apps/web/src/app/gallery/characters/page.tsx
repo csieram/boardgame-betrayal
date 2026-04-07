@@ -81,103 +81,87 @@ export default function CharactersGalleryPage() {
 
             <p className="text-gray-300 text-sm mb-4">{character.description}</p>
 
-            {/* 屬性 */}
-            <div className="grid grid-cols-4 gap-2 text-center">
-              <div className="bg-gray-700 rounded p-2">
-                <div className="text-xs text-gray-400">速度</div>
-                <div className="font-bold">{character.stats.speed.values[character.stats.speed.startIndex]}</div>
+            {/* 屬性軌道 */}
+            <div className="space-y-2">
+              {/* Might */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-400 w-16">Might:</span>
+                <div className="flex gap-1">
+                  {character.stats.might.values.map((value, idx) => (
+                    <span
+                      key={idx}
+                      className={`px-1.5 py-0.5 rounded text-xs ${
+                        idx === character.stats.might.startIndex
+                          ? 'bg-yellow-500 text-black font-bold'
+                          : idx === 7
+                            ? 'bg-red-900 text-red-200'
+                            : 'bg-gray-600'
+                      }`}
+                    >
+                      {idx === character.stats.might.startIndex ? '⭐' : ''}{value}{idx === 7 ? '💀' : ''}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div className="bg-gray-700 rounded p-2">
-                <div className="text-xs text-gray-400">力量</div>
-                <div className="font-bold">{character.stats.might.values[character.stats.might.startIndex]}</div>
+              {/* Speed */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-400 w-16">Speed:</span>
+                <div className="flex gap-1">
+                  {character.stats.speed.values.map((value, idx) => (
+                    <span
+                      key={idx}
+                      className={`px-1.5 py-0.5 rounded text-xs ${
+                        idx === character.stats.speed.startIndex
+                          ? 'bg-yellow-500 text-black font-bold'
+                          : idx === 7
+                            ? 'bg-red-900 text-red-200'
+                            : 'bg-gray-600'
+                      }`}
+                    >
+                      {idx === character.stats.speed.startIndex ? '⭐' : ''}{value}{idx === 7 ? '💀' : ''}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div className="bg-gray-700 rounded p-2">
-                <div className="text-xs text-gray-400">理智</div>
-                <div className="font-bold">{character.stats.sanity.values[character.stats.sanity.startIndex]}</div>
+              {/* Sanity */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-400 w-16">Sanity:</span>
+                <div className="flex gap-1">
+                  {character.stats.sanity.values.map((value, idx) => (
+                    <span
+                      key={idx}
+                      className={`px-1.5 py-0.5 rounded text-xs ${
+                        idx === character.stats.sanity.startIndex
+                          ? 'bg-yellow-500 text-black font-bold'
+                          : idx === 7
+                            ? 'bg-red-900 text-red-200'
+                            : 'bg-gray-600'
+                      }`}
+                    >
+                      {idx === character.stats.sanity.startIndex ? '⭐' : ''}{value}{idx === 7 ? '💀' : ''}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div className="bg-gray-700 rounded p-2">
-                <div className="text-xs text-gray-400">知識</div>
-                <div className="font-bold">{character.stats.knowledge.values[character.stats.knowledge.startIndex]}</div>
-              </div>
-            </div>
-
-            {/* 屬性軌道視覺化 */}
-            <div className="mt-3 space-y-2">
-              {/* 速度軌道 */}
-              <div className="flex items-center justify-center gap-1 text-xs">
-                {character.stats.speed.values.map((value, idx) => (
-                  <span
-                    key={idx}
-                    className={`px-1 rounded ${
-                      idx === character.stats.speed.startIndex
-                        ? 'bg-yellow-500 text-black'
-                        : idx === 7
-                          ? 'bg-red-900 text-red-200'
-                          : 'bg-gray-600'
-                    }`}
-                  >
-                    {idx === character.stats.speed.startIndex ? '⭐' : ''}
-                    {value}
-                    {idx === 7 ? '💀' : ''}
-                  </span>
-                ))}
-              </div>
-              {/* 力量軌道 */}
-              <div className="flex items-center justify-center gap-1 text-xs">
-                {character.stats.might.values.map((value, idx) => (
-                  <span
-                    key={idx}
-                    className={`px-1 rounded ${
-                      idx === character.stats.might.startIndex
-                        ? 'bg-yellow-500 text-black'
-                        : idx === 7
-                          ? 'bg-red-900 text-red-200'
-                          : 'bg-gray-600'
-                    }`}
-                  >
-                    {idx === character.stats.might.startIndex ? '⭐' : ''}
-                    {value}
-                    {idx === 7 ? '💀' : ''}
-                  </span>
-                ))}
-              </div>
-              {/* 理智軌道 */}
-              <div className="flex items-center justify-center gap-1 text-xs">
-                {character.stats.sanity.values.map((value, idx) => (
-                  <span
-                    key={idx}
-                    className={`px-1 rounded ${
-                      idx === character.stats.sanity.startIndex
-                        ? 'bg-yellow-500 text-black'
-                        : idx === 7
-                          ? 'bg-red-900 text-red-200'
-                          : 'bg-gray-600'
-                    }`}
-                  >
-                    {idx === character.stats.sanity.startIndex ? '⭐' : ''}
-                    {value}
-                    {idx === 7 ? '💀' : ''}
-                  </span>
-                ))}
-              </div>
-              {/* 知識軌道 */}
-              <div className="flex items-center justify-center gap-1 text-xs">
-                {character.stats.knowledge.values.map((value, idx) => (
-                  <span
-                    key={idx}
-                    className={`px-1 rounded ${
-                      idx === character.stats.knowledge.startIndex
-                        ? 'bg-yellow-500 text-black'
-                        : idx === 7
-                          ? 'bg-red-900 text-red-200'
-                          : 'bg-gray-600'
-                    }`}
-                  >
-                    {idx === character.stats.knowledge.startIndex ? '⭐' : ''}
-                    {value}
-                    {idx === 7 ? '💀' : ''}
-                  </span>
-                ))}
+              {/* Knowledge */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-400 w-16">Knowledge:</span>
+                <div className="flex gap-1">
+                  {character.stats.knowledge.values.map((value, idx) => (
+                    <span
+                      key={idx}
+                      className={`px-1.5 py-0.5 rounded text-xs ${
+                        idx === character.stats.knowledge.startIndex
+                          ? 'bg-yellow-500 text-black font-bold'
+                          : idx === 7
+                            ? 'bg-red-900 text-red-200'
+                            : 'bg-gray-600'
+                      }`}
+                    >
+                      {idx === character.stats.knowledge.startIndex ? '⭐' : ''}{value}{idx === 7 ? '💀' : ''}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
