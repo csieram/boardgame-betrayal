@@ -544,7 +544,7 @@ export default function SoloGamePage() {
   // 初始化遊戲
   const startGame = (character: Character, aiSetup: { count: number; difficulty: AIDifficulty; personalities: AIPersonality[] } | null) => {
     setPlayer(character);
-    setMoves(character.stats.speed[0]);
+    setMoves(character.stats.speed.values[character.stats.speed.currentIndex]);
     setPhase('play');
 
     // 生成隨機 seed
@@ -678,10 +678,10 @@ export default function SoloGamePage() {
           id: 'solo-player',
           name: character.name,
           stats: {
-            speed: character.stats.speed[0],
-            might: character.stats.might[0],
-            sanity: character.stats.sanity[0],
-            knowledge: character.stats.knowledge[0],
+            speed: character.stats.speed.values[character.stats.speed.currentIndex],
+            might: character.stats.might.values[character.stats.might.currentIndex],
+            sanity: character.stats.sanity.values[character.stats.sanity.currentIndex],
+            knowledge: character.stats.knowledge.values[character.stats.knowledge.currentIndex],
           },
           items: [],
           omens: [],
@@ -739,7 +739,7 @@ export default function SoloGamePage() {
         }
 
         // 計算可達位置（從入口大廳開始）
-        updateReachablePositions(initialMultiFloorMap.ground, { x: MAP_CENTER, y: MAP_CENTER }, character.stats.speed[0], false);
+        updateReachablePositions(initialMultiFloorMap.ground, { x: MAP_CENTER, y: MAP_CENTER }, character.stats.speed.values[character.stats.speed.currentIndex], false);
       } catch (error) {
         console.error('Error initializing game:', error);
         setLog(prev => [...prev, `錯誤：遊戲初始化失敗 - ${error instanceof Error ? error.message : '未知錯誤'}`]);
@@ -1514,7 +1514,10 @@ export default function SoloGamePage() {
             ...prev,
             stats: {
               ...prev.stats,
-              might: [newMight, prev.stats.might[1]],
+              might: {
+                ...prev.stats.might,
+                currentIndex: Math.max(0, prev.stats.might.currentIndex - (result.damage || 0)),
+              },
             },
           } : null);
           setLog(prev => [...prev, `💔 你的力量從 ${playerState!.stats.might} 降至 ${newMight}`]);
@@ -1563,11 +1566,14 @@ export default function SoloGamePage() {
             ...prev,
             stats: {
               ...prev.stats,
-              might: [newMight, prev.stats.might[1]],
+              might: {
+                ...prev.stats.might,
+                currentIndex: Math.max(0, prev.stats.might.currentIndex - (result.attackerDamage || 0)),
+              },
             },
           } : null);
         }
-        
+
         if (result.defenderDamage && result.defenderDamage > 0 && target) {
           updateAIPlayerStats(targetId, { might: -result.defenderDamage });
         }
@@ -1754,22 +1760,25 @@ export default function SoloGamePage() {
             ...prev,
             stats: {
               ...prev.stats,
-              might: [newMight, prev.stats.might[1]],
+              might: {
+                ...prev.stats.might,
+                currentIndex: Math.max(0, prev.stats.might.currentIndex - (result.damage || 0)),
+              },
             },
           } : null);
           setLog(prev => [...prev, `💔 你的力量從 ${playerState!.stats.might} 降至 ${newMight}`]);
         }
-        
+
         // 如果 AI 受傷
         if (result.loser && result.loser.id !== 'solo-player' && result.damage) {
           const loserId = result.loser.id;
           const loser = aiPlayers.find(p => p.id === loserId);
           if (loser) {
-            const currentMight = loser.character?.stats?.might?.[0] || 4;
+            const currentMight = (loser.character as any)?.stats?.might?.values[(loser.character as any)?.stats?.might?.currentIndex || 0] || 4;
             const newMight = Math.max(0, currentMight - result.damage);
             updateAIPlayerStats(loserId, { might: -result.damage });
             setLog(prev => [...prev, `💔 ${loser.name} 的力量從 ${currentMight} 降至 ${newMight}`]);
-            
+
             if (newMight <= 0) {
               setAiPlayers(prev => prev.map(p =>
                 p.id === loserId ? { ...p, isAlive: false } : p
@@ -1786,12 +1795,12 @@ export default function SoloGamePage() {
           `  🎲 ${aiPlayer.name}: ${attackerTotal} vs ${target.name}: ${defenderTotal}`,
           `  🤝 平手！雙方各受 1 點傷害`,
         ]);
-        
+
         // 應用平手傷害
         if (result.attackerDamage && result.attackerDamage > 0) {
           updateAIPlayerStats(aiPlayerId, { might: -result.attackerDamage });
         }
-        
+
         if (result.defenderDamage && result.defenderDamage > 0) {
           if (targetId === 'solo-player') {
             const newMight = Math.max(0, playerState!.stats.might - result.defenderDamage);
@@ -1803,11 +1812,14 @@ export default function SoloGamePage() {
               ...prev,
               stats: {
                 ...prev.stats,
-                might: [newMight, prev.stats.might[1]],
+                might: {
+                  ...prev.stats.might,
+                  currentIndex: Math.max(0, prev.stats.might.currentIndex - (result.defenderDamage || 0)),
+                },
               },
             } : null);
           } else {
-            updateAIPlayerStats(targetId, { might: -result.defenderDamage });
+            updateAIPlayerStats(targetId, { might: -(result.defenderDamage || 0) });
           }
         }
       }
@@ -1819,14 +1831,14 @@ export default function SoloGamePage() {
   // 繼續到下一回合（保留用於其他情況）
   const continueToNextTurn = () => {
     setTurn(t => t + 1);
-    setMoves(player!.stats.speed[0]);
+    setMoves(player!.stats.speed.values[player!.stats.speed.currentIndex]);
     setDiscovered(false);
     setTurnState({
       hasEnded: false,
       endedByDiscovery: false,
     });
     setLog(prev => [...prev, `回合 ${turn + 1}`]);
-    updateReachablePositions(multiFloorMap[currentFloor], position, player!.stats.speed[0], false);
+    updateReachablePositions(multiFloorMap[currentFloor], position, player!.stats.speed.values[player!.stats.speed.currentIndex], false);
   };
 
   // ==================== 屍體搜刮系統 (Issue #243) ====================
@@ -2670,13 +2682,13 @@ export default function SoloGamePage() {
 
       // 進入下一回合
       setTurn(t => t + 1);
-      setMoves(player.stats.speed[0]);
+      setMoves(player.stats.speed.values[player.stats.speed.currentIndex]);
       // Issue #144: 記錄新回合開始
       setLog(prev => [...prev, `回合 ${turn + 1}`]);
 
       // Issue #157-fix: 延遲更新可達位置，確保 multiFloorMap 已更新
       setTimeout(() => {
-        updateReachablePositions(multiFloorMap[currentFloor], position, player.stats.speed[0], false);
+        updateReachablePositions(multiFloorMap[currentFloor], position, player.stats.speed.values[player.stats.speed.currentIndex], false);
       }, 100);
 
       // 完成回合切換
@@ -2684,10 +2696,10 @@ export default function SoloGamePage() {
     } else {
       // 沒有 AI 玩家時，直接進入下一回合
       setTurn(t => t + 1);
-      setMoves(player.stats.speed[0]);
+      setMoves(player.stats.speed.values[player.stats.speed.currentIndex]);
       // Issue #144: 「回合結束」已在函數開始時記錄
       setLog(prev => [...prev, `回合 ${turn + 1}`]);
-      updateReachablePositions(multiFloorMap[currentFloor], position, player.stats.speed[0], false);
+      updateReachablePositions(multiFloorMap[currentFloor], position, player.stats.speed.values[player.stats.speed.currentIndex], false);
 
       // 完成回合切換
       setIsProcessingTurnSwitch(false);
@@ -2775,7 +2787,7 @@ export default function SoloGamePage() {
     setPosition({ x: targetPosition.x, y: targetPosition.y });
 
     // Issue #89: 重置移動點數和 discovered 狀態
-    const resetMoves = player.stats.speed[0];
+    const resetMoves = player.stats.speed.values[player.stats.speed.currentIndex];
     setMoves(resetMoves);
     setDiscovered(false);
 
@@ -3051,7 +3063,10 @@ export default function SoloGamePage() {
             ...prev,
             stats: {
               ...prev.stats,
-              sanity: [prev.stats.sanity[0] + 1, prev.stats.sanity[1]],
+              sanity: {
+                ...prev.stats.sanity,
+                currentIndex: Math.min(7, prev.stats.sanity.currentIndex + 1),
+              },
             },
           };
         });
@@ -3159,7 +3174,7 @@ export default function SoloGamePage() {
       });
 
       // Issue #115: 同步更新 player (Character) 的 stats
-      // 注意：stats[0] 是當前值（UI 顯示用），stats[1] 是初始值
+      // 注意：使用 currentIndex 來追蹤當前屬性值位置
       setPlayer(prev => {
         if (!prev) return prev;
         const speedChange = result.statChanges?.speed || 0;
@@ -3169,10 +3184,10 @@ export default function SoloGamePage() {
         return {
           ...prev,
           stats: {
-            speed: [prev.stats.speed[0] + speedChange, prev.stats.speed[1]],
-            might: [prev.stats.might[0] + mightChange, prev.stats.might[1]],
-            sanity: [prev.stats.sanity[0] + sanityChange, prev.stats.sanity[1]],
-            knowledge: [prev.stats.knowledge[0] + knowledgeChange, prev.stats.knowledge[1]],
+            speed: { ...prev.stats.speed, currentIndex: Math.min(7, Math.max(0, prev.stats.speed.currentIndex + speedChange)) },
+            might: { ...prev.stats.might, currentIndex: Math.min(7, Math.max(0, prev.stats.might.currentIndex + mightChange)) },
+            sanity: { ...prev.stats.sanity, currentIndex: Math.min(7, Math.max(0, prev.stats.sanity.currentIndex + sanityChange)) },
+            knowledge: { ...prev.stats.knowledge, currentIndex: Math.min(7, Math.max(0, prev.stats.knowledge.currentIndex + knowledgeChange)) },
           },
         };
       });
@@ -3315,15 +3330,20 @@ export default function SoloGamePage() {
       });
 
       // 同步更新 player (Character) 的 stats
+      // 計算新舊值的差異來調整 currentIndex
       setPlayer(prev => {
         if (!prev) return prev;
+        const speedDiff = result.newStats.speed - prev.stats.speed.values[prev.stats.speed.currentIndex];
+        const mightDiff = result.newStats.might - prev.stats.might.values[prev.stats.might.currentIndex];
+        const sanityDiff = result.newStats.sanity - prev.stats.sanity.values[prev.stats.sanity.currentIndex];
+        const knowledgeDiff = result.newStats.knowledge - prev.stats.knowledge.values[prev.stats.knowledge.currentIndex];
         return {
           ...prev,
           stats: {
-            speed: [result.newStats.speed, prev.stats.speed[1]],
-            might: [result.newStats.might, prev.stats.might[1]],
-            sanity: [result.newStats.sanity, prev.stats.sanity[1]],
-            knowledge: [result.newStats.knowledge, prev.stats.knowledge[1]],
+            speed: { ...prev.stats.speed, currentIndex: Math.min(7, Math.max(0, prev.stats.speed.currentIndex + speedDiff)) },
+            might: { ...prev.stats.might, currentIndex: Math.min(7, Math.max(0, prev.stats.might.currentIndex + mightDiff)) },
+            sanity: { ...prev.stats.sanity, currentIndex: Math.min(7, Math.max(0, prev.stats.sanity.currentIndex + sanityDiff)) },
+            knowledge: { ...prev.stats.knowledge, currentIndex: Math.min(7, Math.max(0, prev.stats.knowledge.currentIndex + knowledgeDiff)) },
           },
         };
       });
@@ -3502,13 +3522,17 @@ export default function SoloGamePage() {
       if (discardResult.newStats) {
         setPlayer(prev => {
           if (!prev) return prev;
+          const speedDiff = discardResult.newStats!.speed - prev.stats.speed.values[prev.stats.speed.currentIndex];
+          const mightDiff = discardResult.newStats!.might - prev.stats.might.values[prev.stats.might.currentIndex];
+          const sanityDiff = discardResult.newStats!.sanity - prev.stats.sanity.values[prev.stats.sanity.currentIndex];
+          const knowledgeDiff = discardResult.newStats!.knowledge - prev.stats.knowledge.values[prev.stats.knowledge.currentIndex];
           return {
             ...prev,
             stats: {
-              speed: [discardResult.newStats!.speed, prev.stats.speed[1]],
-              might: [discardResult.newStats!.might, prev.stats.might[1]],
-              sanity: [discardResult.newStats!.sanity, prev.stats.sanity[1]],
-              knowledge: [discardResult.newStats!.knowledge, prev.stats.knowledge[1]],
+              speed: { ...prev.stats.speed, currentIndex: Math.min(7, Math.max(0, prev.stats.speed.currentIndex + speedDiff)) },
+              might: { ...prev.stats.might, currentIndex: Math.min(7, Math.max(0, prev.stats.might.currentIndex + mightDiff)) },
+              sanity: { ...prev.stats.sanity, currentIndex: Math.min(7, Math.max(0, prev.stats.sanity.currentIndex + sanityDiff)) },
+              knowledge: { ...prev.stats.knowledge, currentIndex: Math.min(7, Math.max(0, prev.stats.knowledge.currentIndex + knowledgeDiff)) },
             },
           };
         });
@@ -3972,25 +3996,25 @@ export default function SoloGamePage() {
                     <div className="grid grid-cols-2 gap-3">
                       <StatCard
                         label="速度"
-                        value={player.stats.speed[0]}
+                        value={player.stats.speed.values[player.stats.speed.currentIndex]}
                         color="#3B82F6"
                         icon="⚡"
                       />
                       <StatCard
                         label="力量"
-                        value={player.stats.might[0]}
+                        value={player.stats.might.values[player.stats.might.currentIndex]}
                         color="#EF4444"
                         icon="💪"
                       />
                       <StatCard
                         label="理智"
-                        value={player.stats.sanity[0]}
+                        value={player.stats.sanity.values[player.stats.sanity.currentIndex]}
                         color="#8B5CF6"
                         icon="🧠"
                       />
                       <StatCard
                         label="知識"
-                        value={player.stats.knowledge[0]}
+                        value={player.stats.knowledge.values[player.stats.knowledge.currentIndex]}
                         color="#10B981"
                         icon="📚"
                       />

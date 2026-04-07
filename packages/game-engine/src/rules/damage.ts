@@ -14,6 +14,7 @@
  */
 
 import { CharacterStats, StatType, Player } from '../types';
+import { CharacterStat } from '@betrayal/shared';
 
 // ==================== 類型定義 ====================
 
@@ -517,6 +518,74 @@ export function getSafeTraitChoices(
   );
 }
 
+// ==================== 索引基礎屬性操作 ====================
+
+/**
+ * 應用傷害到屬性軌道（索引基礎）
+ * 
+ * 根據 GitHub Issue #296，使用索引系統來追蹤屬性值
+ * - 傷害減少索引（向左移動）
+ * - 最小索引為 0（骷髏位置）
+ * 
+ * @param stat 屬性軌道
+ * @param amount 傷害數值（要減少的索引數）
+ * @returns 更新後的屬性軌道
+ */
+export function applyDamageToStat(stat: CharacterStat, amount: number): CharacterStat {
+  return {
+    ...stat,
+    currentIndex: Math.max(0, stat.currentIndex - amount),
+  };
+}
+
+/**
+ * 應用增益到屬性軌道（索引基礎）
+ * 
+ * 根據 GitHub Issue #296，使用索引系統來追蹤屬性值
+ * - 增益增加索引（向右移動）
+ * - 最大索引為 7（最高值）
+ * 
+ * @param stat 屬性軌道
+ * @param amount 增益數值（要增加的索引數）
+ * @returns 更新後的屬性軌道
+ */
+export function applyBuffToStat(stat: CharacterStat, amount: number): CharacterStat {
+  return {
+    ...stat,
+    currentIndex: Math.min(7, stat.currentIndex + amount),
+  };
+}
+
+/**
+ * 取得屬性軌道的當前數值
+ * 
+ * @param stat 屬性軌道
+ * @returns 當前數值
+ */
+export function getStatValue(stat: CharacterStat): number {
+  return stat.values[stat.currentIndex];
+}
+
+/**
+ * 檢查屬性是否已達最小值（骷髏位置）
+ * 
+ * @param stat 屬性軌道
+ * @returns 是否在最小值
+ */
+export function isStatAtMinimum(stat: CharacterStat): boolean {
+  return stat.currentIndex === 0;
+}
+
+/**
+ * 檢查屬性是否已達最大值
+ * 
+ * @param stat 屬性軌道
+ * @returns 是否在最大值
+ */
+export function isStatAtMaximum(stat: CharacterStat): boolean {
+  return stat.currentIndex === 7;
+}
+
 // ==================== 匯出 ====================
 
 export {
@@ -539,4 +608,10 @@ export default {
   willDamageCauseDeath,
   getFatalTraitChoices,
   getSafeTraitChoices,
+  // 索引基礎函數
+  applyDamageToStat,
+  applyBuffToStat,
+  getStatValue,
+  isStatAtMinimum,
+  isStatAtMaximum,
 };

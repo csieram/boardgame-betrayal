@@ -166,10 +166,10 @@ function CharacterSelectCard({
           
           {/* 屬性軌道 */}
           <div className="mt-3 space-y-1">
-            <MiniStatTrack label="速" track={character.stats.speed.values} startIndex={character.stats.speed.startIndex} color="#3B82F6" />
-            <MiniStatTrack label="力" track={character.stats.might.values} startIndex={character.stats.might.startIndex} color="#EF4444" />
-            <MiniStatTrack label="理" track={character.stats.sanity.values} startIndex={character.stats.sanity.startIndex} color="#8B5CF6" />
-            <MiniStatTrack label="知" track={character.stats.knowledge.values} startIndex={character.stats.knowledge.startIndex} color="#10B981" />
+            <MiniStatTrack label="速" track={character.stats.speed.values} currentIndex={character.stats.speed.currentIndex} color="#3B82F6" />
+            <MiniStatTrack label="力" track={character.stats.might.values} currentIndex={character.stats.might.currentIndex} color="#EF4444" />
+            <MiniStatTrack label="理" track={character.stats.sanity.values} currentIndex={character.stats.sanity.currentIndex} color="#8B5CF6" />
+            <MiniStatTrack label="知" track={character.stats.knowledge.values} currentIndex={character.stats.knowledge.currentIndex} color="#10B981" />
           </div>
         </div>
       </div>
@@ -183,17 +183,17 @@ function CharacterSelectCard({
 interface MiniStatTrackProps {
   label: string;
   track: number[];
-  startIndex: number;
+  currentIndex: number;
   color: string;
 }
 
-function MiniStatTrack({ label, track, startIndex, color }: MiniStatTrackProps) {
+function MiniStatTrack({ label, track, currentIndex, color }: MiniStatTrackProps) {
   return (
     <div className="flex items-center gap-2">
       <span className="text-[10px] text-gray-500 w-3">{label}</span>
       <div className="flex gap-0.5 flex-1">
         {track.map((val, idx) => {
-          const isCurrent = idx === startIndex;
+          const isCurrent = idx === currentIndex;
           const isSkull = idx === 0;
           return (
             <div
@@ -208,7 +208,7 @@ function MiniStatTrack({ label, track, startIndex, color }: MiniStatTrackProps) 
         })}
       </div>
       <span className="text-[10px] font-bold" style={{ color, width: '16px', textAlign: 'right' }}>
-        {track[startIndex]}
+        {track[currentIndex]}
       </span>
     </div>
   );
@@ -318,30 +318,30 @@ function CharacterDetailPanel({
         <div className="space-y-3">
           <StatTrack 
             label="速度 Speed" 
-            value={character.stats.speed.values[character.stats.speed.startIndex]} 
+            value={character.stats.speed.values[character.stats.speed.currentIndex]} 
             track={character.stats.speed.values}
-            startIndex={character.stats.speed.startIndex}
+            currentIndex={character.stats.speed.currentIndex}
             color="#3B82F6"
           />
           <StatTrack 
             label="力量 Might" 
-            value={character.stats.might.values[character.stats.might.startIndex]} 
+            value={character.stats.might.values[character.stats.might.currentIndex]} 
             track={character.stats.might.values}
-            startIndex={character.stats.might.startIndex}
+            currentIndex={character.stats.might.currentIndex}
             color="#EF4444"
           />
           <StatTrack 
             label="理智 Sanity" 
-            value={character.stats.sanity.values[character.stats.sanity.startIndex]} 
+            value={character.stats.sanity.values[character.stats.sanity.currentIndex]} 
             track={character.stats.sanity.values}
-            startIndex={character.stats.sanity.startIndex}
+            currentIndex={character.stats.sanity.currentIndex}
             color="#8B5CF6"
           />
           <StatTrack 
             label="知識 Knowledge" 
-            value={character.stats.knowledge.values[character.stats.knowledge.startIndex]} 
+            value={character.stats.knowledge.values[character.stats.knowledge.currentIndex]} 
             track={character.stats.knowledge.values}
-            startIndex={character.stats.knowledge.startIndex}
+            currentIndex={character.stats.knowledge.currentIndex}
             color="#10B981"
           />
         </div>
@@ -414,11 +414,11 @@ interface StatTrackProps {
   label: string;
   value: number;
   track: number[];
-  startIndex: number;
+  currentIndex: number;
   color: string;
 }
 
-function StatTrack({ label, value, track, startIndex, color }: StatTrackProps) {
+function StatTrack({ label, value, track, currentIndex, color }: StatTrackProps) {
   return (
     <div>
       <div className="flex justify-between text-xs mb-1">
@@ -427,7 +427,7 @@ function StatTrack({ label, value, track, startIndex, color }: StatTrackProps) {
       </div>
       <div className="flex gap-1">
         {track.map((val, idx) => {
-          const isCurrent = idx === startIndex;
+          const isCurrent = idx === currentIndex;
           const isSkull = idx === 0; // 骷髏在 index 0（最低值）
           return (
             <div
@@ -449,11 +449,11 @@ function StatTrack({ label, value, track, startIndex, color }: StatTrackProps) {
             key={idx} 
             className="flex-1 text-center"
             style={{ 
-              opacity: idx === startIndex ? 1 : 0.5,
-              fontWeight: idx === startIndex ? 'bold' : 'normal'
+              opacity: idx === currentIndex ? 1 : 0.5,
+              fontWeight: idx === currentIndex ? 'bold' : 'normal'
             }}
           >
-            {idx === 0 ? '💀' : (idx === startIndex ? '⭐' : val)}
+            {idx === 0 ? '💀' : (idx === currentIndex ? '⭐' : val)}
           </span>
         ))}
       </div>
