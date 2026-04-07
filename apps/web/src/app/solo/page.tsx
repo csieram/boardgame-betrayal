@@ -914,6 +914,23 @@ export default function SoloGamePage() {
 
   // 處理進入 Haunt Reveal
   const handleProceedToReveal = () => {
+    // Issue #301: 檢查作祟是否已經開始
+    if (hauntState.isActive) {
+      // 作祟已經開始，關閉模態框並結束回合
+      setHauntState(prev => ({
+        ...prev,
+        showRollModal: false,
+        rollResult: null,
+      }));
+      
+      // 標記回合結束
+      setTurnState({
+        hasEnded: true,
+        endedByDiscovery: true,
+      });
+      return;
+    }
+
     setHauntState(prev => ({
       ...prev,
       showRollModal: false,
@@ -4306,6 +4323,7 @@ export default function SoloGamePage() {
         isRolling={hauntState.isRolling}
         onClose={handleHauntRollClose}
         onProceedToReveal={handleProceedToReveal}
+        isHauntActive={hauntState.isActive}
       />
 
       {/* Haunt Reveal 畫面 (Issue #97) */}

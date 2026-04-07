@@ -17,6 +17,8 @@ interface HauntRollModalProps {
   onClose: () => void;
   /** 繼續到作祟揭示（當作祟觸發時） */
   onProceedToReveal: () => void;
+  /** 作祟是否已經開始（Issue #301） */
+  isHauntActive?: boolean;
 }
 
 /**
@@ -44,6 +46,7 @@ export function HauntRollModal({
   isRolling,
   onClose,
   onProceedToReveal,
+  isHauntActive = false,
 }: HauntRollModalProps) {
   const [showResult, setShowResult] = useState(false);
   const [diceValues, setDiceValues] = useState<number[]>([]);
@@ -245,7 +248,10 @@ export function HauntRollModal({
                           {rollResult.total}
                         </p>
                         <p className="text-gray-500 text-xs mt-1">
-                          （總和 &lt; {omenCount} 觸發作祟）
+                          {isHauntActive 
+                            ? `（總和 &lt; ${omenCount} 作祟繼續）`
+                            : `（總和 &lt; ${omenCount} 觸發作祟）`
+                          }
                         </p>
                       </div>
 
@@ -259,10 +265,13 @@ export function HauntRollModal({
                         >
                           <div className="text-4xl mb-2">🎭</div>
                           <h3 className="text-xl font-bold text-red-400 mb-1">
-                            作祟開始！
+                            {isHauntActive ? '作祟繼續！' : '作祟開始！'}
                           </h3>
                           <p className="text-red-300 text-sm">
-                            {rollResult.total} &lt; {omenCount}，作祟被觸發
+                            {isHauntActive 
+                              ? `${rollResult.total} &lt; ${omenCount}，作祟將繼續進行`
+                              : `${rollResult.total} &lt; ${omenCount}，作祟被觸發`
+                            }
                           </p>
                         </motion.div>
                       ) : (
@@ -274,10 +283,13 @@ export function HauntRollModal({
                         >
                           <div className="text-4xl mb-2">✨</div>
                           <h3 className="text-xl font-bold text-green-400 mb-1">
-                            安全
+                            {isHauntActive ? '作祟結束' : '安全'}
                           </h3>
                           <p className="text-green-300 text-sm">
-                            {rollResult.total} ≥ {omenCount}，作祟未觸發
+                            {isHauntActive 
+                              ? `${rollResult.total} ≥ ${omenCount}，作祟將結束`
+                              : `${rollResult.total} ≥ ${omenCount}，作祟未觸發`
+                            }
                           </p>
                         </motion.div>
                       )}
@@ -297,7 +309,10 @@ export function HauntRollModal({
                           }
                         `}
                       >
-                        {rollResult.hauntBegins ? '揭示作祟' : '繼續遊戲'}
+                        {rollResult.hauntBegins 
+                          ? (isHauntActive ? '繼續遊戲' : '揭示作祟') 
+                          : '繼續遊戲'
+                        }
                       </motion.button>
                     </motion.div>
                   )}
