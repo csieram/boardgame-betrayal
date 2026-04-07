@@ -114,17 +114,12 @@ export function CharacterDetailPanel({
         </p>
       </div>
 
-      {/* 屬性面板 - 簡化單行顯示 */}
-      <div className="mb-4 p-2 bg-gray-700/30 rounded-lg">
-        <p className="text-sm text-gray-300">
-          <span className="text-blue-400">速 {player.stats.speed}</span>
-          <span className="text-gray-500 mx-2">|</span>
-          <span className="text-red-400">力 {player.stats.might}</span>
-          <span className="text-gray-500 mx-2">|</span>
-          <span className="text-purple-400">理 {player.stats.sanity}</span>
-          <span className="text-gray-500 mx-2">|</span>
-          <span className="text-green-400">知 {player.stats.knowledge}</span>
-        </p>
+      {/* 屬性軌道 */}
+      <div className="mb-4 space-y-2">
+        <StatTrack label="速度" values={player.character.stats.speed.values} currentIndex={player.character.stats.speed.currentIndex} color="#3B82F6" />
+        <StatTrack label="力量" values={player.character.stats.might.values} currentIndex={player.character.stats.might.currentIndex} color="#EF4444" />
+        <StatTrack label="理智" values={player.character.stats.sanity.values} currentIndex={player.character.stats.sanity.currentIndex} color="#8B5CF6" />
+        <StatTrack label="知識" values={player.character.stats.knowledge.values} currentIndex={player.character.stats.knowledge.currentIndex} color="#10B981" />
       </div>
 
       {/* Issue #189: 移除重複的背包資訊，由 InventoryPanel 統一顯示 */}
@@ -152,6 +147,43 @@ export function CharacterDetailPanel({
 /**
  * 取得個性標籤
  */
+/**
+ * 屬性軌道顯示組件
+ */
+interface StatTrackProps {
+  label: string;
+  values: number[];
+  currentIndex: number;
+  color: string;
+}
+
+function StatTrack({ label, values, currentIndex, color }: StatTrackProps) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-xs text-gray-400 w-12">{label}</span>
+      <div className="flex gap-1 flex-1">
+        {values.map((value, idx) => {
+          const isCurrent = idx === currentIndex;
+          const isSkull = idx === 0;
+          return (
+            <div
+              key={idx}
+              className={`flex-1 h-2 rounded-sm ${isCurrent ? 'ring-1 ring-white' : ''}`}
+              style={{
+                backgroundColor: isSkull ? '#374151' : (isCurrent ? color : `${color}60`),
+              }}
+              title={`${isSkull ? '💀 ' : ''}${isCurrent ? '⭐ ' : ''}${value}`}
+            />
+          );
+        })}
+      </div>
+      <span className="text-xs font-bold" style={{ color, width: '20px', textAlign: 'right' }}>
+        {values[currentIndex]}
+      </span>
+    </div>
+  );
+}
+
 function getPersonalityLabel(personality: 'explorer' | 'cautious' | 'aggressive'): string {
   const labels: Record<string, string> = {
     explorer: '探索者',
