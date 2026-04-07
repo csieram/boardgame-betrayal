@@ -56,6 +56,10 @@ import {
   formatBenefitDescription,
   DiscardItemResult,
   EventDiscardOption,
+  // CharacterStat 輔助函數 (Issue #298)
+  getStatValue,
+  applyDamageToStat,
+  applyBuffToStat,
   // Hero AI System (Issue #109)
   HeroAI,
   createHeroAIs,
@@ -674,14 +678,15 @@ export default function SoloGamePage() {
         setMultiFloorMap(initialMultiFloorMap);
 
         // 初始化玩家狀態（用於卡牌效果）
+        // Issue #298: 使用 CharacterStat 結構
         const initialPlayerState: PlayerState = {
           id: 'solo-player',
           name: character.name,
           stats: {
-            speed: character.stats.speed.values[character.stats.speed.currentIndex],
-            might: character.stats.might.values[character.stats.might.currentIndex],
-            sanity: character.stats.sanity.values[character.stats.sanity.currentIndex],
-            knowledge: character.stats.knowledge.values[character.stats.knowledge.currentIndex],
+            speed: character.stats.speed,
+            might: character.stats.might,
+            sanity: character.stats.sanity,
+            knowledge: character.stats.knowledge,
           },
           items: [],
           omens: [],
@@ -1041,11 +1046,12 @@ export default function SoloGamePage() {
           id: 'solo-player',
           name: player?.name || '玩家',
           position: { x: position.x, y: position.y, floor: currentFloor },
+          // Issue #298: 使用 getStatValue 從 CharacterStat 獲取數值
           currentStats: {
-            speed: playerState?.stats.speed || 4,
-            might: playerState?.stats.might || 4,
-            sanity: playerState?.stats.sanity || 4,
-            knowledge: playerState?.stats.knowledge || 4,
+            speed: playerState?.stats.speed ? getStatValue(playerState.stats.speed) : 4,
+            might: playerState?.stats.might ? getStatValue(playerState.stats.might) : 4,
+            sanity: playerState?.stats.sanity ? getStatValue(playerState.stats.sanity) : 4,
+            knowledge: playerState?.stats.knowledge ? getStatValue(playerState.stats.knowledge) : 4,
           },
           items: playerState?.items || [],
           omens: playerState?.omens || [],
@@ -1359,8 +1365,9 @@ export default function SoloGamePage() {
           name: aiPlayer.name,
           type: 'player',
           position: aiPos,
-          might: aiPlayer.character?.stats?.might?.[0] || 4,
-          speed: aiPlayer.character?.stats?.speed?.[0] || 4,
+          // Issue #298: 使用 getStatValue 從 CharacterStat 獲取數值
+        might: aiPlayer.character?.stats?.might ? getStatValue(aiPlayer.character.stats.might) : 4,
+          speed: aiPlayer.character?.stats?.speed ? getStatValue(aiPlayer.character.stats.speed) : 4,
           isTraitor: hauntState.revelation?.traitorId === aiPlayer.id,
         });
       }
@@ -1453,11 +1460,12 @@ export default function SoloGamePage() {
           name: player?.name || '玩家',
           character: player!,
           position: { x: position.x, y: position.y, floor: currentFloor },
+          // Issue #298: 使用 getStatValue 從 CharacterStat 獲取數值
           currentStats: {
-            speed: playerState!.stats.speed,
-            might: playerState!.stats.might,
-            sanity: playerState!.stats.sanity,
-            knowledge: playerState!.stats.knowledge,
+            speed: getStatValue(playerState!.stats.speed),
+            might: getStatValue(playerState!.stats.might),
+            sanity: getStatValue(playerState!.stats.sanity),
+            knowledge: getStatValue(playerState!.stats.knowledge),
           },
           items: playerState!.items,
           omens: playerState!.omens,
@@ -1470,11 +1478,12 @@ export default function SoloGamePage() {
           name: target?.name || '敵人',
           character: target?.character || player!,
           position: targetPos,
+          // Issue #298: 使用 getStatValue 從 CharacterStat 獲取數值
           currentStats: {
-            speed: target?.character?.stats?.speed?.[0] || 4,
-            might: target?.character?.stats?.might?.[0] || 4,
-            sanity: target?.character?.stats?.sanity?.[0] || 4,
-            knowledge: target?.character?.stats?.knowledge?.[0] || 4,
+            speed: target?.character?.stats?.speed ? getStatValue(target.character.stats.speed) : 4,
+            might: target?.character?.stats?.might ? getStatValue(target.character.stats.might) : 4,
+            sanity: target?.character?.stats?.sanity ? getStatValue(target.character.stats.sanity) : 4,
+            knowledge: target?.character?.stats?.knowledge ? getStatValue(target.character.stats.knowledge) : 4,
           },
           items: target?.items || [],
           omens: target?.omens || [],
@@ -1563,28 +1572,31 @@ export default function SoloGamePage() {
         ]);
 
         // 如果玩家受傷，更新狀態
+        // Issue #298: 使用 applyDamageToStat 處理 CharacterStat
         if (result.loser?.id === 'solo-player' && result.damage) {
-          const newMight = Math.max(0, playerState!.stats.might - result.damage);
+          const oldMightValue = getStatValue(playerState!.stats.might);
           setPlayerState(prev => prev ? {
             ...prev,
-            stats: { ...prev.stats, might: newMight },
+            stats: {
+              ...prev.stats,
+              might: applyDamageToStat(prev.stats.might, result.damage || 0),
+            },
           } : null);
           setPlayer(prev => prev ? {
             ...prev,
             stats: {
               ...prev.stats,
-              might: {
-                ...prev.stats.might,
-                currentIndex: Math.max(0, prev.stats.might.currentIndex - (result.damage || 0)),
-              },
+              might: applyDamageToStat(prev.stats.might, result.damage || 0),
             },
           } : null);
-          setLog(prev => [...prev, `💔 你的力量從 ${playerState!.stats.might} 降至 ${newMight}`]);
+          const newMightValue = Math.max(0, oldMightValue - (result.damage || 0));
+          setLog(prev => [...prev, `💔 你的力量從 ${oldMightValue} 降至 ${newMightValue}`]);
         }
         
         // 如果 AI 受傷，更新 AI 狀態
+        // Issue #298: 使用 getStatValue 從 CharacterStat 獲取數值
         if (result.loser?.id === targetId && result.damage && target) {
-          const currentMight = target.character?.stats?.might?.[0] || 4;
+          const currentMight = target.character?.stats?.might ? getStatValue(target.character.stats.might) : 4;
           const newMight = Math.max(0, currentMight - result.damage);
           
           updateAIPlayerStats(targetId, { might: -result.damage });
@@ -1615,20 +1627,20 @@ export default function SoloGamePage() {
         ]);
         
         // 應用平手傷害
+        // Issue #298: 使用 applyDamageToStat 處理 CharacterStat
         if (result.attackerDamage && result.attackerDamage > 0) {
-          const newMight = Math.max(0, playerState!.stats.might - result.attackerDamage);
           setPlayerState(prev => prev ? {
             ...prev,
-            stats: { ...prev.stats, might: newMight },
+            stats: {
+              ...prev.stats,
+              might: applyDamageToStat(prev.stats.might, result.attackerDamage || 0),
+            },
           } : null);
           setPlayer(prev => prev ? {
             ...prev,
             stats: {
               ...prev.stats,
-              might: {
-                ...prev.stats.might,
-                currentIndex: Math.max(0, prev.stats.might.currentIndex - (result.attackerDamage || 0)),
-              },
+              might: applyDamageToStat(prev.stats.might, result.attackerDamage || 0),
             },
           } : null);
         }
@@ -1717,11 +1729,12 @@ export default function SoloGamePage() {
           name: aiPlayer.name,
           character: aiPlayer.character,
           position: aiPos,
+          // Issue #298: 使用 getStatValue 從 CharacterStat 獲取數值
           currentStats: {
-            speed: aiPlayer.character?.stats?.speed?.[0] || 4,
-            might: aiPlayer.character?.stats?.might?.[0] || 4,
-            sanity: aiPlayer.character?.stats?.sanity?.[0] || 4,
-            knowledge: aiPlayer.character?.stats?.knowledge?.[0] || 4,
+            speed: aiPlayer.character?.stats?.speed ? getStatValue(aiPlayer.character.stats.speed) : 4,
+            might: aiPlayer.character?.stats?.might ? getStatValue(aiPlayer.character.stats.might) : 4,
+            sanity: aiPlayer.character?.stats?.sanity ? getStatValue(aiPlayer.character.stats.sanity) : 4,
+            knowledge: aiPlayer.character?.stats?.knowledge ? getStatValue(aiPlayer.character.stats.knowledge) : 4,
           },
           items: aiPlayer.items || [],
           omens: aiPlayer.omens || [],
@@ -1734,16 +1747,18 @@ export default function SoloGamePage() {
           name: targetId === 'solo-player' ? (player?.name || '玩家') : (target as AIPlayerInfo).name,
           character: targetId === 'solo-player' ? player! : (target as AIPlayerInfo).character,
           position: targetPos,
+          // Issue #298: 使用 getStatValue 從 CharacterStat 獲取數值
           currentStats: targetId === 'solo-player' ? {
-            speed: playerState!.stats.speed,
-            might: playerState!.stats.might,
-            sanity: playerState!.stats.sanity,
-            knowledge: playerState!.stats.knowledge,
+            speed: getStatValue(playerState!.stats.speed),
+            might: getStatValue(playerState!.stats.might),
+            sanity: getStatValue(playerState!.stats.sanity),
+            knowledge: getStatValue(playerState!.stats.knowledge),
           } : {
-            speed: (target as AIPlayerInfo).character?.stats?.speed?.[0] || 4,
-            might: (target as AIPlayerInfo).character?.stats?.might?.[0] || 4,
-            sanity: (target as AIPlayerInfo).character?.stats?.sanity?.[0] || 4,
-            knowledge: (target as AIPlayerInfo).character?.stats?.knowledge?.[0] || 4,
+            // Issue #298: 使用 getStatValue 從 CharacterStat 獲取數值
+            speed: (target as AIPlayerInfo).character?.stats?.speed ? getStatValue((target as AIPlayerInfo).character!.stats.speed) : 4,
+            might: (target as AIPlayerInfo).character?.stats?.might ? getStatValue((target as AIPlayerInfo).character!.stats.might) : 4,
+            sanity: (target as AIPlayerInfo).character?.stats?.sanity ? getStatValue((target as AIPlayerInfo).character!.stats.sanity) : 4,
+            knowledge: (target as AIPlayerInfo).character?.stats?.knowledge ? getStatValue((target as AIPlayerInfo).character!.stats.knowledge) : 4,
           },
           items: targetId === 'solo-player' ? playerState!.items : (target as AIPlayerInfo).items || [],
           omens: targetId === 'solo-player' ? playerState!.omens : (target as AIPlayerInfo).omens || [],
@@ -1809,23 +1824,25 @@ export default function SoloGamePage() {
         ]);
         
         // 如果玩家受傷
+        // Issue #298: 使用 applyDamageToStat 處理 CharacterStat
         if (result.loser?.id === 'solo-player' && result.damage) {
-          const newMight = Math.max(0, playerState!.stats.might - result.damage);
+          const oldMightValue = getStatValue(playerState!.stats.might);
           setPlayerState(prev => prev ? {
             ...prev,
-            stats: { ...prev.stats, might: newMight },
+            stats: {
+              ...prev.stats,
+              might: applyDamageToStat(prev.stats.might, result.damage || 0),
+            },
           } : null);
           setPlayer(prev => prev ? {
             ...prev,
             stats: {
               ...prev.stats,
-              might: {
-                ...prev.stats.might,
-                currentIndex: Math.max(0, prev.stats.might.currentIndex - (result.damage || 0)),
-              },
+              might: applyDamageToStat(prev.stats.might, result.damage || 0),
             },
           } : null);
-          setLog(prev => [...prev, `💔 你的力量從 ${playerState!.stats.might} 降至 ${newMight}`]);
+          const newMightValue = Math.max(0, oldMightValue - (result.damage || 0));
+          setLog(prev => [...prev, `💔 你的力量從 ${oldMightValue} 降至 ${newMightValue}`]);
         }
 
         // 如果 AI 受傷
@@ -1860,21 +1877,21 @@ export default function SoloGamePage() {
           updateAIPlayerStats(aiPlayerId, { might: -result.attackerDamage });
         }
 
+        // Issue #298: 使用 applyDamageToStat 處理 CharacterStat
         if (result.defenderDamage && result.defenderDamage > 0) {
           if (targetId === 'solo-player') {
-            const newMight = Math.max(0, playerState!.stats.might - result.defenderDamage);
             setPlayerState(prev => prev ? {
               ...prev,
-              stats: { ...prev.stats, might: newMight },
+              stats: {
+                ...prev.stats,
+                might: applyDamageToStat(prev.stats.might, result.defenderDamage || 0),
+              },
             } : null);
             setPlayer(prev => prev ? {
               ...prev,
               stats: {
                 ...prev.stats,
-                might: {
-                  ...prev.stats.might,
-                  currentIndex: Math.max(0, prev.stats.might.currentIndex - (result.defenderDamage || 0)),
-                },
+                might: applyDamageToStat(prev.stats.might, result.defenderDamage || 0),
               },
             } : null);
           } else {
@@ -2617,11 +2634,12 @@ export default function SoloGamePage() {
                 };
                 
                 // 獲取當前屬性值（更新前）
+                // Issue #298: 使用 getStatValue 從 CharacterStat 獲取數值
                 const currentStats = {
-                  speed: aiPlayer.character?.stats?.speed?.[0] ?? 4,
-                  might: aiPlayer.character?.stats?.might?.[0] ?? 4,
-                  sanity: aiPlayer.character?.stats?.sanity?.[0] ?? 4,
-                  knowledge: aiPlayer.character?.stats?.knowledge?.[0] ?? 4,
+                  speed: aiPlayer.character?.stats?.speed ? getStatValue(aiPlayer.character.stats.speed) : 4,
+                  might: aiPlayer.character?.stats?.might ? getStatValue(aiPlayer.character.stats.might) : 4,
+                  sanity: aiPlayer.character?.stats?.sanity ? getStatValue(aiPlayer.character.stats.sanity) : 4,
+                  knowledge: aiPlayer.character?.stats?.knowledge ? getStatValue(aiPlayer.character.stats.knowledge) : 4,
                 };
                 
                 Object.entries(changes).forEach(([stat, value]) => {
@@ -2994,11 +3012,12 @@ export default function SoloGamePage() {
         name: player?.name || '玩家',
         character: player!,
         position: { x: position.x, y: position.y, floor: currentFloor },
+        // Issue #298: 使用 getStatValue 從 CharacterStat 獲取數值
         currentStats: {
-          speed: playerState.stats.speed,
-          might: playerState.stats.might,
-          sanity: playerState.stats.sanity,
-          knowledge: playerState.stats.knowledge,
+          speed: getStatValue(playerState.stats.speed),
+          might: getStatValue(playerState.stats.might),
+          sanity: getStatValue(playerState.stats.sanity),
+          knowledge: getStatValue(playerState.stats.knowledge),
         },
         items: playerState.items,
         omens: playerState.omens,
@@ -3106,13 +3125,14 @@ export default function SoloGamePage() {
 
       case 'gain_sanity':
         // 獲得 1 點理智
+        // Issue #298: 使用 applyBuffToStat 處理 CharacterStat
         setPlayerState(prev => {
           if (!prev) return prev;
           return {
             ...prev,
             stats: {
               ...prev.stats,
-              sanity: prev.stats.sanity + 1,
+              sanity: applyBuffToStat(prev.stats.sanity, 1),
             },
           };
         });
@@ -3122,10 +3142,7 @@ export default function SoloGamePage() {
             ...prev,
             stats: {
               ...prev.stats,
-              sanity: {
-                ...prev.stats.sanity,
-                currentIndex: Math.min(7, prev.stats.sanity.currentIndex + 1),
-              },
+              sanity: applyBuffToStat(prev.stats.sanity, 1),
             },
           };
         });
@@ -3218,22 +3235,26 @@ export default function SoloGamePage() {
     });
     
     // 應用屬性變化
+    // Issue #298: 使用 applyBuffToStat 和 applyDamageToStat 處理 CharacterStat
     if (result.statChanges) {
       setPlayerState(prev => {
         if (!prev) return prev;
+        const speedChange = result.statChanges?.speed || 0;
+        const mightChange = result.statChanges?.might || 0;
+        const sanityChange = result.statChanges?.sanity || 0;
+        const knowledgeChange = result.statChanges?.knowledge || 0;
         return {
           ...prev,
           stats: {
-            speed: prev.stats.speed + (result.statChanges?.speed || 0),
-            might: prev.stats.might + (result.statChanges?.might || 0),
-            sanity: prev.stats.sanity + (result.statChanges?.sanity || 0),
-            knowledge: prev.stats.knowledge + (result.statChanges?.knowledge || 0),
+            speed: speedChange > 0 ? applyBuffToStat(prev.stats.speed, speedChange) : applyDamageToStat(prev.stats.speed, -speedChange),
+            might: mightChange > 0 ? applyBuffToStat(prev.stats.might, mightChange) : applyDamageToStat(prev.stats.might, -mightChange),
+            sanity: sanityChange > 0 ? applyBuffToStat(prev.stats.sanity, sanityChange) : applyDamageToStat(prev.stats.sanity, -sanityChange),
+            knowledge: knowledgeChange > 0 ? applyBuffToStat(prev.stats.knowledge, knowledgeChange) : applyDamageToStat(prev.stats.knowledge, -knowledgeChange),
           },
         };
       });
 
       // Issue #115: 同步更新 player (Character) 的 stats
-      // 注意：使用 currentIndex 來追蹤當前屬性值位置
       setPlayer(prev => {
         if (!prev) return prev;
         const speedChange = result.statChanges?.speed || 0;
@@ -3243,10 +3264,10 @@ export default function SoloGamePage() {
         return {
           ...prev,
           stats: {
-            speed: { ...prev.stats.speed, currentIndex: Math.min(7, Math.max(0, prev.stats.speed.currentIndex + speedChange)) },
-            might: { ...prev.stats.might, currentIndex: Math.min(7, Math.max(0, prev.stats.might.currentIndex + mightChange)) },
-            sanity: { ...prev.stats.sanity, currentIndex: Math.min(7, Math.max(0, prev.stats.sanity.currentIndex + sanityChange)) },
-            knowledge: { ...prev.stats.knowledge, currentIndex: Math.min(7, Math.max(0, prev.stats.knowledge.currentIndex + knowledgeChange)) },
+            speed: speedChange > 0 ? applyBuffToStat(prev.stats.speed, speedChange) : applyDamageToStat(prev.stats.speed, -speedChange),
+            might: mightChange > 0 ? applyBuffToStat(prev.stats.might, mightChange) : applyDamageToStat(prev.stats.might, -mightChange),
+            sanity: sanityChange > 0 ? applyBuffToStat(prev.stats.sanity, sanityChange) : applyDamageToStat(prev.stats.sanity, -sanityChange),
+            knowledge: knowledgeChange > 0 ? applyBuffToStat(prev.stats.knowledge, knowledgeChange) : applyDamageToStat(prev.stats.knowledge, -knowledgeChange),
           },
         };
       });
@@ -3379,30 +3400,40 @@ export default function SoloGamePage() {
     ]);
 
     // 應用傷害到玩家屬性
+    // Issue #298: 將 CharacterStats 轉換為 CharacterStat
     if (result.newStats) {
       setPlayerState(prev => {
         if (!prev) return prev;
+        // 計算差異並應用到 CharacterStat
+        const speedDiff = result.newStats!.speed - getStatValue(prev.stats.speed);
+        const mightDiff = result.newStats!.might - getStatValue(prev.stats.might);
+        const sanityDiff = result.newStats!.sanity - getStatValue(prev.stats.sanity);
+        const knowledgeDiff = result.newStats!.knowledge - getStatValue(prev.stats.knowledge);
         return {
           ...prev,
-          stats: result.newStats,
+          stats: {
+            speed: speedDiff > 0 ? applyBuffToStat(prev.stats.speed, speedDiff) : applyDamageToStat(prev.stats.speed, -speedDiff),
+            might: mightDiff > 0 ? applyBuffToStat(prev.stats.might, mightDiff) : applyDamageToStat(prev.stats.might, -mightDiff),
+            sanity: sanityDiff > 0 ? applyBuffToStat(prev.stats.sanity, sanityDiff) : applyDamageToStat(prev.stats.sanity, -sanityDiff),
+            knowledge: knowledgeDiff > 0 ? applyBuffToStat(prev.stats.knowledge, knowledgeDiff) : applyDamageToStat(prev.stats.knowledge, -knowledgeDiff),
+          },
         };
       });
 
       // 同步更新 player (Character) 的 stats
-      // 計算新舊值的差異來調整 currentIndex
       setPlayer(prev => {
         if (!prev) return prev;
-        const speedDiff = result.newStats.speed - prev.stats.speed.values[prev.stats.speed.currentIndex];
-        const mightDiff = result.newStats.might - prev.stats.might.values[prev.stats.might.currentIndex];
-        const sanityDiff = result.newStats.sanity - prev.stats.sanity.values[prev.stats.sanity.currentIndex];
-        const knowledgeDiff = result.newStats.knowledge - prev.stats.knowledge.values[prev.stats.knowledge.currentIndex];
+        const speedDiff = result.newStats!.speed - getStatValue(prev.stats.speed);
+        const mightDiff = result.newStats!.might - getStatValue(prev.stats.might);
+        const sanityDiff = result.newStats!.sanity - getStatValue(prev.stats.sanity);
+        const knowledgeDiff = result.newStats!.knowledge - getStatValue(prev.stats.knowledge);
         return {
           ...prev,
           stats: {
-            speed: { ...prev.stats.speed, currentIndex: Math.min(7, Math.max(0, prev.stats.speed.currentIndex + speedDiff)) },
-            might: { ...prev.stats.might, currentIndex: Math.min(7, Math.max(0, prev.stats.might.currentIndex + mightDiff)) },
-            sanity: { ...prev.stats.sanity, currentIndex: Math.min(7, Math.max(0, prev.stats.sanity.currentIndex + sanityDiff)) },
-            knowledge: { ...prev.stats.knowledge, currentIndex: Math.min(7, Math.max(0, prev.stats.knowledge.currentIndex + knowledgeDiff)) },
+            speed: speedDiff > 0 ? applyBuffToStat(prev.stats.speed, speedDiff) : applyDamageToStat(prev.stats.speed, -speedDiff),
+            might: mightDiff > 0 ? applyBuffToStat(prev.stats.might, mightDiff) : applyDamageToStat(prev.stats.might, -mightDiff),
+            sanity: sanityDiff > 0 ? applyBuffToStat(prev.stats.sanity, sanityDiff) : applyDamageToStat(prev.stats.sanity, -sanityDiff),
+            knowledge: knowledgeDiff > 0 ? applyBuffToStat(prev.stats.knowledge, knowledgeDiff) : applyDamageToStat(prev.stats.knowledge, -knowledgeDiff),
           },
         };
       });
@@ -3487,11 +3518,12 @@ export default function SoloGamePage() {
       name: player.name,
       character: player,
       position: { x: position.x, y: position.y, floor: currentFloor },
+      // Issue #298: 使用 getStatValue 從 CharacterStat 獲取數值
       currentStats: {
-        speed: playerState.stats.speed,
-        might: playerState.stats.might,
-        sanity: playerState.stats.sanity,
-        knowledge: playerState.stats.knowledge,
+        speed: getStatValue(playerState.stats.speed),
+        might: getStatValue(playerState.stats.might),
+        sanity: getStatValue(playerState.stats.sanity),
+        knowledge: getStatValue(playerState.stats.knowledge),
       },
       items: playerState.items,
       omens: playerState.omens,
@@ -3567,31 +3599,49 @@ export default function SoloGamePage() {
 
     if (discardResult.success && discardResult.discardedItem) {
       // 更新玩家狀態
+      // Issue #298: 將 CharacterStats 轉換為 CharacterStat
       setPlayerState(prev => {
         if (!prev) return prev;
+        if (!discardResult.newStats) {
+          return {
+            ...prev,
+            items: prev.items.filter(i => i.id !== item.id),
+            omens: prev.omens.filter(o => o.id !== item.id),
+          };
+        }
+        const speedDiff = discardResult.newStats.speed - getStatValue(prev.stats.speed);
+        const mightDiff = discardResult.newStats.might - getStatValue(prev.stats.might);
+        const sanityDiff = discardResult.newStats.sanity - getStatValue(prev.stats.sanity);
+        const knowledgeDiff = discardResult.newStats.knowledge - getStatValue(prev.stats.knowledge);
         return {
           ...prev,
           items: prev.items.filter(i => i.id !== item.id),
           omens: prev.omens.filter(o => o.id !== item.id),
-          stats: discardResult.newStats || prev.stats,
+          stats: {
+            speed: speedDiff > 0 ? applyBuffToStat(prev.stats.speed, speedDiff) : applyDamageToStat(prev.stats.speed, -speedDiff),
+            might: mightDiff > 0 ? applyBuffToStat(prev.stats.might, mightDiff) : applyDamageToStat(prev.stats.might, -mightDiff),
+            sanity: sanityDiff > 0 ? applyBuffToStat(prev.stats.sanity, sanityDiff) : applyDamageToStat(prev.stats.sanity, -sanityDiff),
+            knowledge: knowledgeDiff > 0 ? applyBuffToStat(prev.stats.knowledge, knowledgeDiff) : applyDamageToStat(prev.stats.knowledge, -knowledgeDiff),
+          },
         };
       });
 
       // 同步更新 player (Character) 的 stats
+      // Issue #298: 將 CharacterStats 轉換為 CharacterStat
       if (discardResult.newStats) {
         setPlayer(prev => {
           if (!prev) return prev;
-          const speedDiff = discardResult.newStats!.speed - prev.stats.speed.values[prev.stats.speed.currentIndex];
-          const mightDiff = discardResult.newStats!.might - prev.stats.might.values[prev.stats.might.currentIndex];
-          const sanityDiff = discardResult.newStats!.sanity - prev.stats.sanity.values[prev.stats.sanity.currentIndex];
-          const knowledgeDiff = discardResult.newStats!.knowledge - prev.stats.knowledge.values[prev.stats.knowledge.currentIndex];
+          const speedDiff = discardResult.newStats!.speed - getStatValue(prev.stats.speed);
+          const mightDiff = discardResult.newStats!.might - getStatValue(prev.stats.might);
+          const sanityDiff = discardResult.newStats!.sanity - getStatValue(prev.stats.sanity);
+          const knowledgeDiff = discardResult.newStats!.knowledge - getStatValue(prev.stats.knowledge);
           return {
             ...prev,
             stats: {
-              speed: { ...prev.stats.speed, currentIndex: Math.min(7, Math.max(0, prev.stats.speed.currentIndex + speedDiff)) },
-              might: { ...prev.stats.might, currentIndex: Math.min(7, Math.max(0, prev.stats.might.currentIndex + mightDiff)) },
-              sanity: { ...prev.stats.sanity, currentIndex: Math.min(7, Math.max(0, prev.stats.sanity.currentIndex + sanityDiff)) },
-              knowledge: { ...prev.stats.knowledge, currentIndex: Math.min(7, Math.max(0, prev.stats.knowledge.currentIndex + knowledgeDiff)) },
+              speed: speedDiff > 0 ? applyBuffToStat(prev.stats.speed, speedDiff) : applyDamageToStat(prev.stats.speed, -speedDiff),
+              might: mightDiff > 0 ? applyBuffToStat(prev.stats.might, mightDiff) : applyDamageToStat(prev.stats.might, -mightDiff),
+              sanity: sanityDiff > 0 ? applyBuffToStat(prev.stats.sanity, sanityDiff) : applyDamageToStat(prev.stats.sanity, -sanityDiff),
+              knowledge: knowledgeDiff > 0 ? applyBuffToStat(prev.stats.knowledge, knowledgeDiff) : applyDamageToStat(prev.stats.knowledge, -knowledgeDiff),
             },
           };
         });
@@ -3668,11 +3718,12 @@ export default function SoloGamePage() {
           y: position.y,
           floor: currentFloor,
         },
+        // Issue #298: 使用 getStatValue 從 CharacterStat 獲取數值
         stats: {
-          speed: playerState.stats.speed,
-          might: playerState.stats.might,
-          sanity: playerState.stats.sanity,
-          knowledge: playerState.stats.knowledge,
+          speed: getStatValue(playerState.stats.speed),
+          might: getStatValue(playerState.stats.might),
+          sanity: getStatValue(playerState.stats.sanity),
+          knowledge: getStatValue(playerState.stats.knowledge),
         },
         items: playerState.items.map(item => ({ id: item.id, name: item.name, type: item.type })),
         omens: playerState.omens.map(omen => ({ id: omen.id, name: omen.name, type: omen.type })),
@@ -4224,8 +4275,9 @@ export default function SoloGamePage() {
       <EventCheckModal
         isOpen={eventCheckState.showModal}
         card={eventCheckState.card}
+        // Issue #298: 使用 getStatValue 從 CharacterStat 獲取數值
         playerStatValue={eventCheckState.card?.rollRequired?.stat && playerState 
-          ? playerState.stats[eventCheckState.card.rollRequired.stat] 
+          ? getStatValue(playerState.stats[eventCheckState.card.rollRequired.stat])
           : 0}
         checkResult={eventCheckState.result}
         isRolling={eventCheckState.isRolling}
@@ -4327,24 +4379,43 @@ export default function SoloGamePage() {
         <CombatModal
           isOpen={combatState.showCombatModal}
           onClose={handleCloseCombat}
+          // Issue #298: 添加缺少的 Player 屬性
           attacker={{
             id: 'solo-player',
+            name: player?.name || '玩家',
             character: player!,
             position: { x: position.x, y: position.y, floor: currentFloor },
-            items: playerState?.items || [],
-            omens: playerState?.omens || [],
+            currentStats: playerState ? {
+              speed: getStatValue(playerState.stats.speed),
+              might: getStatValue(playerState.stats.might),
+              sanity: getStatValue(playerState.stats.sanity),
+              knowledge: getStatValue(playerState.stats.knowledge),
+            } : { speed: 4, might: 4, sanity: 4, knowledge: 4 },
+            items: (playerState?.items as Card[]) || [],
+            omens: (playerState?.omens as Card[]) || [],
             isTraitor: hauntState.revelation?.traitorId === 'solo-player',
+            isDead: false,
+            usedItemsThisTurn: [],
           }}
           defender={(() => {
             const target = aiPlayers.find(p => p.id === combatState.selectedTarget);
             const targetPos = aiPlayerPositions.get(combatState.selectedTarget!) || target?.position || { x: 7, y: 7, floor: 'ground' };
             return {
               id: combatState.selectedTarget!,
+              name: target?.name || '敵人',
               character: target?.character || player!,
               position: targetPos,
-              items: target?.items || [],
-              omens: target?.omens || [],
+              currentStats: target?.character?.stats ? {
+                speed: getStatValue(target.character.stats.speed),
+                might: getStatValue(target.character.stats.might),
+                sanity: getStatValue(target.character.stats.sanity),
+                knowledge: getStatValue(target.character.stats.knowledge),
+              } : { speed: 4, might: 4, sanity: 4, knowledge: 4 },
+              items: (target?.items as Card[]) || [],
+              omens: (target?.omens as Card[]) || [],
               isTraitor: hauntState.revelation?.traitorId === target?.id,
+              isDead: false,
+              usedItemsThisTurn: [],
             };
           })()}
           attackerWeapons={playerState?.items || []}
@@ -4377,7 +4448,13 @@ export default function SoloGamePage() {
         <DamageDialog
           isOpen={eventDamageState.showDialog}
           damage={eventDamageState.damage}
-          currentStats={playerState.stats}
+          // Issue #298: 轉換 CharacterStat 為 CharacterStats
+          currentStats={{
+            speed: getStatValue(playerState.stats.speed),
+            might: getStatValue(playerState.stats.might),
+            sanity: getStatValue(playerState.stats.sanity),
+            knowledge: getStatValue(playerState.stats.knowledge),
+          }}
           isHauntActive={hauntState.isActive}
           playerName={player?.name || '玩家'}
           onConfirm={handleEventDamageConfirm}

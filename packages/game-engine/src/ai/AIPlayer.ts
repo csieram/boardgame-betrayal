@@ -26,7 +26,7 @@ import {
   Tile,
   Floor,
 } from '../types';
-import { Room } from '@betrayal/shared';
+import { Room, CharacterStat } from '@betrayal/shared';
 import {
   AIDecisionEngine,
   AIDecision,
@@ -616,10 +616,16 @@ export class AIPlayer {
             // Get current player state for card effect
             const currentPlayer = this.getPlayer(gameState);
             if (currentPlayer) {
+              // Issue #298: 將 CharacterStats 轉換為 CharacterStat 結構
               const playerState = {
                 id: currentPlayer.id,
                 name: currentPlayer.name,
-                stats: currentPlayer.currentStats,
+                stats: {
+                  speed: { values: [0, 1, 2, 3, 4, 5, 6, 7, 8], currentIndex: currentPlayer.currentStats.speed },
+                  might: { values: [0, 1, 2, 3, 4, 5, 6, 7, 8], currentIndex: currentPlayer.currentStats.might },
+                  sanity: { values: [0, 1, 2, 3, 4, 5, 6, 7, 8], currentIndex: currentPlayer.currentStats.sanity },
+                  knowledge: { values: [0, 1, 2, 3, 4, 5, 6, 7, 8], currentIndex: currentPlayer.currentStats.knowledge },
+                },
                 items: currentPlayer.items,
                 omens: currentPlayer.omens,
               };

@@ -126,6 +126,10 @@ export {
   CardDrawingManager,
   CardEffectApplier,
   drawAndApplyCard,
+  // CharacterStat 輔助函數 (Issue #298)
+  getStatValue,
+  applyDamageToStat,
+  applyBuffToStat,
 } from './rules/cardDrawing';
 export type {
   CardDrawResult,

@@ -1,4 +1,4 @@
-import { Card, CardType, EVENT_CARDS, ITEM_CARDS, OMEN_CARDS } from '@betrayal/shared';
+import { Card, CardType, EVENT_CARDS, ITEM_CARDS, OMEN_CARDS, CharacterStat } from '@betrayal/shared';
 import { SeededRng } from '../core/GameState';
 
 /**
@@ -332,10 +332,10 @@ export interface PlayerState {
   id: string;
   name: string;
   stats: {
-    speed: number;
-    might: number;
-    sanity: number;
-    knowledge: number;
+    speed: CharacterStat;
+    might: CharacterStat;
+    sanity: CharacterStat;
+    knowledge: CharacterStat;
   };
   items: Card[];
   omens: Card[];
@@ -510,7 +510,7 @@ export class CardEffectApplier {
     }
 
     const { stat, target } = card.rollRequired;
-    const playerStatValue = player.stats[stat];
+    const playerStatValue = getStatValue(player.stats[stat]);
     
     // 執行檢定擲骰
     const rollResult = this.performRoll(stat, target, playerStatValue);
@@ -761,6 +761,43 @@ export interface EventCheckResult {
   effectDescription: string;
   /** 屬性變化 */
   statChanges?: Partial<Record<'speed' | 'might' | 'sanity' | 'knowledge', number>>;
+}
+
+// ==================== CharacterStat 輔助函數 ====================
+
+/**
+ * 獲取當前屬性值
+ * @param stat CharacterStat 對象
+ * @returns 當前索引對應的數值
+ */
+export function getStatValue(stat: CharacterStat): number {
+  return stat.values[stat.currentIndex];
+}
+
+/**
+ * 應用傷害（降低索引）
+ * @param stat CharacterStat 對象
+ * @param amount 傷害數量
+ * @returns 更新後的 CharacterStat
+ */
+export function applyDamageToStat(stat: CharacterStat, amount: number): CharacterStat {
+  return {
+    ...stat,
+    currentIndex: Math.max(0, stat.currentIndex - amount)
+  };
+}
+
+/**
+ * 應用增益（提高索引）
+ * @param stat CharacterStat 對象
+ * @param amount 增益數量
+ * @returns 更新後的 CharacterStat
+ */
+export function applyBuffToStat(stat: CharacterStat, amount: number): CharacterStat {
+  return {
+    ...stat,
+    currentIndex: Math.min(7, stat.currentIndex + amount)
+  };
 }
 
 // 匯出類型和函數

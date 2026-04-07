@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@betrayal/shared';
-import { 
-  CombatResult, 
-  CombatManager, 
+import {
+  CombatResult,
+  CombatManager,
   SeededRng,
   Player,
-  GameState 
+  GameState
 } from '@betrayal/game-engine';
 import { CombatCard } from './CombatCard';
 import { WeaponSelector } from './WeaponSelector';
@@ -26,7 +26,7 @@ interface CombatModalProps {
 
 /**
  * 戰鬥模態框組件
- * 
+ *
  * 顯示完整的戰鬥流程，包括武器選擇、擲骰、結果顯示
  */
 export function CombatModal({
@@ -57,7 +57,7 @@ export function CombatModal({
 
   const handleStartCombat = () => {
     setIsRolling(true);
-    
+
     // 模擬擲骰動畫
     const rollInterval = setInterval(() => {
       setAttackerRoll(Array.from({ length: 4 }, () => Math.floor(Math.random() * 3)));
@@ -67,7 +67,7 @@ export function CombatModal({
     // 2秒後停止動畫並顯示結果
     setTimeout(() => {
       clearInterval(rollInterval);
-      
+
       // 使用真正的戰鬥引擎
       const combatManager = new CombatManager(SeededRng.fromState(gameState.rngState));
       const result = combatManager.initiateCombat(
@@ -79,13 +79,13 @@ export function CombatModal({
 
       setCombatResult(result);
       setIsRolling(false);
-      
+
       // 設置擲骰顯示結果
       if (result.attackerRoll) {
-        setAttackerRoll(result.attackerRoll.dice || [result.attackerRoll.total || 0]);
+        setAttackerRoll(result.attackerRoll.results || [result.attackerRoll.total || 0]);
       }
       if (result.defenderRoll) {
-        setDefenderRoll(result.defenderRoll.dice || [result.defenderRoll.total || 0]);
+        setDefenderRoll(result.defenderRoll.results || [result.defenderRoll.total || 0]);
       }
     }, 2000);
   };
@@ -170,11 +170,11 @@ export function CombatModal({
               </p>
               {/* 顯示擲骰詳情 */}
               <div className="mt-3 text-sm text-gray-400">
-                <p>攻擊者擲骰: {combatResult.attackerRoll?.total || 0} 
-                  {combatResult.attackerRoll?.dice && ` (${combatResult.attackerRoll.dice.join(', ')})`}
+                <p>攻擊者擲骰: {combatResult.attackerRoll?.total || 0}
+                  {combatResult.attackerRoll?.results && ` (${combatResult.attackerRoll.results.join(', ')})`}
                 </p>
                 <p>防守者擲骰: {combatResult.defenderRoll?.total || 0}
-                  {combatResult.defenderRoll?.dice && ` (${combatResult.defenderRoll.dice.join(', ')})`}
+                  {combatResult.defenderRoll?.results && ` (${combatResult.defenderRoll.results.join(', ')})`}
                 </p>
               </div>
             </motion.div>

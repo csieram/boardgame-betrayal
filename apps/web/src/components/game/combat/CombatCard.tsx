@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Player } from '@betrayal/shared';
+import { Player } from '@betrayal/game-engine';
 
 interface CombatCardProps {
   player: Player;

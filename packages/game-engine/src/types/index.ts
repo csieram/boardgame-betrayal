@@ -9,11 +9,14 @@
  * 4. Multiplayer-ready - 支援同步
  */
 
-import { Room, SymbolType } from '@betrayal/shared';
+import { Room, SymbolType, Character, CharacterStat } from '@betrayal/shared';
 import { MapToken } from '../state/mapTokens';
 
 // Re-export Floor from shared
 export type Floor = import('@betrayal/shared').Floor;
+
+// Re-export Character and CharacterStat from shared
+export type { Character, CharacterStat };
 
 // ==================== 基礎類型 ====================
 
@@ -138,8 +141,7 @@ export interface StatTrack {
   knowledge: number[];
 }
 
-/** 角色定義 - 從 shared 包導入 */
-export type { Character, CharacterStat } from '@betrayal/shared';
+// Character and CharacterStat are now imported and re-exported at the top of the file
 
 /** 玩家狀態 */
 export interface Player {

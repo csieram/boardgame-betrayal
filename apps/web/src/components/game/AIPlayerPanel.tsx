@@ -42,6 +42,9 @@ export function AIPlayerPanel({
   difficulty,
   actingPlayerId,
 }: AIPlayerPanelProps) {
+  // Issue #298: 導入 getStatValue 輔助函數
+  const { getStatValue } = require('@betrayal/game-engine');
+
   // Issue #197: 添加除錯日誌追蹤渲染時的屬性值
   console.log('[AIPlayerPanel] Render:', {
     aiPlayersCount: aiPlayers.length,
@@ -50,10 +53,11 @@ export function AIPlayerPanel({
     aiPlayersStats: aiPlayers.map(p => ({
       id: p.id,
       name: p.name,
-      speed: p.character?.stats?.speed?.[0],
-      might: p.character?.stats?.might?.[0],
-      sanity: p.character?.stats?.sanity?.[0],
-      knowledge: p.character?.stats?.knowledge?.[0],
+      // Issue #298: 使用 getStatValue 從 CharacterStat 獲取數值
+      speed: p.character?.stats?.speed ? getStatValue(p.character.stats.speed) : 4,
+      might: p.character?.stats?.might ? getStatValue(p.character.stats.might) : 4,
+      sanity: p.character?.stats?.sanity ? getStatValue(p.character.stats.sanity) : 4,
+      knowledge: p.character?.stats?.knowledge ? getStatValue(p.character.stats.knowledge) : 4,
     })),
   });
   
@@ -195,25 +199,26 @@ export function AIPlayerPanel({
               <div className="grid grid-cols-4 gap-2 mb-2">
                 <StatBadge
                   icon="⚡"
-                  value={aiPlayer.character?.stats?.speed?.[0] ?? 0}
+                  // Issue #298: 使用 getStatValue 從 CharacterStat 獲取數值
+                  value={aiPlayer.character?.stats?.speed ? getStatValue(aiPlayer.character.stats.speed) : 0}
                   color="#3B82F6"
                   label="速度"
                 />
                 <StatBadge
                   icon="💪"
-                  value={aiPlayer.character?.stats?.might?.[0] ?? 0}
+                  value={aiPlayer.character?.stats?.might ? getStatValue(aiPlayer.character.stats.might) : 0}
                   color="#EF4444"
                   label="力量"
                 />
                 <StatBadge
                   icon="🧠"
-                  value={aiPlayer.character?.stats?.sanity?.[0] ?? 0}
+                  value={aiPlayer.character?.stats?.sanity ? getStatValue(aiPlayer.character.stats.sanity) : 0}
                   color="#8B5CF6"
                   label="理智"
                 />
                 <StatBadge
                   icon="📚"
-                  value={aiPlayer.character?.stats?.knowledge?.[0] ?? 0}
+                  value={aiPlayer.character?.stats?.knowledge ? getStatValue(aiPlayer.character.stats.knowledge) : 0}
                   color="#10B981"
                   label="知識"
                 />

@@ -182,14 +182,15 @@ describe('CardEffectApplier', () => {
 
   beforeEach(() => {
     applier = new CardEffectApplier(TEST_SEED);
+    // Issue #298: 使用 CharacterStat 結構
     player = {
       id: 'player-1',
       name: '測試玩家',
       stats: {
-        speed: 4,
-        might: 3,
-        sanity: 5,
-        knowledge: 4,
+        speed: { values: [3, 4, 4, 4, 5, 6, 7, 8], currentIndex: 3 },
+        might: { values: [2, 3, 3, 4, 5, 6, 6, 7], currentIndex: 2 },
+        sanity: { values: [3, 3, 4, 5, 5, 6, 6, 7], currentIndex: 4 },
+        knowledge: { values: [2, 3, 3, 4, 5, 5, 6, 6], currentIndex: 3 },
       },
       items: [],
       omens: [],
@@ -485,10 +486,16 @@ describe('drawAndApplyCard 整合測試', () => {
   beforeEach(() => {
     cardManager = new CardDrawingManager(TEST_SEED);
     effectApplier = new CardEffectApplier(TEST_SEED);
+    // Issue #298: 使用 CharacterStat 結構
     player = {
       id: 'player-1',
       name: '測試玩家',
-      stats: { speed: 4, might: 3, sanity: 5, knowledge: 4 },
+      stats: {
+        speed: { values: [3, 4, 4, 4, 5, 6, 7, 8], currentIndex: 3 },
+        might: { values: [2, 3, 3, 4, 5, 6, 6, 7], currentIndex: 2 },
+        sanity: { values: [3, 3, 4, 5, 5, 6, 6, 7], currentIndex: 4 },
+        knowledge: { values: [2, 3, 3, 4, 5, 5, 6, 6], currentIndex: 3 },
+      },
       items: [],
       omens: [],
     };

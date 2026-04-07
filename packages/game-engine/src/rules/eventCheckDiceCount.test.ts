@@ -13,14 +13,15 @@ describe('Event Check Dice Count Bug #162', () => {
 
   beforeEach(() => {
     effectApplier = new CardEffectApplier(TEST_SEED);
+    // Issue #298: 使用 CharacterStat 結構
     player = {
       id: 'test-player',
       name: 'Test Player',
       stats: {
-        speed: 4,
-        might: 3,
-        sanity: 5,
-        knowledge: 2,
+        speed: { values: [3, 4, 4, 4, 5, 6, 7, 8], currentIndex: 3 }, // value = 4
+        might: { values: [2, 3, 3, 4, 5, 6, 6, 7], currentIndex: 2 }, // value = 3
+        sanity: { values: [3, 3, 4, 5, 5, 6, 6, 7], currentIndex: 4 }, // value = 5
+        knowledge: { values: [2, 3, 3, 4, 5, 5, 6, 6], currentIndex: 1 }, // value = 2
       },
       items: [],
       omens: [],
@@ -105,7 +106,8 @@ describe('Event Check Dice Count Bug #162', () => {
     });
 
     it('should roll at least 1 die even with 0 or negative trait value', () => {
-      player.stats.might = 0;
+      // Issue #298: 使用 CharacterStat 結構設置最低值
+      player.stats.might = { values: [0, 1, 2, 3, 4, 5, 6, 7], currentIndex: 0 }; // value = 0
       
       const eventCard: Card = {
         id: 'event_test_zero',
@@ -127,11 +129,13 @@ describe('Event Check Dice Count Bug #162', () => {
 
   describe('Stat modifiers affecting dice count', () => {
     it('should use modified trait value after stat changes', () => {
+      // Issue #298: 使用 getStatValue 獲取當前值
+      const { getStatValue } = require('./cardDrawing');
       // Initial might is 3
-      expect(player.stats.might).toBe(3);
+      expect(getStatValue(player.stats.might)).toBe(3);
       
-      // Simulate gaining might from an item
-      player.stats.might = 5;
+      // Simulate gaining might from an item (increase currentIndex)
+      player.stats.might = { ...player.stats.might, currentIndex: 5 }; // value = 6
       
       const eventCard: Card = {
         id: 'event_test_modified',
@@ -146,16 +150,17 @@ describe('Event Check Dice Count Bug #162', () => {
 
       const result = effectApplier.performEventCheck(eventCard, player);
       
-      // Modified might is 5, so should roll 5 dice
-      expect(result.dice.length).toBe(5);
+      // Modified might is 6, so should roll 6 dice
+      expect(result.dice.length).toBe(6);
     });
 
     it('should use reduced trait value after taking damage', () => {
+      const { getStatValue } = require('./cardDrawing');
       // Initial might is 3
-      expect(player.stats.might).toBe(3);
+      expect(getStatValue(player.stats.might)).toBe(3);
       
-      // Simulate taking damage (reducing might)
-      player.stats.might = 2;
+      // Simulate taking damage (reducing currentIndex)
+      player.stats.might = { ...player.stats.might, currentIndex: 1 }; // value = 2
       
       const eventCard: Card = {
         id: 'event_test_damage',
@@ -177,11 +182,12 @@ describe('Event Check Dice Count Bug #162', () => {
 
   describe('UI display consistency', () => {
     it('should match displayed dice count with actual trait value', () => {
+      const { getStatValue } = require('./cardDrawing');
       const testCases = [
-        { stat: 'speed' as const, value: player.stats.speed },
-        { stat: 'might' as const, value: player.stats.might },
-        { stat: 'sanity' as const, value: player.stats.sanity },
-        { stat: 'knowledge' as const, value: player.stats.knowledge },
+        { stat: 'speed' as const, value: getStatValue(player.stats.speed) },
+        { stat: 'might' as const, value: getStatValue(player.stats.might) },
+        { stat: 'sanity' as const, value: getStatValue(player.stats.sanity) },
+        { stat: 'knowledge' as const, value: getStatValue(player.stats.knowledge) },
       ];
 
       for (const { stat, value } of testCases) {
@@ -234,7 +240,8 @@ describe('Event Check Dice Count Bug #162', () => {
         failure: '失去 1 點體力',
       };
 
-      const initialMight = player.stats.might; // 3
+      const { getStatValue } = require('./cardDrawing');
+      const initialMight = getStatValue(player.stats.might); // 3
 
       // Test failure case
       const failureResult = effectApplier.performEventCheck(failingEventCard, player);
@@ -278,9 +285,10 @@ describe('Event Check Dice Count Bug #162', () => {
       const result = effectApplier.performEventCheck(eventCard, player);
 
       // Verify dice array exists and has correct properties
+      const { getStatValue } = require('./cardDrawing');
       expect(result.dice).toBeDefined();
       expect(Array.isArray(result.dice)).toBe(true);
-      expect(result.dice.length).toBe(player.stats.sanity); // 5
+      expect(result.dice.length).toBe(getStatValue(player.stats.sanity)); // 5
 
       // Each die should be 0, 1, or 2 (Betrayal dice faces)
       result.dice.forEach(die => {

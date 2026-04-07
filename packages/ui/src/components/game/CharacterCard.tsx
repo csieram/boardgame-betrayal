@@ -1,6 +1,11 @@
 'use client';
 
-import { Character } from '@betrayal/shared';
+import { Character, CharacterStat } from '@betrayal/shared';
+
+// Issue #298: 本地輔助函數（避免循環依賴）
+function getStatValue(stat: CharacterStat): number {
+  return stat.values[stat.currentIndex];
+}
 
 interface CharacterCardProps {
   character: Character;
@@ -20,11 +25,11 @@ export function CharacterCard({ character, isSelected, onClick }: CharacterCardP
       style={{ borderLeft: `4px solid ${character.color}` }}
     >
       <div className="flex items-center gap-3 mb-2">
-        {character.avatar ? (
+        {character.portraitSvg ? (
           <svg 
             viewBox="0 0 100 100" 
             className="w-12 h-12 rounded-full"
-            dangerouslySetInnerHTML={{ __html: character.avatar }}
+            dangerouslySetInnerHTML={{ __html: character.portraitSvg }}
           />
         ) : (
           <div 
@@ -44,19 +49,19 @@ export function CharacterCard({ character, isSelected, onClick }: CharacterCardP
       <div className="grid grid-cols-4 gap-1 text-xs">
         <div className="text-center">
           <div className="text-gray-400">速度</div>
-          <div className="text-white font-bold">{character.stats.speed[0]}</div>
+          <div className="text-white font-bold">{getStatValue(character.stats.speed)}</div>
         </div>
         <div className="text-center">
           <div className="text-gray-400">力量</div>
-          <div className="text-white font-bold">{character.stats.might[0]}</div>
+          <div className="text-white font-bold">{getStatValue(character.stats.might)}</div>
         </div>
         <div className="text-center">
           <div className="text-gray-400">理智</div>
-          <div className="text-white font-bold">{character.stats.sanity[0]}</div>
+          <div className="text-white font-bold">{getStatValue(character.stats.sanity)}</div>
         </div>
         <div className="text-center">
           <div className="text-gray-400">知识</div>
-          <div className="text-white font-bold">{character.stats.knowledge[0]}</div>
+          <div className="text-white font-bold">{getStatValue(character.stats.knowledge)}</div>
         </div>
       </div>
     </div>
