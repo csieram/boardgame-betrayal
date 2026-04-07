@@ -34,9 +34,9 @@ export const CHARACTERS: Character[] = [
     fullSvg: '/characters/brandon_jaspers.svg',
     stats: {
       might: { values: [2, 3, 3, 4, 4, 4, 5, 7], startIndex: 3 },
-      speed: { values: [3, 4, 4, 4, 5, 6, 7, 8], startIndex: 2 },
-      sanity: { values: [3, 3, 4, 5, 5, 6, 6, 7], startIndex: 2 },
-      knowledge: { values: [2, 3, 3, 4, 5, 5, 6, 6], startIndex: 2 },
+      speed: { values: [2, 2, 3, 3, 4, 4, 4, 5], startIndex: 2 },
+      sanity: { values: [2, 2, 3, 3, 3, 4, 5, 6], startIndex: 3 },
+      knowledge: { values: [2, 2, 3, 3, 4, 5, 5, 5], startIndex: 3 },
     },
   },
   {
@@ -51,7 +51,7 @@ export const CHARACTERS: Character[] = [
     fullSvg: '/characters/peter_akimoto.svg',
     stats: {
       might: { values: [2, 3, 3, 3, 4, 5, 5, 6], startIndex: 3 },
-      speed: { values: [3, 3, 4, 4, 5, 5, 6, 6], startIndex: 3 },
+      speed: { values: [3, 3, 3, 4, 4, 5, 5, 6], startIndex: 3 },
       sanity: { values: [2, 3, 3, 4, 4, 5, 5, 6], startIndex: 3 },
       knowledge: { values: [2, 3, 3, 3, 4, 4, 5, 5], startIndex: 3 },
     },
@@ -67,10 +67,10 @@ export const CHARACTERS: Character[] = [
     portraitSvg: '/characters/vivian_lopez.svg',
     fullSvg: '/characters/vivian_lopez.svg',
     stats: {
-      might: { values: [2, 2, 3, 2, 3, 4, 4, 4], startIndex: 3 },
+      might: { values: [2, 2, 2, 2, 3, 4, 4, 4], startIndex: 3 },
       speed: { values: [2, 2, 3, 4, 4, 5, 5, 6], startIndex: 3 },
       sanity: { values: [3, 3, 4, 4, 5, 5, 6, 7], startIndex: 3 },
-      knowledge: { values: [4, 4, 5, 5, 6, 6, 7, 8], startIndex: 3 },
+      knowledge: { values: [4, 4, 5, 5, 5, 6, 7, 8], startIndex: 3 },
     },
   },
   {
@@ -81,8 +81,8 @@ export const CHARACTERS: Character[] = [
     age: 14,
     description: 'The fastest kid in school.',
     color: '#FF4500',
-    portraitSvg: '/characters/darrin_flash_williams.svg',
-    fullSvg: '/characters/darrin_flash_williams.svg',
+    portraitSvg: '/characters/darrin_williams.svg',
+    fullSvg: '/characters/darrin_williams.svg',
     stats: {
       might: { values: [2, 2, 3, 3, 4, 4, 5, 6], startIndex: 3 },
       speed: { values: [4, 4, 5, 6, 6, 7, 7, 8], startIndex: 3 },
@@ -101,7 +101,7 @@ export const CHARACTERS: Character[] = [
     portraitSvg: '/characters/heather_granville.svg',
     fullSvg: '/characters/heather_granville.svg',
     stats: {
-      might: { values: [2, 2, 3, 3, 4, 4, 5, 5], startIndex: 3 },
+      might: { values: [2, 2, 2, 3, 3, 3, 4, 5], startIndex: 3 },
       speed: { values: [2, 3, 3, 3, 4, 4, 5, 6], startIndex: 3 },
       sanity: { values: [2, 2, 3, 3, 4, 4, 5, 6], startIndex: 3 },
       knowledge: { values: [3, 4, 4, 5, 5, 6, 7, 8], startIndex: 3 },
@@ -118,10 +118,10 @@ export const CHARACTERS: Character[] = [
     portraitSvg: '/characters/jenny_leclerc.svg',
     fullSvg: '/characters/jenny_leclerc.svg',
     stats: {
-      might: { values: [1, 2, 2, 3, 3, 4, 4, 4], startIndex: 3 },
-      speed: { values: [2, 3, 4, 4, 5, 6, 6, 8], startIndex: 3 },
-      sanity: { values: [2, 2, 3, 5, 4, 4, 5, 6], startIndex: 3 },
-      knowledge: { values: [2, 2, 3, 3, 4, 4, 5, 6], startIndex: 3 },
+      might: { values: [1, 2, 2, 3, 3, 3, 4, 4], startIndex: 3 },
+      speed: { values: [2, 3, 4, 4, 4, 5, 6, 8], startIndex: 3 },
+      sanity: { values: [2, 2, 3, 4, 4, 5, 5, 6], startIndex: 3 },
+      knowledge: { values: [2, 2, 3, 3, 3, 4, 5, 6], startIndex: 3 },
     },
   },
   {
@@ -135,10 +135,10 @@ export const CHARACTERS: Character[] = [
     portraitSvg: '/characters/zoe_ingstrom.svg',
     fullSvg: '/characters/zoe_ingstrom.svg',
     stats: {
-      might: { values: [2, 2, 3, 3, 3, 4, 4, 5], startIndex: 3 },
-      speed: { values: [2, 3, 3, 4, 4, 4, 5, 5], startIndex: 3 },
-      sanity: { values: [3, 3, 4, 5, 5, 6, 6, 7], startIndex: 3 },
-      knowledge: { values: [2, 2, 3, 3, 4, 4, 5, 5], startIndex: 3 },
+      might: { values: [2, 2, 3, 3, 3, 3, 4, 5], startIndex: 3 },
+      speed: { values: [2, 3, 3, 3, 4, 4, 4, 5], startIndex: 3 },
+      sanity: { values: [3, 3, 4, 4, 5, 5, 6, 7], startIndex: 3 },
+      knowledge: { values: [2, 2, 3, 3, 3, 4, 5, 5], startIndex: 3 },
     },
   },
   {
@@ -152,10 +152,10 @@ export const CHARACTERS: Character[] = [
     portraitSvg: '/characters/ox_bellows.svg',
     fullSvg: '/characters/ox_bellows.svg',
     stats: {
-      might: { values: [4, 4, 5, 5, 6, 6, 7, 8], startIndex: 3 },
-      speed: { values: [2, 2, 3, 3, 4, 4, 5, 5], startIndex: 3 },
-      sanity: { values: [1, 1, 2, 3, 3, 4, 4, 5], startIndex: 3 },
-      knowledge: { values: [1, 1, 2, 2, 3, 3, 3, 4], startIndex: 3 },
+      might: { values: [4, 4, 5, 5, 5, 6, 7, 8], startIndex: 3 },
+      speed: { values: [2, 2, 3, 3, 4, 5, 5, 5], startIndex: 2 },
+      sanity: { values: [1, 1, 2, 2, 3, 3, 4, 5], startIndex: 3 },
+      knowledge: { values: [1, 1, 2, 2, 3, 2, 3, 4], startIndex: 3 },
     },
   },
   {
@@ -169,10 +169,10 @@ export const CHARACTERS: Character[] = [
     portraitSvg: '/characters/father_rhinehardt.svg',
     fullSvg: '/characters/father_rhinehardt.svg',
     stats: {
-      might: { values: [1, 1, 2, 2, 3, 3, 4, 4], startIndex: 3 },
+      might: { values: [1, 1, 2, 2, 2, 3, 4, 4], startIndex: 3 },
       speed: { values: [1, 2, 2, 3, 3, 4, 4, 5], startIndex: 3 },
       sanity: { values: [3, 3, 4, 5, 5, 6, 6, 7], startIndex: 3 },
-      knowledge: { values: [2, 3, 4, 4, 5, 5, 6, 6], startIndex: 3 },
+      knowledge: { values: [2, 3, 4, 4, 4, 5, 6, 6], startIndex: 3 },
     },
   },
   {
@@ -186,8 +186,8 @@ export const CHARACTERS: Character[] = [
     portraitSvg: '/characters/professor_longfellow.svg',
     fullSvg: '/characters/professor_longfellow.svg',
     stats: {
-      might: { values: [1, 1, 2, 2, 2, 3, 3, 4], startIndex: 3 },
-      speed: { values: [1, 1, 2, 2, 3, 3, 4, 4], startIndex: 3 },
+      might: { values: [1, 1, 2, 2, 2, 2, 3, 4], startIndex: 3 },
+      speed: { values: [1, 1, 2, 2, 3, 4, 4, 4], startIndex: 2 },
       sanity: { values: [3, 3, 4, 4, 5, 5, 6, 6], startIndex: 3 },
       knowledge: { values: [4, 4, 5, 5, 6, 6, 7, 8], startIndex: 3 },
     },
@@ -198,15 +198,15 @@ export const CHARACTERS: Character[] = [
     nameEn: 'Missy Dubourde',
     emoji: '👩',
     age: 16,
-    description: 'A girl who loves sports and adventure.',
+    description: 'A girl from the South with a cheerful disposition.',
     color: '#FF6347',
     portraitSvg: '/characters/missy_dubourde.svg',
     fullSvg: '/characters/missy_dubourde.svg',
     stats: {
-      might: { values: [2, 2, 3, 3, 4, 4, 5, 5], startIndex: 3 },
+      might: { values: [2, 2, 3, 3, 4, 4, 4, 5], startIndex: 3 },
       speed: { values: [2, 2, 3, 4, 4, 5, 5, 6], startIndex: 3 },
       sanity: { values: [1, 2, 2, 3, 3, 4, 4, 5], startIndex: 3 },
-      knowledge: { values: [2, 3, 3, 4, 5, 5, 6, 6], startIndex: 3 },
+      knowledge: { values: [2, 3, 3, 4, 4, 5, 5, 6], startIndex: 3 },
     },
   },
   {
@@ -215,15 +215,15 @@ export const CHARACTERS: Character[] = [
     nameEn: 'Madame Zostra',
     emoji: '👩',
     age: 45,
-    description: 'A mysterious woman with psychic abilities.',
+    description: 'A mysterious woman who reads fortunes.',
     color: '#4B0082',
     portraitSvg: '/characters/madame_zostra.svg',
     fullSvg: '/characters/madame_zostra.svg',
     stats: {
       might: { values: [2, 3, 3, 4, 4, 5, 5, 6], startIndex: 3 },
-      speed: { values: [2, 2, 3, 3, 4, 5, 5, 5], startIndex: 3 },
+      speed: { values: [2, 2, 3, 3, 4, 4, 5, 5], startIndex: 3 },
       sanity: { values: [3, 3, 4, 5, 5, 6, 6, 7], startIndex: 3 },
-      knowledge: { values: [2, 3, 4, 4, 5, 6, 6, 7], startIndex: 3 },
+      knowledge: { values: [2, 3, 4, 4, 5, 5, 6, 7], startIndex: 3 },
     },
   },
 ];
