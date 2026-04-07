@@ -519,6 +519,14 @@ export default function SoloGamePage() {
     });
   }, [eventDamageState]);
 
+  // Issue #300-debug: 追蹤 physical damage 檢測
+  useEffect(() => {
+    console.log('[Physical Damage] playerState changed:', {
+      hasPlayerState: !!playerState,
+      timestamp: Date.now(),
+    });
+  }, [playerState]);
+
   // 從 sessionStorage 讀取選擇的角色和 AI 設置
   useEffect(() => {
     const storedSetup = sessionStorage.getItem('solo-game-setup');
@@ -865,11 +873,26 @@ export default function SoloGamePage() {
         rollResult: result,
       }));
 
+      // Issue #301: 檢查作祟是否已經開始
+      const isHauntAlreadyActive = hauntState.isActive;
+
       // 如果作祟觸發，記錄到日誌
       if (result.hauntBegins) {
-        setLog(prev => [...prev, `⚠️ 作祟觸發！擲出 ${result.total} < 5`]);
+        if (isHauntAlreadyActive) {
+          // 作祟已經開始，檢定結果決定作祟是否繼續
+          setLog(prev => [...prev, `⚠️ 作祟繼續！擲出 ${result.total} < ${omenCount}`]);
+        } else {
+          // 作祟尚未開始，檢定結果決定是否開始作祟
+          setLog(prev => [...prev, `⚠️ 作祟觸發！擲出 ${result.total} < ${omenCount}`]);
+        }
       } else {
-        setLog(prev => [...prev, `作祟未觸發，擲出 ${result.total} >= 5`]);
+        if (isHauntAlreadyActive) {
+          // 作祟已經開始，但檢定結果決定作祟結束
+          setLog(prev => [...prev, `作祟結束，擲出 ${result.total} >= ${omenCount}`]);
+        } else {
+          // 作祟尚未開始，檢定結果決定不開始作祟
+          setLog(prev => [...prev, `作祟未觸發，擲出 ${result.total} >= ${omenCount}`]);
+        }
       }
     }, 2000);
   };
@@ -3314,6 +3337,12 @@ export default function SoloGamePage() {
       console.log('[DEBUG #274] result.damage:', result.damage);
       console.log('[DEBUG #274] Has damage in setTimeout?', !!result.damage);
       
+      // Issue #300-debug: Physical damage detection
+      console.log('[Physical Damage] Damage object:', result.damage);
+      console.log('[Physical Damage] Damage type:', result.damage?.type);
+      console.log('[Physical Damage] Setting eventDamageState:', { showDialog: true, damage: result.damage });
+      console.log('[Physical Damage] Current eventDamageState:', eventDamageState);
+      
       // 關閉 EventCheckModal
       setEventCheckState({
         showModal: false,
@@ -3325,11 +3354,17 @@ export default function SoloGamePage() {
       // Issue #270: 檢查是否有傷害需要分配
       // Issue #274: Also check for damage.amount to ensure it's valid
       // Issue #274-fix: Check for result.damage.type and result.damage.amount
+      // Issue #300-fix: Check for physical damage specifically
       const hasDamage = result.damage && 
                         typeof result.damage === 'object' && 
                         result.damage.type && 
                         typeof result.damage.amount === 'number' && 
                         result.damage.amount > 0;
+      
+      // Issue #300-debug: Log damage detection details
+      console.log('[Physical Damage] hasDamage check:', hasDamage);
+      console.log('[Physical Damage] result.damage:', result.damage);
+      console.log('[Physical Damage] Is physical damage?', result.damage?.type === 'physical');
       
       if (hasDamage && result.damage) {
         console.log('[DEBUG #274] Damage detected, showing DamageDialog:', result.damage);
@@ -3337,6 +3372,7 @@ export default function SoloGamePage() {
         // Issue #274-fix: Use createDamageAllocation to ensure correct structure with availableTraits
         const damageAllocation = createDamageAllocation(result.damage.type, result.damage.amount);
         console.log('[DEBUG #274] Created damageAllocation:', damageAllocation);
+        console.log('[Physical Damage] Calling setEventDamageState with:', { showDialog: true, damage: damageAllocation });
         setEventDamageState({
           showDialog: true,
           damage: damageAllocation,
@@ -4456,9 +4492,10 @@ export default function SoloGamePage() {
       {/* Issue #270: 事件卡傷害對話框 */}
       {/* Issue #299-fix: Always render DamageDialog, control visibility with isOpen prop */}
       {/* Issue #299-fix: Add key prop to force re-render when damage changes */}
+      {/* Issue #300-fix: Simplify isOpen condition to ensure dialog shows */}
       <DamageDialog
         key={`damage-dialog-${eventDamageState.damage?.type}-${eventDamageState.damage?.amount}-${eventDamageState.showDialog}`}
-        isOpen={eventDamageState.showDialog && !!playerState}
+        isOpen={eventDamageState.showDialog}
         damage={eventDamageState.damage}
         // Issue #298: 轉換 CharacterStat 為 CharacterStats
         currentStats={playerState ? {

@@ -84,6 +84,10 @@ export function DamageDialog({
   console.log('[DEBUG #274] DamageDialog rendered, isOpen:', isOpen);
   console.log('[DEBUG #274] DamageDialog props:', { isOpen, damage, currentStats });
   
+  // Issue #300-debug: Log props received
+  console.log('[DamageDialog] Props received:', { isOpen, damage });
+  console.log('[DamageDialog] Available traits:', damage?.availableTraits);
+  
   const [selectedTrait, setSelectedTrait] = useState<StatType | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
 
