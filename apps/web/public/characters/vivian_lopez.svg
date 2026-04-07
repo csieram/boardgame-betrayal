@@ -1,48 +1,62 @@
 <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background - deep purple for bookish/intellectual -->
-  <rect width="200" height="200" fill="#3D2B4F"/>
+  <!-- Background -->
+  <rect width="200" height="200" fill="#2A2A1A"/>
+  
+  <!-- Frame -->
+  <rect x="5" y="5" width="190" height="190" fill="none" stroke="#4B0082" stroke-width="4"/>
+  
+  <!-- Dramatic shadow overlay -->
+  <defs>
+    <radialGradient id="shadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0.4"/>
+    </radialGradient>
+  </defs>
   
   <!-- Neck -->
-  <rect x="87" y="132" width="26" height="22" fill="#F5D0C5"/>
+  <rect x="87" y="132" width="26" height="22" fill="#E5C0B0"/>
   
-  <!-- Shirt collar with bow -->
-  <path d="M78 145 L100 158 L122 145 L122 152 L100 165 L78 152 Z" fill="#5B4A6A"/>
-  <circle cx="100" cy="152" r="6" fill="#7B6A8A"/>
+  <!-- Blouse collar -->
+  <path d="M78 145 L100 160 L122 145 L122 152 L100 168 L78 152 Z" fill="#3D2B4F"/>
+  <circle cx="100" cy="155" r="5" fill="#5B4A6A"/>
   
   <!-- Face shape -->
-  <ellipse cx="100" cy="95" rx="36" ry="42" fill="#F5D0C5"/>
+  <ellipse cx="100" cy="95" rx="35" ry="43" fill="#E5C0B0"/>
   
   <!-- Ears -->
-  <ellipse cx="64" cy="95" rx="6" ry="10" fill="#F5D0C5"/>
-  <ellipse cx="136" cy="95" rx="6" ry="10" fill="#F5D0C5"/>
+  <ellipse cx="65" cy="95" rx="6" ry="10" fill="#E5C0B0"/>
+  <ellipse cx="135" cy="95" rx="6" ry="10" fill="#E5C0B0"/>
   
-  <!-- Hair - dark brown, shoulder length with headband -->
-  <path d="M64 90 Q62 65 75 50 Q88 38 100 38 Q112 38 125 50 Q138 65 136 90 Q138 75 130 60 Q116 45 100 45 Q84 45 70 60 Q62 75 64 90" fill="#4A3728"/>
-  <path d="M64 85 Q60 100 62 115 Q64 125 70 130" fill="none" stroke="#4A3728" stroke-width="8" stroke-linecap="round"/>
-  <path d="M136 85 Q140 100 138 115 Q136 125 130 130" fill="none" stroke="#4A3728" stroke-width="8" stroke-linecap="round"/>
+  <!-- Hair - dark brown, shoulder length -->
+  <path d="M65 90 Q63 60 76 48 Q88 38 100 38 Q112 38 124 48 Q137 60 135 90 Q137 72 129 58 Q115 44 100 44 Q85 44 71 58 Q63 72 65 90" fill="#3D2E22"/>
+  <path d="M64 85 Q62 100 65 118 Q68 125 73 128" fill="none" stroke="#3D2E22" stroke-width="8" stroke-linecap="round"/>
+  <path d="M136 85 Q138 100 135 118 Q132 125 127 128" fill="none" stroke="#3D2E22" stroke-width="8" stroke-linecap="round"/>
   
   <!-- Headband -->
-  <path d="M68 55 Q85 48 100 50 Q115 48 132 55" fill="none" stroke="#7B6A8A" stroke-width="6" stroke-linecap="round"/>
+  <path d="M68 52 Q85 45 100 47 Q115 45 132 52" fill="none" stroke="#5B4A6A" stroke-width="5" stroke-linecap="round"/>
   
-  <!-- Eyes - intelligent, focused -->
-  <ellipse cx="87" cy="92" rx="6" ry="5" fill="#FFF"/>
-  <ellipse cx="113" cy="92" rx="6" ry="5" fill="#FFF"/>
-  <circle cx="87" cy="92" r="3.5" fill="#5D4E37"/>
-  <circle cx="113" cy="92" r="3.5" fill="#5D4E37"/>
-  <circle cx="88" cy="91" r="1.2" fill="#FFF"/>
-  <circle cx="114" cy="91" r="1.2" fill="#FFF"/>
+  <!-- Eyes - serious, intellectual -->
+  <ellipse cx="88" cy="92" rx="6" ry="5" fill="#E8D8C8"/>
+  <ellipse cx="112" cy="92" rx="6" ry="5" fill="#E8D8C8"/>
+  <circle cx="88" cy="92" r="3.5" fill="#4A3728"/>
+  <circle cx="112" cy="92" r="3.5" fill="#4A3728"/>
+  <circle cx="89" cy="91" r="1.2" fill="#FFF" opacity="0.5"/>
+  <circle cx="113" cy="91" r="1.2" fill="#FFF" opacity="0.5"/>
   
   <!-- Eyebrows -->
-  <path d="M81 82 Q87 80 93 82" stroke="#4A3728" stroke-width="2" fill="none"/>
-  <path d="M107 82 Q113 80 119 82" stroke="#4A3728" stroke-width="2" fill="none"/>
+  <path d="M82 84 Q88 82 94 84" stroke="#3D2E22" stroke-width="2" fill="none"/>
+  <path d="M106 84 Q112 82 118 84" stroke="#3D2E22" stroke-width="2" fill="none"/>
   
   <!-- Nose -->
-  <path d="M100 96 L98 108 L102 108 Z" fill="#E5B8A8"/>
+  <path d="M100 97 L98 110 L102 110 Z" fill="#D4A890"/>
   
-  <!-- Mouth - gentle smile -->
-  <path d="M90 118 Q100 123 110 118" stroke="#C98B7A" stroke-width="2" fill="none"/>
+  <!-- Mouth - serious -->
+  <path d="M92 120 Q100 118 108 120" stroke="#C49580" stroke-width="2" fill="none"/>
   
-  <!-- Book held at chest level (subtle hint) -->
-  <rect x="70" y="155" width="60" height="35" rx="2" fill="#5B4A6A" opacity="0.3"/>
-  <rect x="72" y="157" width="56" height="31" rx="1" fill="#4A3A5A" opacity="0.3"/>
+  <!-- Dramatic shadows -->
+  <ellipse cx="75" cy="105" rx="15" ry="20" fill="#000" opacity="0.15"/>
+  <ellipse cx="125" cy="105" rx="15" ry="20" fill="#000" opacity="0.15"/>
+  
+  <!-- Shadow overlay -->
+  <rect width="200" height="200" fill="url(#shadow)"/>
 </svg>

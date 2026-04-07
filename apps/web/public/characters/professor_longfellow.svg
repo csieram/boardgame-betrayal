@@ -1,54 +1,72 @@
 <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background - academic brown -->
-  <rect width="200" height="200" fill="#5D4E37"/>
+  <!-- Background -->
+  <rect width="200" height="200" fill="#2A2A1A"/>
+  
+  <!-- Frame -->
+  <rect x="5" y="5" width="190" height="190" fill="none" stroke="#556B2F" stroke-width="4"/>
+  
+  <!-- Dramatic shadow overlay -->
+  <defs>
+    <radialGradient id="shadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0.4"/>
+    </radialGradient>
+  </defs>
   
   <!-- Neck -->
-  <rect x="87" y="130" width="26" height="20" fill="#F5D0C5"/>
+  <rect x="87" y="130" width="26" height="20" fill="#E5C4B0"/>
   
   <!-- Academic gown/turtleneck -->
-  <path d="M78 142 L100 155 L122 142 L125 150 L100 165 L75 150 Z" fill="#2C3E50"/>
+  <path d="M78 142 L100 158 L122 142 L125 152 L100 170 L75 152 Z" fill="#2C3E50"/>
   
   <!-- Face shape - wise, aged -->
-  <ellipse cx="100" cy="92" rx="36" ry="42" fill="#F5D0C5"/>
+  <ellipse cx="100" cy="92" rx="35" ry="43" fill="#E5C4B0"/>
   
-  <!-- Wrinkles - wise lines -->
-  <path d="M78 78 Q85 76 92 78" stroke="#D4A8A0" stroke-width="1" fill="none" opacity="0.5"/>
-  <path d="M108 78 Q115 76 122 78" stroke="#D4A8A0" stroke-width="1" fill="none" opacity="0.5"/>
-  <path d="M82 65 Q100 68 118 65" stroke="#D4A8A0" stroke-width="1" fill="none" opacity="0.4"/>
+  <!-- Wrinkles -->
+  <path d="M78 78 Q85 76 92 78" stroke="#D4A8A0" stroke-width="1.5" fill="none" opacity="0.6"/>
+  <path d="M108 78 Q115 76 122 78" stroke="#D4A8A0" stroke-width="1.5" fill="none" opacity="0.6"/>
+  <path d="M82 65 Q100 68 118 65" stroke="#D4A8A0" stroke-width="1.5" fill="none" opacity="0.5"/>
   
   <!-- Ears -->
-  <ellipse cx="64" cy="92" rx="6" ry="10" fill="#F5D0C5"/>
-  <ellipse cx="136" cy="92" rx="6" ry="10" fill="#F5D0C5"/>
+  <ellipse cx="65" cy="92" rx="6" ry="10" fill="#E5C4B0"/>
+  <ellipse cx="135" cy="92" rx="6" ry="10" fill="#E5C4B0"/>
   
-  <!-- Gray hair - distinguished professor -->
-  <path d="M64 88 Q62 58 75 48 Q88 38 100 38 Q112 38 125 48 Q138 58 136 88 Q138 70 130 56 Q116 42 100 42 Q84 42 70 56 Q62 70 64 88" fill="#808080"/>
-  <path d="M70 52 Q85 45 100 47 Q115 45 130 52" fill="none" stroke="#606060" stroke-width="2"/>
+  <!-- Gray hair - distinguished -->
+  <path d="M65 90 Q63 60 76 50 Q88 40 100 40 Q112 40 124 50 Q137 60 135 90 Q137 72 129 58 Q115 44 100 44 Q85 44 71 58 Q63 72 65 90" fill="#808080"/>
+  <path d="M70 54 Q85 48 100 50 Q115 48 130 54" fill="none" stroke="#707070" stroke-width="2"/>
   
   <!-- Glasses - round academic frames -->
-  <circle cx="88" cy="88" r="12" fill="none" stroke="#2C3E50" stroke-width="2"/>
-  <circle cx="112" cy="88" r="12" fill="none" stroke="#2C3E50" stroke-width="2"/>
-  <line x1="100" y1="88" x2="100" y2="88" stroke="#2C3E50" stroke-width="2"/>
-  <line x1="76" y1="85" x2="64" y2="82" stroke="#2C3E50" stroke-width="1.5"/>
-  <line x1="124" y1="85" x2="136" y2="82" stroke="#2C3E50" stroke-width="1.5"/>
+  <circle cx="88" cy="88" r="12" fill="none" stroke="#1A1A1A" stroke-width="2"/>
+  <circle cx="112" cy="88" r="12" fill="none" stroke="#1A1A1A" stroke-width="2"/>
+  <line x1="100" y1="88" x2="100" y2="88" stroke="#1A1A1A" stroke-width="2"/>
+  <line x1="76" y1="85" x2="65" y2="82" stroke="#1A1A1A" stroke-width="1.5"/>
+  <line x1="124" y1="85" x2="135" y2="82" stroke="#1A1A1A" stroke-width="1.5"/>
   
-  <!-- Eyes behind glasses -->
-  <ellipse cx="88" cy="88" rx="5" ry="4" fill="#FFF"/>
-  <ellipse cx="112" cy="88" rx="5" ry="4" fill="#FFF"/>
-  <circle cx="88" cy="88" r="3" fill="#5D4E37"/>
-  <circle cx="112" cy="88" r="3" fill="#5D4E37"/>
-  <circle cx="89" cy="87" r="1" fill="#FFF"/>
-  <circle cx="113" cy="87" r="1" fill="#FFF"/>
+  <!-- Eyes behind glasses - wise -->
+  <ellipse cx="88" cy="88" rx="5" ry="4" fill="#E8D8C8"/>
+  <ellipse cx="112" cy="88" rx="5" ry="4" fill="#E8D8C8"/>
+  <circle cx="88" cy="88" r="3" fill="#4A3728"/>
+  <circle cx="112" cy="88" r="3" fill="#4A3728"/>
+  <circle cx="89" cy="87" r="1" fill="#FFF" opacity="0.5"/>
+  <circle cx="113" cy="87" r="1" fill="#FFF" opacity="0.5"/>
   
   <!-- Eyebrows - gray, thoughtful -->
-  <path d="M82 78 Q88 76 94 78" stroke="#808080" stroke-width="2" fill="none"/>
-  <path d="M106 78 Q112 76 118 78" stroke="#808080" stroke-width="2" fill="none"/>
+  <path d="M82 78 Q88 76 94 78" stroke="#808080" stroke-width="2.5" fill="none"/>
+  <path d="M106 78 Q112 76 118 78" stroke="#808080" stroke-width="2.5" fill="none"/>
   
   <!-- Nose -->
-  <path d="M100 92 L97 106 L103 106 Z" fill="#E5B8A8"/>
+  <path d="M100 92 L97 108 L103 108 Z" fill="#D4A890"/>
   
-  <!-- Mouth - wise, gentle smile -->
-  <path d="M92 115 Q100 118 108 115" stroke="#C98B7A" stroke-width="2" fill="none"/>
+  <!-- Mouth - wise, serious -->
+  <path d="M92 118 Q100 116 108 118" stroke="#C49580" stroke-width="2.5" fill="none"/>
   
   <!-- Bow tie -->
-  <path d="M92 148 L100 152 L108 148 L108 154 L100 158 L92 154 Z" fill="#8B4513"/>
+  <path d="M92 152 L100 156 L108 152 L108 158 L100 162 L92 158 Z" fill="#5D4037"/>
+  
+  <!-- Dramatic shadows -->
+  <ellipse cx="75" cy="102" rx="15" ry="20" fill="#000" opacity="0.15"/>
+  <ellipse cx="125" cy="102" rx="15" ry="20" fill="#000" opacity="0.15"/>
+  
+  <!-- Shadow overlay -->
+  <rect width="200" height="200" fill="url(#shadow)"/>
 </svg>

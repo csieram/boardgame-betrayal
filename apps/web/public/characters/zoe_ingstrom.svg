@@ -1,44 +1,62 @@
 <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background - soft lavender for spiritual innocence -->
-  <rect width="200" height="200" fill="#6B5B95"/>
+  <!-- Background -->
+  <rect width="200" height="200" fill="#2A2A1A"/>
+  
+  <!-- Frame -->
+  <rect x="5" y="5" width="190" height="190" fill="none" stroke="#FF69B4" stroke-width="4"/>
+  
+  <!-- Dramatic shadow overlay -->
+  <defs>
+    <radialGradient id="shadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0.4"/>
+    </radialGradient>
+  </defs>
   
   <!-- Neck -->
-  <rect x="88" y="132" width="24" height="20" fill="#F5D0C5"/>
+  <rect x="88" y="132" width="24" height="20" fill="#E5C4B0"/>
   
   <!-- Simple dress collar -->
-  <path d="M80 145 L100 158 L120 145 L120 152 L100 165 L80 152 Z" fill="#E8E4F3"/>
+  <path d="M80 145 L100 160 L120 145 L120 152 L100 168 L80 152 Z" fill="#4A4A5A"/>
   
   <!-- Face shape -->
-  <ellipse cx="100" cy="95" rx="34" ry="40" fill="#F5D0C5"/>
+  <ellipse cx="100" cy="95" rx="33" ry="40" fill="#E5C4B0"/>
   
   <!-- Ears -->
-  <ellipse cx="66" cy="95" rx="6" ry="9" fill="#F5D0C5"/>
-  <ellipse cx="134" cy="95" rx="6" ry="9" fill="#F5D0C5"/>
+  <ellipse cx="67" cy="95" rx="6" ry="9" fill="#E5C4B0"/>
+  <ellipse cx="133" cy="95" rx="6" ry="9" fill="#E5C4B0"/>
   
-  <!-- Hair - light brown, simple style -->
-  <path d="M66 92 Q64 65 76 52 Q88 42 100 42 Q112 42 124 52 Q136 65 134 92 Q136 75 128 62 Q115 48 100 48 Q85 48 72 62 Q64 75 66 92" fill="#A0826D"/>
-  <path d="M66 85 Q64 100 68 112" fill="none" stroke="#8B7355" stroke-width="5" stroke-linecap="round"/>
-  <path d="M134 85 Q136 100 132 112" fill="none" stroke="#8B7355" stroke-width="5" stroke-linecap="round"/>
+  <!-- Hair - light brown -->
+  <path d="M67 92 Q65 65 77 52 Q88 42 100 42 Q112 42 123 52 Q135 65 133 92 Q135 75 127 62 Q114 48 100 48 Q86 48 73 62 Q65 75 67 92" fill="#8B7355"/>
+  <path d="M67 85 Q65 100 70 112" fill="none" stroke="#7B6345" stroke-width="5" stroke-linecap="round"/>
+  <path d="M133 85 Q135 100 130 112" fill="none" stroke="#7B6345" stroke-width="5" stroke-linecap="round"/>
   
   <!-- Hair bow -->
-  <path d="M92 48 L100 42 L108 48" fill="none" stroke="#E8E4F3" stroke-width="4" stroke-linecap="round"/>
-  <circle cx="100" cy="45" r="3" fill="#D4C4E0"/>
+  <path d="M92 48 L100 42 L108 48" fill="none" stroke="#E8E4F3" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="100" cy="45" r="3" fill="#C4B4D0"/>
   
-  <!-- Eyes - innocent, wide -->
-  <ellipse cx="89" cy="92" rx="6" ry="5" fill="#FFF"/>
-  <ellipse cx="111" cy="92" rx="6" ry="5" fill="#FFF"/>
-  <circle cx="89" cy="92" r="3.5" fill="#7B9E87"/>
-  <circle cx="111" cy="92" r="3.5" fill="#7B9E87"/>
-  <circle cx="90" cy="91" r="1.2" fill="#FFF"/>
-  <circle cx="112" cy="91" r="1.2" fill="#FFF"/>
+  <!-- Eyes - serious, determined -->
+  <ellipse cx="89" cy="92" rx="6" ry="5" fill="#E8D8C8"/>
+  <ellipse cx="111" cy="92" rx="6" ry="5" fill="#E8D8C8"/>
+  <circle cx="89" cy="92" r="3.5" fill="#4A6741"/>
+  <circle cx="111" cy="92" r="3.5" fill="#4A6741"/>
+  <circle cx="90" cy="91" r="1.2" fill="#FFF" opacity="0.5"/>
+  <circle cx="112" cy="91" r="1.2" fill="#FFF" opacity="0.5"/>
   
-  <!-- Eyebrows - gentle -->
-  <path d="M84 85 Q89 83 94 85" stroke="#8B7355" stroke-width="1.5" fill="none"/>
-  <path d="M106 85 Q111 83 116 85" stroke="#8B7355" stroke-width="1.5" fill="none"/>
+  <!-- Eyebrows -->
+  <path d="M84 85 Q89 83 94 85" stroke="#7B6345" stroke-width="1.5" fill="none"/>
+  <path d="M106 85 Q111 83 116 85" stroke="#7B6345" stroke-width="1.5" fill="none"/>
   
   <!-- Nose -->
-  <path d="M100 96 L98 106 L102 106 Z" fill="#E5B8A8"/>
+  <path d="M100 96 L98 108 L102 108 Z" fill="#D4A890"/>
   
-  <!-- Mouth - sweet smile -->
-  <path d="M93 116 Q100 120 107 116" stroke="#C98B7A" stroke-width="2" fill="none"/>
+  <!-- Mouth - serious -->
+  <path d="M93 118 Q100 116 107 118" stroke="#C49580" stroke-width="2" fill="none"/>
+  
+  <!-- Dramatic shadows -->
+  <ellipse cx="78" cy="105" rx="12" ry="18" fill="#000" opacity="0.15"/>
+  <ellipse cx="122" cy="105" rx="12" ry="18" fill="#000" opacity="0.15"/>
+  
+  <!-- Shadow overlay -->
+  <rect width="200" height="200" fill="url(#shadow)"/>
 </svg>

@@ -1,53 +1,70 @@
 <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background - warm peach/southern charm -->
-  <rect width="200" height="200" fill="#E8A87C"/>
+  <!-- Background -->
+  <rect width="200" height="200" fill="#2A2A1A"/>
+  
+  <!-- Frame -->
+  <rect x="5" y="5" width="190" height="190" fill="none" stroke="#FF6347" stroke-width="4"/>
+  
+  <!-- Dramatic shadow overlay -->
+  <defs>
+    <radialGradient id="shadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0.4"/>
+    </radialGradient>
+  </defs>
   
   <!-- Neck -->
-  <rect x="87" y="130" width="26" height="22" fill="#F5D0C5"/>
+  <rect x="87" y="130" width="26" height="22" fill="#E5C4B0"/>
   
-  <!-- Southern style dress collar -->
-  <path d="M78 142 L100 158 L122 142 L125 150 L100 168 L75 150 Z" fill="#FFF5EE"/>
-  <circle cx="100" cy="152" r="5" fill="#D4A574"/>
+  <!-- Dress collar -->
+  <path d="M78 142 L100 160 L122 142 L125 152 L100 172 L75 152 Z" fill="#5A4A4A"/>
+  <circle cx="100" cy="155" r="5" fill="#8B7355"/>
   
   <!-- Face shape -->
-  <ellipse cx="100" cy="92" rx="36" ry="42" fill="#F5D0C5"/>
+  <ellipse cx="100" cy="92" rx="35" ry="43" fill="#E5C4B0"/>
   
   <!-- Ears -->
-  <ellipse cx="64" cy="92" rx="6" ry="10" fill="#F5D0C5"/>
-  <ellipse cx="136" cy="92" rx="6" ry="10" fill="#F5D0C5"/>
+  <ellipse cx="65" cy="92" rx="6" ry="10" fill="#E5C4B0"/>
+  <ellipse cx="135" cy="92" rx="6" ry="10" fill="#E5C4B0"/>
   
-  <!-- Hair - auburn/red, styled southern belle -->
-  <path d="M64 88 Q62 58 75 48 Q88 38 100 38 Q112 38 125 48 Q138 58 136 88 Q138 70 130 56 Q116 42 100 42 Q84 42 70 56 Q62 70 64 88" fill="#A0522D"/>
-  <path d="M64 80 Q62 95 68 108 Q72 115 78 118" fill="none" stroke="#8B4513" stroke-width="6" stroke-linecap="round"/>
-  <path d="M136 80 Q138 95 132 108 Q128 115 122 118" fill="none" stroke="#8B4513" stroke-width="6" stroke-linecap="round"/>
-  <path d="M70 52 Q85 45 100 47 Q115 45 130 52" fill="none" stroke="#CD853F" stroke-width="2"/>
+  <!-- Hair - auburn/red -->
+  <path d="M65 90 Q63 60 76 50 Q88 40 100 40 Q112 40 124 50 Q137 60 135 90 Q137 72 129 58 Q115 44 100 44 Q85 44 71 58 Q63 72 65 90" fill="#8B4513"/>
+  <path d="M65 82 Q64 95 70 110 Q74 118 80 120" fill="none" stroke="#7B3503" stroke-width="6" stroke-linecap="round"/>
+  <path d="M135 82 Q136 95 130 110 Q126 118 120 120" fill="none" stroke="#7B3503" stroke-width="6" stroke-linecap="round"/>
+  <path d="M70 54 Q85 48 100 50 Q115 48 130 54" fill="none" stroke="#9B5523" stroke-width="2"/>
   
   <!-- Flower in hair -->
-  <circle cx="128" cy="55" r="6" fill="#FFB6C1"/>
-  <circle cx="128" cy="55" r="3" fill="#FFF"/>
+  <circle cx="128" cy="55" r="5" fill="#D4A0A0"/>
+  <circle cx="128" cy="55" r="2.5" fill="#F5F0E6"/>
   
-  <!-- Eyes - warm, charming -->
-  <ellipse cx="88" cy="90" rx="6" ry="5" fill="#FFF"/>
-  <ellipse cx="112" cy="90" rx="6" ry="5" fill="#FFF"/>
-  <circle cx="88" cy="90" r="3.5" fill="#8B4513"/>
-  <circle cx="112" cy="90" r="3.5" fill="#8B4513"/>
-  <circle cx="89" cy="89" r="1.2" fill="#FFF"/>
-  <circle cx="113" cy="89" r="1.2" fill="#FFF"/>
+  <!-- Eyes - serious -->
+  <ellipse cx="88" cy="90" rx="6" ry="5" fill="#E8D8C8"/>
+  <ellipse cx="112" cy="90" rx="6" ry="5" fill="#E8D8C8"/>
+  <circle cx="88" cy="90" r="3.5" fill="#5D4E37"/>
+  <circle cx="112" cy="90" r="3.5" fill="#5D4E37"/>
+  <circle cx="89" cy="89" r="1.2" fill="#FFF" opacity="0.5"/>
+  <circle cx="113" cy="89" r="1.2" fill="#FFF" opacity="0.5"/>
   
   <!-- Eyelashes -->
-  <path d="M83 87 L81 85" stroke="#A0522D" stroke-width="1"/>
-  <path d="M86 86 L85 84" stroke="#A0522D" stroke-width="1"/>
-  <path d="M117 87 L119 85" stroke="#A0522D" stroke-width="1"/>
-  <path d="M114 86 L115 84" stroke="#A0522D" stroke-width="1"/>
+  <path d="M83 87 L81 85" stroke="#7B3503" stroke-width="1"/>
+  <path d="M86 86 L85 84" stroke="#7B3503" stroke-width="1"/>
+  <path d="M117 87 L119 85" stroke="#7B3503" stroke-width="1"/>
+  <path d="M114 86 L115 84" stroke="#7B3503" stroke-width="1"/>
   
   <!-- Eyebrows -->
-  <path d="M82 82 Q88 80 94 82" stroke="#A0522D" stroke-width="2" fill="none"/>
-  <path d="M106 82 Q112 80 118 82" stroke="#A0522D" stroke-width="2" fill="none"/>
+  <path d="M82 82 Q88 80 94 82" stroke="#7B3503" stroke-width="2" fill="none"/>
+  <path d="M106 82 Q112 80 118 82" stroke="#7B3503" stroke-width="2" fill="none"/>
   
   <!-- Nose -->
-  <path d="M100 94 L98 106 L102 106 Z" fill="#E5B8A8"/>
+  <path d="M100 94 L98 108 L102 108 Z" fill="#D4A890"/>
   
-  <!-- Mouth - charming smile -->
-  <path d="M92 114 Q100 120 108 114" stroke="#C98B7A" stroke-width="2" fill="none"/>
-  <path d="M94 115 Q100 117 106 115" fill="#E8A090"/>
+  <!-- Mouth - serious -->
+  <path d="M92 118 Q100 116 108 118" stroke="#C49580" stroke-width="2" fill="none"/>
+  
+  <!-- Dramatic shadows -->
+  <ellipse cx="75" cy="102" rx="15" ry="20" fill="#000" opacity="0.15"/>
+  <ellipse cx="125" cy="102" rx="15" ry="20" fill="#000" opacity="0.15"/>
+  
+  <!-- Shadow overlay -->
+  <rect width="200" height="200" fill="url(#shadow)"/>
 </svg>

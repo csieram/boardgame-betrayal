@@ -1,44 +1,61 @@
 <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background - dark brown as specified -->
+  <!-- Background -->
   <rect width="200" height="200" fill="#2A2A1A"/>
+  
+  <!-- Frame -->
+  <rect x="5" y="5" width="190" height="190" fill="none" stroke="#FF4500" stroke-width="4"/>
+  
+  <!-- Dramatic shadow overlay -->
+  <defs>
+    <radialGradient id="shadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0.4"/>
+    </radialGradient>
+  </defs>
   
   <!-- Neck -->
   <rect x="85" y="128" width="30" height="25" fill="#8D5524"/>
   
   <!-- Athletic jersey collar -->
-  <path d="M75 140 L100 155 L125 140 L125 150 L100 165 L75 150 Z" fill="#FFF"/>
-  <path d="M85 140 L100 148 L115 140" fill="none" stroke="#FF4500" stroke-width="2"/>
+  <path d="M75 140 L100 158 L125 140 L125 150 L100 170 L75 150 Z" fill="#1A1A1A"/>
+  <path d="M85 140 L100 150 L115 140" fill="none" stroke="#FF4500" stroke-width="2"/>
   
   <!-- Face shape -->
-  <ellipse cx="100" cy="92" rx="40" ry="44" fill="#8D5524"/>
+  <ellipse cx="100" cy="92" rx="40" ry="46" fill="#8D5524"/>
   
   <!-- Ears -->
   <ellipse cx="60" cy="92" rx="8" ry="12" fill="#8D5524"/>
   <ellipse cx="140" cy="92" rx="8" ry="12" fill="#8D5524"/>
   
   <!-- Hair - short, athletic style -->
-  <path d="M60 85 Q55 55 70 42 Q85 32 100 32 Q115 32 130 42 Q145 55 140 85 Q142 65 132 52 Q118 38 100 38 Q82 38 68 52 Q58 65 60 85" fill="#1A1A1A"/>
-  <path d="M65 50 Q80 42 100 44 Q120 42 135 50" fill="none" stroke="#0A0A0A" stroke-width="2"/>
+  <path d="M60 88 Q55 55 70 42 Q85 32 100 32 Q115 32 130 42 Q145 55 140 88 Q142 68 132 52 Q118 38 100 38 Q82 38 68 52 Q58 68 60 88" fill="#1A1A1A"/>
+  <path d="M65 50 Q82 42 100 45 Q118 42 135 50" fill="none" stroke="#0A0A0A" stroke-width="2"/>
   
-  <!-- Headband for sports - using character color -->
-  <path d="M62 60 Q80 52 100 54 Q120 52 138 60" fill="none" stroke="#FF4500" stroke-width="5" stroke-linecap="round"/>
+  <!-- Headband -->
+  <path d="M62 58 Q82 50 100 52 Q118 50 138 58" fill="none" stroke="#FF4500" stroke-width="5" stroke-linecap="round"/>
   
-  <!-- Eyes - determined, confident -->
-  <ellipse cx="85" cy="88" rx="7" ry="5" fill="#FFF"/>
-  <ellipse cx="115" cy="88" rx="7" ry="5" fill="#FFF"/>
-  <circle cx="85" cy="88" r="4" fill="#4A3728"/>
-  <circle cx="115" cy="88" r="4" fill="#4A3728"/>
-  <circle cx="86" cy="87" r="1.5" fill="#FFF"/>
-  <circle cx="116" cy="87" r="1.5" fill="#FFF"/>
+  <!-- Eyes - intense, focused -->
+  <ellipse cx="85" cy="88" rx="7" ry="5" fill="#E8D8C8"/>
+  <ellipse cx="115" cy="88" rx="7" ry="5" fill="#E8D8C8"/>
+  <circle cx="85" cy="88" r="4" fill="#2A1A0A"/>
+  <circle cx="115" cy="88" r="4" fill="#2A1A0A"/>
+  <circle cx="86" cy="87" r="1.5" fill="#FFF" opacity="0.5"/>
+  <circle cx="116" cy="87" r="1.5" fill="#FFF" opacity="0.5"/>
   
-  <!-- Eyebrows - strong, focused -->
-  <path d="M78 78 Q85 76 92 78" stroke="#1A1A1A" stroke-width="3" fill="none"/>
-  <path d="M108 78 Q115 76 122 78" stroke="#1A1A1A" stroke-width="3" fill="none"/>
+  <!-- Eyebrows - intense -->
+  <path d="M78 80 Q85 78 92 80" stroke="#1A1A1A" stroke-width="3" fill="none"/>
+  <path d="M108 80 Q115 78 122 80" stroke="#1A1A1A" stroke-width="3" fill="none"/>
   
   <!-- Nose -->
-  <path d="M100 92 L97 105 L103 105 Z" fill="#6B4423"/>
+  <path d="M100 92 L97 108 L103 108 Z" fill="#6B4423"/>
   
-  <!-- Mouth - confident grin -->
-  <path d="M88 115 Q100 122 112 115" stroke="#5A3A1A" stroke-width="2.5" fill="none"/>
-  <path d="M90 117 Q100 120 110 117" fill="#FFF" opacity="0.8"/>
+  <!-- Mouth - determined -->
+  <path d="M88 118 Q100 116 112 118" stroke="#5A3A1A" stroke-width="2.5" fill="none"/>
+  
+  <!-- Dramatic shadows -->
+  <ellipse cx="75" cy="100" rx="15" ry="20" fill="#000" opacity="0.2"/>
+  <ellipse cx="125" cy="100" rx="15" ry="20" fill="#000" opacity="0.2"/>
+  
+  <!-- Shadow overlay -->
+  <rect width="200" height="200" fill="url(#shadow)"/>
 </svg>
