@@ -57,58 +57,26 @@ export default function CharactersGalleryPage() {
               <p className="text-sm text-gray-500">{character.age}歲</p>
             </div>
 
-            {/* 肖像和全身圖 */}
-            <div className="flex gap-4 mb-4">
-              {/* 肖像 */}
-              <div className="flex-1">
-                <p className="text-xs text-gray-500 mb-2 text-center">肖像</p>
-                {character.portraitSvg ? (
-                  <CharacterImage
-                    src={`/betrayal${character.portraitSvg}`}
-                    alt={`${character.name} 肖像`}
-                    fallbackInitial={character.name[0]}
-                    color={character.color}
-                  />
-                ) : (
-                  <div
-                    className="w-full h-48 flex items-center justify-center rounded"
-                    style={{ backgroundColor: character.color + '40' }}
-                  >
-                    <span style={{ color: character.color }} className="text-4xl font-bold">
-                      {character.name[0]}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* 全身圖 */}
-              <div className="flex-1">
-                <p className="text-xs text-gray-500 mb-2 text-center">全身</p>
-                {character.fullSvg ? (
-                  <CharacterImage
-                    src={`/betrayal${character.fullSvg}`}
-                    alt={`${character.name} 全身`}
-                    fallbackInitial={character.name[0]}
-                    color={character.color}
-                  />
-                ) : character.portraitSvg ? (
-                  <CharacterImage
-                    src={`/betrayal${character.portraitSvg}`}
-                    alt={`${character.name}`}
-                    fallbackInitial={character.name[0]}
-                    color={character.color}
-                  />
-                ) : (
-                  <div
-                    className="w-full h-48 flex items-center justify-center rounded"
-                    style={{ backgroundColor: character.color + '40' }}
-                  >
-                    <span style={{ color: character.color }} className="text-4xl font-bold">
-                      {character.name[0]}
-                    </span>
-                  </div>
-                )}
-              </div>
+            {/* 肖像 */}
+            <div className="w-full mb-4">
+              <p className="text-xs text-gray-500 mb-2 text-center">肖像</p>
+              {character.portraitSvg ? (
+                <CharacterImage
+                  src={`/betrayal${character.portraitSvg}`}
+                  alt={`${character.name} 肖像`}
+                  fallbackInitial={character.name[0]}
+                  color={character.color}
+                />
+              ) : (
+                <div
+                  className="w-full h-48 flex items-center justify-center rounded"
+                  style={{ backgroundColor: character.color + '40' }}
+                >
+                  <span style={{ color: character.color }} className="text-4xl font-bold">
+                    {character.name[0]}
+                  </span>
+                </div>
+              )}
             </div>
 
             <p className="text-gray-300 text-sm mb-4">{character.description}</p>
