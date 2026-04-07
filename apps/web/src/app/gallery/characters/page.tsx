@@ -93,12 +93,12 @@ export default function CharactersGalleryPage() {
                       className={`px-1.5 py-0.5 rounded text-xs ${
                         idx === character.stats.might.startIndex
                           ? 'bg-yellow-500 text-black font-bold'
-                          : idx === 7
+                          : idx === 0
                             ? 'bg-red-900 text-red-200'
                             : 'bg-gray-600'
                       }`}
                     >
-                      {idx === character.stats.might.startIndex ? '⭐' : ''}{value}{idx === 7 ? '💀' : ''}
+                      {idx === 0 ? '💀' : ''}{value}{idx === character.stats.might.startIndex ? '⭐' : ''}
                     </span>
                   ))}
                 </div>
@@ -113,12 +113,12 @@ export default function CharactersGalleryPage() {
                       className={`px-1.5 py-0.5 rounded text-xs ${
                         idx === character.stats.speed.startIndex
                           ? 'bg-yellow-500 text-black font-bold'
-                          : idx === 7
+                          : idx === 0
                             ? 'bg-red-900 text-red-200'
                             : 'bg-gray-600'
                       }`}
                     >
-                      {idx === character.stats.speed.startIndex ? '⭐' : ''}{value}{idx === 7 ? '💀' : ''}
+                      {idx === 0 ? '💀' : ''}{value}{idx === character.stats.might.startIndex ? '⭐' : ''}
                     </span>
                   ))}
                 </div>
@@ -133,12 +133,12 @@ export default function CharactersGalleryPage() {
                       className={`px-1.5 py-0.5 rounded text-xs ${
                         idx === character.stats.sanity.startIndex
                           ? 'bg-yellow-500 text-black font-bold'
-                          : idx === 7
+                          : idx === 0
                             ? 'bg-red-900 text-red-200'
                             : 'bg-gray-600'
                       }`}
                     >
-                      {idx === character.stats.sanity.startIndex ? '⭐' : ''}{value}{idx === 7 ? '💀' : ''}
+                      {idx === 0 ? '💀' : ''}{value}{idx === character.stats.might.startIndex ? '⭐' : ''}
                     </span>
                   ))}
                 </div>
@@ -153,12 +153,12 @@ export default function CharactersGalleryPage() {
                       className={`px-1.5 py-0.5 rounded text-xs ${
                         idx === character.stats.knowledge.startIndex
                           ? 'bg-yellow-500 text-black font-bold'
-                          : idx === 7
+                          : idx === 0
                             ? 'bg-red-900 text-red-200'
                             : 'bg-gray-600'
                       }`}
                     >
-                      {idx === character.stats.knowledge.startIndex ? '⭐' : ''}{value}{idx === 7 ? '💀' : ''}
+                      {idx === 0 ? '💀' : ''}{value}{idx === character.stats.might.startIndex ? '⭐' : ''}
                     </span>
                   ))}
                 </div>
