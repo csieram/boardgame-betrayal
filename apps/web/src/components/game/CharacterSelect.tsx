@@ -166,10 +166,10 @@ function CharacterSelectCard({
           
           {/* 屬性預覽 */}
           <div className="grid grid-cols-4 gap-1 mt-3">
-            <StatBadge label="速" value={character.stats.speed[0]} color="#3B82F6" />
-            <StatBadge label="力" value={character.stats.might[0]} color="#EF4444" />
-            <StatBadge label="理" value={character.stats.sanity[0]} color="#8B5CF6" />
-            <StatBadge label="知" value={character.stats.knowledge[0]} color="#10B981" />
+            <StatBadge label="速" value={character.stats.speed.values[character.stats.speed.startIndex]} color="#3B82F6" />
+            <StatBadge label="力" value={character.stats.might.values[character.stats.might.startIndex]} color="#EF4444" />
+            <StatBadge label="理" value={character.stats.sanity.values[character.stats.sanity.startIndex]} color="#8B5CF6" />
+            <StatBadge label="知" value={character.stats.knowledge.values[character.stats.knowledge.startIndex]} color="#10B981" />
           </div>
         </div>
       </div>
