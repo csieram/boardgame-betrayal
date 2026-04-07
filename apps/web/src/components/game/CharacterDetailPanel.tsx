@@ -116,10 +116,43 @@ export function CharacterDetailPanel({
 
       {/* 屬性軌道 */}
       <div className="mb-4 space-y-2">
-        <StatTrack label="速度" values={player.character.stats.speed.values} currentIndex={player.character.stats.speed.currentIndex} color="#3B82F6" />
-        <StatTrack label="力量" values={player.character.stats.might.values} currentIndex={player.character.stats.might.currentIndex} color="#EF4444" />
-        <StatTrack label="理智" values={player.character.stats.sanity.values} currentIndex={player.character.stats.sanity.currentIndex} color="#8B5CF6" />
-        <StatTrack label="知識" values={player.character.stats.knowledge.values} currentIndex={player.character.stats.knowledge.currentIndex} color="#10B981" />
+        {/* Check if stats has CharacterStat structure or simple number structure */}
+        {(() => {
+          const speedStat = player.character.stats.speed;
+          const mightStat = player.character.stats.might;
+          const sanityStat = player.character.stats.sanity;
+          const knowledgeStat = player.character.stats.knowledge;
+          
+          // Check if it's CharacterStat (has values array) or simple number
+          const isCharacterStat = typeof speedStat === 'object' && 'values' in speedStat;
+          
+          if (isCharacterStat) {
+            // CharacterStat structure
+            return (
+              <>
+                <StatTrack label="速度" values={(speedStat as any).values} currentIndex={(speedStat as any).currentIndex} color="#3B82F6" />
+                <StatTrack label="力量" values={(mightStat as any).values} currentIndex={(mightStat as any).currentIndex} color="#EF4444" />
+                <StatTrack label="理智" values={(sanityStat as any).values} currentIndex={(sanityStat as any).currentIndex} color="#8B5CF6" />
+                <StatTrack label="知識" values={(knowledgeStat as any).values} currentIndex={(knowledgeStat as any).currentIndex} color="#10B981" />
+              </>
+            );
+          } else {
+            // Simple number structure - show current values only
+            return (
+              <div className="p-2 bg-gray-700/30 rounded-lg">
+                <p className="text-sm text-gray-300">
+                  <span className="text-blue-400">速 {speedStat as number}</span>
+                  <span className="text-gray-500 mx-2">|</span>
+                  <span className="text-red-400">力 {mightStat as number}</span>
+                  <span className="text-gray-500 mx-2">|</span>
+                  <span className="text-purple-400">理 {sanityStat as number}</span>
+                  <span className="text-gray-500 mx-2">|</span>
+                  <span className="text-green-400">知 {knowledgeStat as number}</span>
+                </p>
+              </div>
+            );
+          }
+        })()}
       </div>
 
       {/* Issue #189: 移除重複的背包資訊，由 InventoryPanel 統一顯示 */}
