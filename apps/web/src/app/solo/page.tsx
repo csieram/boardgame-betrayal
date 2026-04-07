@@ -885,17 +885,19 @@ export default function SoloGamePage() {
     const rng = new SeededRng(Date.now().toString());
     
     // 構建 gameState 用於 revealHaunt
+    // Issue #297-fix: 正確存取 CharacterStat 結構
     const gameStateForReveal = {
       players: [{
         id: 'solo-player',
         name: player?.name || '玩家',
         color: player?.color || '#000000',
         position: { x: position.x, y: position.y, floor: currentFloor },
+        // 這裡的 stats 應該是 currentStats（簡單數字結構）
         stats: {
-          speed: player?.stats.speed || [0, 0, 0, 0, 0, 0, 0, 0],
-          might: player?.stats.might || [0, 0, 0, 0, 0, 0, 0, 0],
-          sanity: player?.stats.sanity || [0, 0, 0, 0, 0, 0, 0, 0],
-          knowledge: player?.stats.knowledge || [0, 0, 0, 0, 0, 0, 0, 0],
+          speed: player?.stats.speed.values[player?.stats.speed.currentIndex] ?? 4,
+          might: player?.stats.might.values[player?.stats.might.currentIndex] ?? 4,
+          sanity: player?.stats.sanity.values[player?.stats.sanity.currentIndex] ?? 4,
+          knowledge: player?.stats.knowledge.values[player?.stats.knowledge.currentIndex] ?? 4,
         },
         items: playerState?.items || [],
         omens: playerState?.omens || [],
@@ -982,15 +984,28 @@ export default function SoloGamePage() {
     // Issue #148-fix: 使用真實的 AI 玩家位置
     const aiPlayersList = aiPlayers.map(aiPlayer => {
       const aiPos = aiPlayerPositions.get(aiPlayer.id) || aiPlayer.position || { x: 7, y: 7, floor: 'ground' as Floor };
+      // Issue #297-fix: 正確存取 CharacterStat 結構
+      const getStatValue = (stat: unknown): number => {
+        if (typeof stat === 'object' && stat !== null && 'values' in stat && 'currentIndex' in stat) {
+          const s = stat as { values: number[]; currentIndex: number };
+          return s.values[s.currentIndex] ?? 4;
+        }
+        // 向後兼容：如果是陣列，返回第一個元素
+        if (Array.isArray(stat) && stat.length > 0) {
+          return stat[0];
+        }
+        return 4;
+      };
+
       return {
         id: aiPlayer.id,
         name: aiPlayer.name,
         position: aiPos,
         currentStats: {
-          speed: aiPlayer.character?.stats?.speed?.[0] || 4,
-          might: aiPlayer.character?.stats?.might?.[0] || 4,
-          sanity: aiPlayer.character?.stats?.sanity?.[0] || 4,
-          knowledge: aiPlayer.character?.stats?.knowledge?.[0] || 4,
+          speed: getStatValue(aiPlayer.character?.stats?.speed),
+          might: getStatValue(aiPlayer.character?.stats?.might),
+          sanity: getStatValue(aiPlayer.character?.stats?.sanity),
+          knowledge: getStatValue(aiPlayer.character?.stats?.knowledge),
         },
         items: [],
         omens: [],
@@ -1165,34 +1180,64 @@ export default function SoloGamePage() {
           console.error('[updateAIPlayerStats] ERROR: AI player missing character or stats:', p);
           return p;
         }
-        
-        const currentSpeed = p.character.stats.speed?.[0] ?? 4;
-        const currentMight = p.character.stats.might?.[0] ?? 4;
-        const currentSanity = p.character.stats.sanity?.[0] ?? 4;
-        const currentKnowledge = p.character.stats.knowledge?.[0] ?? 4;
+
+        // Issue #297-fix: 正確存取 CharacterStat 結構
+        const getCurrentStatValue = (stat: unknown): number => {
+          if (typeof stat === 'object' && stat !== null && 'values' in stat && 'currentIndex' in stat) {
+            const s = stat as { values: number[]; currentIndex: number };
+            return s.values[s.currentIndex] ?? 4;
+          }
+          // 向後兼容：如果是陣列，返回第一個元素
+          if (Array.isArray(stat) && stat.length > 0) {
+            return stat[0];
+          }
+          return 4;
+        };
+
+        const currentSpeed = getCurrentStatValue(p.character.stats.speed);
+        const currentMight = getCurrentStatValue(p.character.stats.might);
+        const currentSanity = getCurrentStatValue(p.character.stats.sanity);
+        const currentKnowledge = getCurrentStatValue(p.character.stats.knowledge);
         
         const newSpeed = Math.max(0, Math.min(8, currentSpeed + (changes.speed || 0)));
         const newMight = Math.max(0, Math.min(8, currentMight + (changes.might || 0)));
         const newSanity = Math.max(0, Math.min(8, currentSanity + (changes.sanity || 0)));
         const newKnowledge = Math.max(0, Math.min(8, currentKnowledge + (changes.knowledge || 0)));
-        
+
         console.log('[updateAIPlayerStats] Updating AI stats:', {
           playerId,
           old: { speed: currentSpeed, might: currentMight, sanity: currentSanity, knowledge: currentKnowledge },
           new: { speed: newSpeed, might: newMight, sanity: newSanity, knowledge: newKnowledge },
           changes,
         });
-        
+
+        // Issue #297-fix: 正確更新 CharacterStat 結構，保持 values 陣列和更新 currentIndex
+        const updateStat = (currentValue: number, newValue: number, stat: { values: number[]; currentIndex: number }) => {
+          // 找到新值在 values 陣列中的索引
+          let newIndex = stat.values.indexOf(newValue);
+          // 如果找不到，找到最接近的較小值
+          if (newIndex === -1) {
+            for (let i = stat.values.length - 1; i >= 0; i--) {
+              if (stat.values[i] <= newValue) {
+                newIndex = i;
+                break;
+              }
+            }
+            // 如果還是找不到，使用索引 0（骷髏）
+            if (newIndex === -1) newIndex = 0;
+          }
+          return { ...stat, currentIndex: newIndex };
+        };
+
         return {
           ...p,
           character: {
             ...p.character,
             stats: {
-              ...p.character.stats,
-              speed: [newSpeed, p.character.stats.speed?.[1] ?? 4] as [number, number],
-              might: [newMight, p.character.stats.might?.[1] ?? 4] as [number, number],
-              sanity: [newSanity, p.character.stats.sanity?.[1] ?? 4] as [number, number],
-              knowledge: [newKnowledge, p.character.stats.knowledge?.[1] ?? 4] as [number, number],
+              speed: updateStat(currentSpeed, newSpeed, p.character.stats.speed as { values: number[]; currentIndex: number }),
+              might: updateStat(currentMight, newMight, p.character.stats.might as { values: number[]; currentIndex: number }),
+              sanity: updateStat(currentSanity, newSanity, p.character.stats.sanity as { values: number[]; currentIndex: number }),
+              knowledge: updateStat(currentKnowledge, newKnowledge, p.character.stats.knowledge as { values: number[]; currentIndex: number }),
             },
           },
         };
@@ -1228,17 +1273,31 @@ export default function SoloGamePage() {
 
     // AI 自動選擇數值最高的屬性
     const availableTraits = getAvailableTraitsForDamage(damage.type);
+
+    // Issue #297-fix: 正確存取 CharacterStat 結構
+    const getStatValue = (stat: unknown): number => {
+      if (typeof stat === 'object' && stat !== null && 'values' in stat && 'currentIndex' in stat) {
+        const s = stat as { values: number[]; currentIndex: number };
+        return s.values[s.currentIndex] ?? 0;
+      }
+      // 向後兼容：如果是陣列，返回第一個元素
+      if (Array.isArray(stat) && stat.length > 0) {
+        return stat[0];
+      }
+      return 0;
+    };
+
     console.log('[AI Damage Debug] Available traits for', damage.type, ':', availableTraits);
     console.log('[AI Damage Debug] AI current stats:', {
-      might: aiPlayer.character?.stats?.might?.[0],
-      speed: aiPlayer.character?.stats?.speed?.[0],
-      knowledge: aiPlayer.character?.stats?.knowledge?.[0],
-      sanity: aiPlayer.character?.stats?.sanity?.[0],
+      might: getStatValue(aiPlayer.character?.stats?.might),
+      speed: getStatValue(aiPlayer.character?.stats?.speed),
+      knowledge: getStatValue(aiPlayer.character?.stats?.knowledge),
+      sanity: getStatValue(aiPlayer.character?.stats?.sanity),
     });
 
     // Issue #279: 在日誌中顯示可選擇的特質
     const traitOptions = availableTraits.map(t => statNames[t]).join('/');
-    setLog(prev => [...prev, 
+    setLog(prev => [...prev,
       `[${timeStr}] AI ${aiPlayer.name} 需要承受 ${damage.amount} 點${damage.type === 'mental' ? '精神' : '物理'}傷害，可選擇: ${traitOptions}`
     ]);
 
@@ -1246,7 +1305,7 @@ export default function SoloGamePage() {
     let bestValue = -1;
 
     for (const trait of availableTraits) {
-      const value = aiPlayer.character?.stats?.[trait]?.[0] || 0;
+      const value = getStatValue(aiPlayer.character?.stats?.[trait]) || 0;
       if (value > bestValue) {
         bestValue = value;
         bestTrait = trait;
@@ -3635,12 +3694,24 @@ export default function SoloGamePage() {
         console.error('[buildAllPlayers] ERROR: AI player missing character or stats:', aiPlayer);
       }
       
-      // Issue #198-fix: 確保讀取最新的 stats 值
+      // Issue #297-fix: 正確存取 CharacterStat 結構
+      const getStatValue = (stat: unknown): number => {
+        if (typeof stat === 'object' && stat !== null && 'values' in stat && 'currentIndex' in stat) {
+          const s = stat as { values: number[]; currentIndex: number };
+          return s.values[s.currentIndex] ?? 0;
+        }
+        // 向後兼容：如果是陣列，返回第一個元素
+        if (Array.isArray(stat) && stat.length > 0) {
+          return stat[0];
+        }
+        return 0;
+      };
+
       const stats = {
-        speed: aiPlayer.character?.stats?.speed?.[0] ?? 0,
-        might: aiPlayer.character?.stats?.might?.[0] ?? 0,
-        sanity: aiPlayer.character?.stats?.sanity?.[0] ?? 0,
-        knowledge: aiPlayer.character?.stats?.knowledge?.[0] ?? 0,
+        speed: getStatValue(aiPlayer.character?.stats?.speed),
+        might: getStatValue(aiPlayer.character?.stats?.might),
+        sanity: getStatValue(aiPlayer.character?.stats?.sanity),
+        knowledge: getStatValue(aiPlayer.character?.stats?.knowledge),
       };
       
       console.log('[buildAllPlayers] AI player stats:', {

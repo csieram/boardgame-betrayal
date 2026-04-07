@@ -364,9 +364,10 @@ export class CombatManager {
       type: 'player',
       name: player.name,
       position: player.position,
-      might: player.character.stats.might[1],
+      // Issue #297-fix: 正確存取 CharacterStat 的 values 陣列
+      might: player.character.stats.might.values[player.character.stats.might.currentIndex],
       currentMight: player.currentStats.might,
-      speed: player.character.stats.speed[1],
+      speed: player.character.stats.speed.values[player.character.stats.speed.currentIndex],
       currentSpeed: player.currentStats.speed,
       weaponBonus,
     };

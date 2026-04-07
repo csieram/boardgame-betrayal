@@ -116,38 +116,56 @@ export function CharacterDetailPanel({
 
       {/* 屬性軌道 */}
       <div className="mb-4 space-y-2">
-        {/* Check if stats has CharacterStat structure or simple number structure */}
+        {/* Issue #297-fix: 更嚴格地檢查 CharacterStat 結構 */}
         {(() => {
           const speedStat = player.character.stats.speed;
           const mightStat = player.character.stats.might;
           const sanityStat = player.character.stats.sanity;
           const knowledgeStat = player.character.stats.knowledge;
-          
-          // Check if it's CharacterStat (has values array) or simple number
-          const isCharacterStat = typeof speedStat === 'object' && 'values' in speedStat;
-          
-          if (isCharacterStat) {
+
+          // Issue #297-fix: 嚴格檢查是否為有效的 CharacterStat 結構
+          const isValidCharacterStat = (stat: unknown): stat is { values: number[]; currentIndex: number } => {
+            if (typeof stat !== 'object' || stat === null) return false;
+            const s = stat as Record<string, unknown>;
+            return (
+              Array.isArray(s.values) &&
+              s.values.length === 8 &&
+              typeof s.currentIndex === 'number' &&
+              s.currentIndex >= 0 &&
+              s.currentIndex < 8
+            );
+          };
+
+          const hasCharacterStatStructure = isValidCharacterStat(speedStat);
+
+          if (hasCharacterStatStructure) {
             // CharacterStat structure
             return (
               <>
-                <StatTrack label="速度" values={(speedStat as any).values} currentIndex={(speedStat as any).currentIndex} color="#3B82F6" />
-                <StatTrack label="力量" values={(mightStat as any).values} currentIndex={(mightStat as any).currentIndex} color="#EF4444" />
-                <StatTrack label="理智" values={(sanityStat as any).values} currentIndex={(sanityStat as any).currentIndex} color="#8B5CF6" />
-                <StatTrack label="知識" values={(knowledgeStat as any).values} currentIndex={(knowledgeStat as any).currentIndex} color="#10B981" />
+                <StatTrack label="速度" values={(speedStat as { values: number[]; currentIndex: number }).values} currentIndex={(speedStat as { values: number[]; currentIndex: number }).currentIndex} color="#3B82F6" />
+                <StatTrack label="力量" values={(mightStat as { values: number[]; currentIndex: number }).values} currentIndex={(mightStat as { values: number[]; currentIndex: number }).currentIndex} color="#EF4444" />
+                <StatTrack label="理智" values={(sanityStat as { values: number[]; currentIndex: number }).values} currentIndex={(sanityStat as { values: number[]; currentIndex: number }).currentIndex} color="#8B5CF6" />
+                <StatTrack label="知識" values={(knowledgeStat as { values: number[]; currentIndex: number }).values} currentIndex={(knowledgeStat as { values: number[]; currentIndex: number }).currentIndex} color="#10B981" />
               </>
             );
           } else {
             // Simple number structure - show current values only
+            // Issue #297-fix: 確保值是數字
+            const getStatValue = (stat: unknown): number => {
+              if (typeof stat === 'number') return stat;
+              if (Array.isArray(stat) && stat.length > 0) return stat[0];
+              return 0;
+            };
             return (
               <div className="p-2 bg-gray-700/30 rounded-lg">
                 <p className="text-sm text-gray-300">
-                  <span className="text-blue-400">速 {speedStat as number}</span>
+                  <span className="text-blue-400">速 {getStatValue(speedStat)}</span>
                   <span className="text-gray-500 mx-2">|</span>
-                  <span className="text-red-400">力 {mightStat as number}</span>
+                  <span className="text-red-400">力 {getStatValue(mightStat)}</span>
                   <span className="text-gray-500 mx-2">|</span>
-                  <span className="text-purple-400">理 {sanityStat as number}</span>
+                  <span className="text-purple-400">理 {getStatValue(sanityStat)}</span>
                   <span className="text-gray-500 mx-2">|</span>
-                  <span className="text-green-400">知 {knowledgeStat as number}</span>
+                  <span className="text-green-400">知 {getStatValue(knowledgeStat)}</span>
                 </p>
               </div>
             );

@@ -295,11 +295,12 @@ function createPlayer(
     name,
     character,
     position,
+    // Issue #297-fix: 正確存取 CharacterStat 的 values 陣列
     currentStats: {
-      speed: character.stats.speed[1],
-      might: character.stats.might[1],
-      sanity: character.stats.sanity[1],
-      knowledge: character.stats.knowledge[1],
+      speed: character.stats.speed.values[character.stats.speed.currentIndex],
+      might: character.stats.might.values[character.stats.might.currentIndex],
+      sanity: character.stats.sanity.values[character.stats.sanity.currentIndex],
+      knowledge: character.stats.knowledge.values[character.stats.knowledge.currentIndex],
     },
     items: [],
     omens: [],

@@ -138,26 +138,8 @@ export interface StatTrack {
   knowledge: number[];
 }
 
-/** 角色定義 */
-export interface Character {
-  id: string;
-  name: string;
-  nameEn: string;
-  age: number;
-  description: string;
-  color: string;
-  portraitSvg?: string;
-  fullSvg?: string;
-  /** 初始屬性值 [初始, 當前] */
-  stats: {
-    speed: [number, number];
-    might: [number, number];
-    sanity: [number, number];
-    knowledge: [number, number];
-  };
-  /** 屬性軌道（用於升降數值） */
-  statTrack: StatTrack;
-}
+/** 角色定義 - 從 shared 包導入 */
+export type { Character, CharacterStat } from '@betrayal/shared';
 
 /** 玩家狀態 */
 export interface Player {

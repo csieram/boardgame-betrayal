@@ -330,7 +330,8 @@ describe('Helper Functions', () => {
     expect(player.name).toBe('Test Player');
     expect(player.character).toBe(character);
     expect(player.position).toEqual(position);
-    expect(player.currentStats.speed).toBe(character.stats.speed[1]);
+    // Issue #297-fix: 正確存取 CharacterStat 的 values 陣列
+    expect(player.currentStats.speed).toBe(character.stats.speed.values[character.stats.speed.currentIndex]);
     expect(player.items).toEqual([]);
     expect(player.omens).toEqual([]);
     expect(player.isTraitor).toBe(false);

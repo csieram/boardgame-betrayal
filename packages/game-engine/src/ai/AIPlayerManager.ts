@@ -232,16 +232,17 @@ export class AIPlayerManager {
       this.aiPlayers.set(aiId, aiPlayer);
 
       // 創建 Player 對象
+      // Issue #297-fix: 正確存取 CharacterStat 的 values 陣列
       const player: Player = {
         id: aiId,
         name: character.name,
         character,
         position: { x: 7, y: 7, floor: 'ground' },
         currentStats: {
-          speed: character.stats.speed[0],
-          might: character.stats.might[0],
-          sanity: character.stats.sanity[0],
-          knowledge: character.stats.knowledge[0],
+          speed: character.stats.speed.values[character.stats.speed.currentIndex],
+          might: character.stats.might.values[character.stats.might.currentIndex],
+          sanity: character.stats.sanity.values[character.stats.sanity.currentIndex],
+          knowledge: character.stats.knowledge.values[character.stats.knowledge.currentIndex],
         },
         items: [],
         omens: [],
