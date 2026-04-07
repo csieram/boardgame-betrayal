@@ -1,190 +1,144 @@
-// 樓層類型
-export type Floor = 'ground' | 'upper' | 'basement';
+// Official Betrayal at House on the Hill - 2nd Edition + Widow's Walk Rooms
+// Generated from official room data
+// Format: Each room can appear on multiple floors (floors: ['ground', 'upper', 'basement', 'roof'])
 
-// 符號類型
-export type SymbolType = 'E' | 'I' | 'O' | null;
+export type Floor = 'ground' | 'upper' | 'basement' | 'roof';
+export type RoomType = 'omen' | 'event' | 'item' | 'none' | 'landing' | 'special';
+export type CardSymbol = 'O' | 'E' | 'I' | null;
 
-// 房間類型
 export interface Room {
   id: string;
   name: string;
   nameEn: string;
-  floor: Floor;
-  symbol: SymbolType;
+  floors: Floor[];  // Room can appear on multiple floors
+  type: RoomType;
+  symbol: CardSymbol;
   doors: ('north' | 'south' | 'east' | 'west')[];
   description: string;
   color: string;
-  icon: string;
   isOfficial: boolean;
-  notes?: string;
-  // Gallery SVG 路徑
-  gallerySvg?: string;
-  // 向後兼容
-  omenRequired?: boolean;
-  eventRequired?: boolean;
-  type?: string;
+  set: '2nd' | 'ww';
+  hasDumbwaiter?: boolean;
+  isOutside?: boolean;
+  hasWindow?: boolean;
+  specialText?: string;
 }
 
-// 門的 SVG
-const doorN = `<rect x="42" y="0" width="16" height="8" fill="#4A3728" stroke="#2A1A0A" stroke-width="1"/>`;
-const doorS = `<rect x="42" y="92" width="16" height="8" fill="#4A3728" stroke="#2A1A0A" stroke-width="1"/>`;
-const doorE = `<rect x="92" y="42" width="8" height="16" fill="#4A3728" stroke="#2A1A0A" stroke-width="1"/>`;
-const doorW = `<rect x="0" y="42" width="8" height="16" fill="#4A3728" stroke="#2A1A0A" stroke-width="1"/>`;
+// ==================== ALL OFFICIAL ROOMS ====================
+export const ALL_ROOMS: Room[] = [
+  // 2nd Edition - Core (45 rooms)
+  { id: 'abandoned_room', name: '廢棄房間', nameEn: 'Abandoned Room', floors: ['ground', 'basement'], type: 'omen', symbol: 'O', doors: ['north', 'south', 'east', 'west'], description: '被遺棄的房間', color: '#4A4A4A', isOfficial: true, set: '2nd' },
+  { id: 'attic', name: '閣樓', nameEn: 'Attic', floors: ['upper'], type: 'event', symbol: 'E', doors: ['south'], description: '屋頂的閣樓', color: '#4A4A3A', isOfficial: true, set: '2nd', specialText: 'Exit: Speed 3+ or lose 1 Might' },
+  { id: 'balcony', name: '陽台', nameEn: 'Balcony', floors: ['upper'], type: 'omen', symbol: 'O', doors: ['north', 'south'], description: '俯瞰的陽台', color: '#6A6A5A', isOfficial: true, set: '2nd', isOutside: true },
+  { id: 'ballroom', name: '舞廳', nameEn: 'Ballroom', floors: ['ground'], type: 'event', symbol: 'E', doors: ['north', 'south', 'east', 'west'], description: '華麗的舞廳', color: '#4A4A6A', isOfficial: true, set: '2nd' },
+  { id: 'basement_landing', name: '地下室大廳', nameEn: 'Basement Landing', floors: ['basement'], type: 'landing', symbol: null, doors: ['north', 'south', 'east', 'west'], description: '地下室的起點', color: '#3A3A3A', isOfficial: true, set: '2nd' },
+  { id: 'bedroom', name: '臥室', nameEn: 'Bedroom', floors: ['upper'], type: 'event', symbol: 'E', doors: ['east', 'west'], description: '普通的臥室', color: '#6B4B4B', isOfficial: true, set: '2nd', hasWindow: true },
+  { id: 'bloody_room', name: '血跡房間', nameEn: 'Bloody Room', floors: ['upper', 'ground'], type: 'item', symbol: 'I', doors: ['north', 'south', 'east', 'west'], description: '滿是血跡的房間', color: '#5A3A3A', isOfficial: true, set: '2nd' },
+  { id: 'catacombs', name: '地下墓穴', nameEn: 'Catacombs', floors: ['basement'], type: 'omen', symbol: 'O', doors: ['north', 'south'], description: '古老的地下墓穴', color: '#3A3A3A', isOfficial: true, set: '2nd', specialText: 'Sanity 6+ to cross' },
+  { id: 'chapel', name: '禮拜堂', nameEn: 'Chapel', floors: ['upper', 'ground'], type: 'event', symbol: 'E', doors: ['north', 'east'], description: '小型的禮拜堂', color: '#4A4A5A', isOfficial: true, set: '2nd', hasWindow: true, specialText: 'Once/game +1 Sanity' },
+  { id: 'charred_room', name: '燒焦房間', nameEn: 'Charred Room', floors: ['upper', 'ground'], type: 'omen', symbol: 'O', doors: ['north', 'south', 'east', 'west'], description: '被火燒過的房間', color: '#3A2A2A', isOfficial: true, set: '2nd' },
+  { id: 'chasm', name: '深淵', nameEn: 'Chasm', floors: ['basement'], type: 'none', symbol: null, doors: ['east', 'west'], description: '地板裂開的深淵', color: '#1A1A1A', isOfficial: true, set: '2nd', specialText: 'Speed 3+ to cross' },
+  { id: 'coal_chute', name: '煤槽', nameEn: 'Coal Chute', floors: ['ground'], type: 'none', symbol: null, doors: ['north'], description: '滑到地下室的煤槽', color: '#2A2A2A', isOfficial: true, set: '2nd', specialText: 'Slide to Basement Landing' },
+  { id: 'collapsed_room', name: '倒塌房間', nameEn: 'Collapsed Room', floors: ['upper', 'ground'], type: 'none', symbol: null, doors: ['north', 'south', 'east', 'west'], description: '地板倒塌的房間', color: '#3A3A3A', isOfficial: true, set: '2nd', specialText: 'Speed 5+ or fall to basement' },
+  { id: 'conservatory', name: '溫室', nameEn: 'Conservatory', floors: ['upper', 'ground'], type: 'event', symbol: 'E', doors: ['north'], description: '植物溫室', color: '#2F4F2F', isOfficial: true, set: '2nd', isOutside: true },
+  { id: 'creaky_hallway', name: '吱嘎走廊', nameEn: 'Creaky Hallway', floors: ['upper', 'ground', 'basement'], type: 'none', symbol: null, doors: ['north', 'south', 'east', 'west'], description: '地板吱嘎作響的走廊', color: '#5A5A5A', isOfficial: true, set: '2nd' },
+  { id: 'crypt', name: '墓穴', nameEn: 'Crypt', floors: ['basement'], type: 'event', symbol: 'E', doors: ['north', 'east'], description: '存放石棺的墓穴', color: '#3A3A4A', isOfficial: true, set: '2nd', specialText: 'End turn: 1 mental dmg' },
+  { id: 'dining_room', name: '餐廳', nameEn: 'Dining Room', floors: ['ground'], type: 'omen', symbol: 'O', doors: ['north', 'east'], description: '長餐桌的餐廳', color: '#5A4A3A', isOfficial: true, set: '2nd', hasWindow: true },
+  { id: 'dusty_hallway', name: '積灰走廊', nameEn: 'Dusty Hallway', floors: ['upper', 'ground', 'basement'], type: 'none', symbol: null, doors: ['north', 'south', 'east', 'west'], description: '滿是灰塵的走廊', color: '#6A6A5A', isOfficial: true, set: '2nd' },
+  { id: 'entrance_hall', name: '入口大廳', nameEn: 'Entrance Hall', floors: ['ground'], type: 'landing', symbol: null, doors: ['north', 'south', 'east', 'west'], description: '房屋的入口', color: '#7B6354', isOfficial: true, set: '2nd', hasWindow: true, specialText: 'Part of 3-tile start' },
+  { id: 'furnace_room', name: '鍋爐房', nameEn: 'Furnace Room', floors: ['basement'], type: 'omen', symbol: 'O', doors: ['north', 'south', 'west'], description: '燃燒的鍋爐房', color: '#4A3A2A', isOfficial: true, set: '2nd', specialText: 'End turn: 1 physical dmg' },
+  { id: 'gallery', name: '畫廊', nameEn: 'Gallery', floors: ['upper'], type: 'omen', symbol: 'O', doors: ['north', 'south', 'east', 'west'], description: '展示畫作的畫廊', color: '#5A4A4A', isOfficial: true, set: '2nd', specialText: 'Fall to Ballroom' },
+  { id: 'game_room', name: '遊戲室', nameEn: 'Game Room', floors: ['upper', 'ground', 'basement'], type: 'event', symbol: 'E', doors: ['north', 'south', 'east'], description: '遊戲娛樂室', color: '#4A5A6A', isOfficial: true, set: '2nd' },
+  { id: 'gardens', name: '花園', nameEn: 'Gardens', floors: ['ground'], type: 'event', symbol: 'E', doors: ['north', 'south'], description: '戶外花園', color: '#2F4F2F', isOfficial: true, set: '2nd', isOutside: true },
+  { id: 'graveyard', name: '墓地', nameEn: 'Graveyard', floors: ['ground'], type: 'event', symbol: 'E', doors: ['south'], description: '荒廢的墓地', color: '#3A4A3A', isOfficial: true, set: '2nd', isOutside: true, specialText: 'Exit: Sanity 4+ or lose Knowledge' },
+  { id: 'gymnasium', name: '健身房', nameEn: 'Gymnasium', floors: ['upper', 'basement'], type: 'omen', symbol: 'O', doors: ['south', 'east'], description: '室內健身房', color: '#5A6A5A', isOfficial: true, set: '2nd', specialText: 'Once/game +1 Speed' },
+  { id: 'junk_room', name: '雜物間', nameEn: 'Junk Room', floors: ['upper', 'ground', 'basement'], type: 'omen', symbol: 'O', doors: ['north', 'south', 'east', 'west'], description: '堆滿雜物的房間', color: '#4A4A3A', isOfficial: true, set: '2nd', specialText: 'Exit: Might 3+ or lose Speed' },
+  { id: 'kitchen', name: '廚房', nameEn: 'Kitchen', floors: ['ground', 'basement'], type: 'omen', symbol: 'O', doors: ['north', 'east'], description: '家庭廚房', color: '#4A6741', isOfficial: true, set: '2nd' },
+  { id: 'larder', name: '儲藏室', nameEn: 'Larder', floors: ['basement'], type: 'item', symbol: 'I', doors: ['north', 'south'], description: '存放食物的儲藏室', color: '#4A4A3A', isOfficial: true, set: '2nd', specialText: 'Once/game +1 Might' },
+  { id: 'library', name: '圖書室', nameEn: 'Library', floors: ['upper', 'ground'], type: 'event', symbol: 'E', doors: ['north', 'south', 'east', 'west'], description: '滿是書的圖書室', color: '#5D4E37', isOfficial: true, set: '2nd', specialText: 'Once/game +1 Knowledge' },
+  { id: 'master_bedroom', name: '主臥室', nameEn: 'Master Bedroom', floors: ['upper'], type: 'omen', symbol: 'O', doors: ['north', 'west'], description: '華麗的主臥室', color: '#7B4B4B', isOfficial: true, set: '2nd', hasWindow: true },
+  { id: 'mystic_elevator', name: '神秘電梯', nameEn: 'Mystic Elevator', floors: ['upper', 'ground', 'basement'], type: 'none', symbol: null, doors: ['north'], description: '會移動的電梯', color: '#4A4A5A', isOfficial: true, set: '2nd', specialText: 'Moves floors' },
+  { id: 'operating_lab', name: '手術實驗室', nameEn: 'Operating Laboratory', floors: ['upper', 'basement'], type: 'event', symbol: 'E', doors: ['south', 'east'], description: '進行手術的實驗室', color: '#4A5A4A', isOfficial: true, set: '2nd' },
+  { id: 'organ_room', name: '風琴室', nameEn: 'Organ Room', floors: ['upper', 'ground', 'basement'], type: 'event', symbol: 'E', doors: ['south', 'west'], description: '有風琴的房間', color: '#5A4A5A', isOfficial: true, set: '2nd' },
+  { id: 'patio', name: '庭院', nameEn: 'Patio', floors: ['ground'], type: 'event', symbol: 'E', doors: ['north', 'south', 'west'], description: '戶外庭院', color: '#6A6A5A', isOfficial: true, set: '2nd', isOutside: true },
+  { id: 'pentagram_chamber', name: '五芒星密室', nameEn: 'Pentagram Chamber', floors: ['basement'], type: 'omen', symbol: 'O', doors: ['east'], description: '畫著五芒星的密室', color: '#3A1A4A', isOfficial: true, set: '2nd', specialText: 'Exit: Knowledge 4+ or lose Sanity' },
+  { id: 'research_lab', name: '研究實驗室', nameEn: 'Research Laboratory', floors: ['upper', 'basement'], type: 'event', symbol: 'E', doors: ['north', 'south'], description: '研究用的實驗室', color: '#4A5A5A', isOfficial: true, set: '2nd' },
+  { id: 'laboratory', name: '實驗室', nameEn: 'Laboratory', floors: ['basement'], type: 'item', symbol: 'I', doors: ['south', 'east'], description: '進行實驗的房間', color: '#4A5A4A', isOfficial: true, set: '2nd' },
+  { id: 'servants_quarters', name: '僕人房', nameEn: 'Servants Quarters', floors: ['upper', 'basement'], type: 'omen', symbol: 'O', doors: ['north', 'south', 'east', 'west'], description: '僕人居住的地方', color: '#4A4A4A', isOfficial: true, set: '2nd' },
+  { id: 'stairs_from_basement', name: '地下室樓梯', nameEn: 'Stairs from Basement', floors: ['basement'], type: 'none', symbol: null, doors: ['north', 'south'], description: '通往一樓的樓梯', color: '#4A4A3A', isOfficial: true, set: '2nd' },
+  { id: 'statuary_corridor', name: '雕像走廊', nameEn: 'Statuary Corridor', floors: ['upper', 'ground', 'basement'], type: 'event', symbol: 'E', doors: ['north', 'south'], description: '有雕像的走廊', color: '#5A5A6A', isOfficial: true, set: '2nd' },
+  { id: 'storeroom', name: '儲物間', nameEn: 'Storeroom', floors: ['upper', 'basement'], type: 'item', symbol: 'I', doors: ['north'], description: '存放雜物的房間', color: '#4A4A4A', isOfficial: true, set: '2nd' },
+  { id: 'tower', name: '塔樓', nameEn: 'Tower', floors: ['upper'], type: 'event', symbol: 'E', doors: ['east', 'west'], description: '高聳的塔樓', color: '#556B8B', isOfficial: true, set: '2nd', isOutside: true, specialText: 'Might 3+ to cross' },
+  { id: 'underground_lake', name: '地下湖', nameEn: 'Underground Lake', floors: ['basement'], type: 'event', symbol: 'E', doors: ['north', 'west'], description: '地下的湖泊', color: '#2A3A4A', isOfficial: true, set: '2nd' },
+  { id: 'upper_landing', name: '二樓大廳', nameEn: 'Upper Landing', floors: ['upper'], type: 'landing', symbol: null, doors: ['north', 'south', 'east', 'west'], description: '二樓的起點', color: '#6B5344', isOfficial: true, set: '2nd' },
+  { id: 'vault', name: '金庫', nameEn: 'Vault', floors: ['upper', 'basement'], type: 'special', symbol: 'I', doors: ['north'], description: '存放貴重物品的金庫', color: '#4A4A3A', isOfficial: true, set: '2nd', specialText: 'Knowledge 6+ to open' },
+  { id: 'wine_cellar', name: '酒窖', nameEn: 'Wine Cellar', floors: ['basement'], type: 'item', symbol: 'I', doors: ['north', 'south'], description: '存放酒的地下室', color: '#4A3A4A', isOfficial: true, set: '2nd' },
 
-// 地板
-const floor = (c: string) => `<rect x="8" y="8" width="84" height="84" fill="${c}" stroke="#2A2A2A" stroke-width="2"/>`;
-
-// 符號標記
-const symE = `<circle cx="85" cy="15" r="6" fill="#4A9A4A"/><text x="85" y="18" text-anchor="middle" font-size="8" fill="#FFF">E</text>`;
-const symI = `<circle cx="85" cy="15" r="6" fill="#3D7AB8"/><text x="85" y="18" text-anchor="middle" font-size="8" fill="#FFF">I</text>`;
-const symO = `<circle cx="85" cy="15" r="6" fill="#8B4DA8"/><text x="85" y="18" text-anchor="middle" font-size="8" fill="#FFF">O</text>`;
-
-// ==================== BASEMENT (19 rooms) ====================
-export const BASEMENT_ROOMS: Room[] = [
-  { id: 'abandoned_room', name: '廢棄房間', nameEn: 'Abandoned Room', floor: 'basement', symbol: 'O', doors: ['north'], description: '被遺棄的房間', color: '#4A4A4A', icon: `${floor('#5A5A5A')}${doorN}${symO}`, gallerySvg: '/gallery/rooms/abandoned_room.svg', isOfficial: true },
-  { id: 'arsenal', name: '軍械庫', nameEn: 'Arsenal', floor: 'basement', symbol: 'I', doors: ['south', 'east'], description: '存放武器的房間', color: '#4A4A3A', icon: `${floor('#5A5A4A')}${doorS}${doorE}${symI}`, gallerySvg: '/gallery/rooms/arsenal.svg', isOfficial: true },
-  { id: 'bloody_room', name: '血跡房間', nameEn: 'Bloody Room', floor: 'basement', symbol: 'E', doors: ['north'], description: '滿是血跡的房間', color: '#5A3A3A', icon: `${floor('#6B4B4B')}${doorN}${symE}`, gallerySvg: '/gallery/rooms/bloody_room.svg', isOfficial: true },
-  { id: 'catacombs', name: '地下墓穴', nameEn: 'Catacombs', floor: 'basement', symbol: null, doors: ['north', 'east', 'south'], description: '古老的地下墓穴', color: '#3A3A3A', icon: `${floor('#4A4A4A')}${doorN}${doorE}${doorS}`, gallerySvg: '/gallery/rooms/catacombs.svg', isOfficial: true },
-  { id: 'cavern', name: '洞穴', nameEn: 'Cavern', floor: 'basement', symbol: 'E', doors: ['north'], description: '天然形成的洞穴', color: '#2A2A2A', icon: `${floor('#3A3A3A')}${doorN}${symE}`, gallerySvg: '/gallery/rooms/cavern.svg', isOfficial: true },
-  { id: 'charred_room', name: '燒焦房間', nameEn: 'Charred Room', floor: 'basement', symbol: 'O', doors: ['north'], description: '被火燒過的房間', color: '#3A2A2A', icon: `${floor('#4A3A3A')}${doorN}${symO}`, gallerySvg: '/gallery/rooms/charred_room.svg', isOfficial: true },
-  { id: 'chasm', name: '深淵', nameEn: 'Chasm', floor: 'basement', symbol: null, doors: ['north', 'east'], description: '地板裂開的深淵', color: '#1A1A1A', icon: `${floor('#0A0A0A')}${doorN}${doorE}`, gallerySvg: '/gallery/rooms/chasm.svg', isOfficial: true },
-  { id: 'crypt', name: '墓穴', nameEn: 'Crypt', floor: 'basement', symbol: 'I', doors: ['north', 'east'], description: '存放石棺的墓穴', color: '#3A3A4A', icon: `${floor('#4A4A5A')}${doorN}${doorE}${symI}`, isOfficial: true, gallerySvg: '/gallery/rooms/crypt.svg' },
-  { id: 'dungeon', name: '地牢', nameEn: 'Dungeon', floor: 'basement', symbol: null, doors: ['north'], description: '陰森的地牢', color: '#2A2A3A', icon: `${floor('#3A3A4A')}${doorN}`, isOfficial: true, gallerySvg: '/gallery/rooms/dungeon.svg' },
-  { id: 'furnace_room', name: '鍋爐房', nameEn: 'Furnace Room', floor: 'basement', symbol: 'O', doors: ['north', 'east'], description: '燃燒的鍋爐房', color: '#4A3A2A', icon: `${floor('#5A4A3A')}${doorN}${doorE}${symO}`, isOfficial: true, gallerySvg: '/gallery/rooms/furnace_room.svg' },
-  { id: 'graveyard', name: '墓地', nameEn: 'Graveyard', floor: 'basement', symbol: null, doors: ['north', 'east'], description: '荒廢的墓地', color: '#3A4A3A', icon: `${floor('#4A5A4A')}${doorN}${doorE}`, isOfficial: true, gallerySvg: '/gallery/rooms/graveyard.svg' },
-  { id: 'larder', name: '儲藏室', nameEn: 'Larder', floor: 'basement', symbol: 'I', doors: ['north'], description: '存放食物的儲藏室', color: '#4A4A3A', icon: `${floor('#5A5A4A')}${doorN}${symI}`, gallerySvg: '/gallery/rooms/larder.svg', isOfficial: true },
-  { id: 'operating_lab', name: '手術實驗室', nameEn: 'Operating Laboratory', floor: 'basement', symbol: 'I', doors: ['north'], description: '進行手術的實驗室', color: '#4A5A4A', icon: `${floor('#5A6A6A')}${doorN}${symI}`, gallerySvg: '/gallery/rooms/operating_lab.svg', isOfficial: true },
-  { id: 'pentagram_chamber', name: '五芒星密室', nameEn: 'Pentagram Chamber', floor: 'basement', symbol: 'O', doors: ['north'], description: '畫著五芒星的密室', color: '#3A1A4A', icon: `${floor('#4A2A5A')}${doorN}${symO}`, isOfficial: true, gallerySvg: '/gallery/rooms/pentagram_chamber.svg' },
-  { id: 'research_lab', name: '研究實驗室', nameEn: 'Research Laboratory', floor: 'basement', symbol: 'I', doors: ['north'], description: '研究用的實驗室', color: '#4A5A5A', icon: `${floor('#5A6A6A')}${doorN}${symI}`, gallerySvg: '/gallery/rooms/research_lab.svg', isOfficial: true },
-  { id: 'servants_quarters', name: '僕人房', nameEn: 'Servants Quarters', floor: 'basement', symbol: null, doors: ['north', 'east'], description: '僕人居住的地方', color: '#4A4A4A', icon: `${floor('#5A5A5A')}${doorN}${doorE}`, gallerySvg: '/gallery/rooms/servants_quarters.svg', isOfficial: true },
-  { id: 'underground_lake', name: '地下湖', nameEn: 'Underground Lake', floor: 'basement', symbol: null, doors: ['north'], description: '地下的湖泊', color: '#2A3A4A', icon: `${floor('#3A4A5A')}${doorN}`, gallerySvg: '/gallery/rooms/underground_lake.svg', isOfficial: true },
-  { id: 'vault', name: '金庫', nameEn: 'Vault', floor: 'basement', symbol: 'I', doors: ['north'], description: '存放貴重物品的金庫', color: '#4A4A3A', icon: `${floor('#5A5A4A')}${doorN}${symI}`, gallerySvg: '/gallery/rooms/vault.svg', isOfficial: true },
-  { id: 'wine_cellar', name: '酒窖', nameEn: 'Wine Cellar', floor: 'basement', symbol: 'I', doors: ['north', 'east'], description: '存放美酒的酒窖', color: '#4A3A3A', icon: `${floor('#5A4A4A')}${doorN}${doorE}${symI}`, gallerySvg: '/gallery/rooms/wine_cellar.svg', isOfficial: true },
+  // Widow's Walk Expansion (20 rooms)
+  { id: 'arsenal', name: '軍械庫', nameEn: 'Arsenal', floors: ['ground', 'basement'], type: 'item', symbol: 'I', doors: ['south', 'east'], description: '存放武器的房間', color: '#4A4A3A', isOfficial: true, set: 'ww', specialText: 'Draw 2 items, keep 1' },
+  { id: 'bathroom', name: '浴室', nameEn: 'Bathroom', floors: ['upper', 'ground'], type: 'event', symbol: 'E', doors: ['south'], description: '浴室', color: '#4A5A6A', isOfficial: true, set: 'ww' },
+  { id: 'cave', name: '洞穴', nameEn: 'Cave', floors: ['basement'], type: 'event', symbol: 'E', doors: ['north', 'south', 'east', 'west'], description: '天然的洞穴', color: '#2A2A2A', isOfficial: true, set: 'ww', specialText: 'Lose die if pass-through' },
+  { id: 'drawing_room', name: '繪畫室', nameEn: 'Drawing Room', floors: ['roof', 'upper'], type: 'special', symbol: null, doors: ['north', 'south', 'east', 'west'], description: '繪畫室', color: '#5A5A4A', isOfficial: true, set: 'ww', hasWindow: true, specialText: 'Gives any card type' },
+  { id: 'dungeon', name: '地牢', nameEn: 'Dungeon', floors: ['basement'], type: 'omen', symbol: 'O', doors: ['north', 'south'], description: '陰森的地牢', color: '#2A2A3A', isOfficial: true, set: 'ww', specialText: 'Sanity 3+ or lose 1' },
+  { id: 'laundry', name: '洗衣房', nameEn: 'Laundry', floors: ['ground', 'basement'], type: 'item', symbol: 'I', doors: ['south', 'west'], description: '洗衣房', color: '#4A5A5A', isOfficial: true, set: 'ww', hasDumbwaiter: true, specialText: 'Recycle item' },
+  { id: 'locked_room', name: '上鎖房間', nameEn: 'Locked Room', floors: ['roof', 'upper', 'basement'], type: 'event', symbol: 'E', doors: ['north', 'south', 'east'], description: '上鎖的房間', color: '#4A4A5A', isOfficial: true, set: 'ww', specialText: 'Doors locked (Knowledge 3+)' },
+  { id: 'menagerie', name: '動物園', nameEn: 'Menagerie', floors: ['ground', 'basement'], type: 'event', symbol: 'E', doors: ['east', 'west'], description: '動物展示室', color: '#4A5A4A', isOfficial: true, set: 'ww', hasDumbwaiter: true, specialText: 'Once/game +1 physical' },
+  { id: 'nursery', name: '嬰兒房', nameEn: 'Nursery', floors: ['roof', 'upper'], type: 'omen', symbol: 'O', doors: ['north', 'east'], description: '嬰兒的房間', color: '#8B6B7B', isOfficial: true, set: 'ww', specialText: 'Sanity adjust' },
+  { id: 'panic_room', name: '避難室', nameEn: 'Panic Room', floors: ['roof', 'upper', 'ground', 'basement'], type: 'event', symbol: 'E', doors: ['east'], description: '安全的避難室', color: '#4A5A4A', isOfficial: true, set: 'ww', hasDumbwaiter: true, specialText: 'Teleport via dumbwaiter' },
+  { id: 'roof_landing', name: '屋頂大廳', nameEn: 'Roof Landing', floors: ['roof'], type: 'landing', symbol: null, doors: ['north', 'south', 'east', 'west'], description: '屋頂的起點', color: '#5A5A5A', isOfficial: true, set: 'ww', isOutside: true, specialText: 'Connects upper' },
+  { id: 'rookery', name: '鴿舍', nameEn: 'Rookery', floors: ['roof'], type: 'omen', symbol: 'O', doors: ['east', 'west'], description: '鴿子居住的塔樓', color: '#5A5A6A', isOfficial: true, set: 'ww', specialText: 'Choose next room tile' },
+  { id: 'sewing_room', name: '縫紉室', nameEn: 'Sewing Room', floors: ['roof', 'upper'], type: 'item', symbol: 'I', doors: ['north', 'south', 'west'], description: '縫紉工作的房間', color: '#6A5A6A', isOfficial: true, set: 'ww', hasDumbwaiter: true, hasWindow: true, specialText: 'Trade item for stat' },
+  { id: 'solarium', name: '日光室', nameEn: 'Solarium', floors: ['roof', 'upper'], type: 'item', symbol: 'I', doors: ['north'], description: '陽光充足的房間', color: '#6A6A4A', isOfficial: true, set: 'ww', isOutside: true, specialText: 'Gain Sanity' },
+  { id: 'spiral_staircase', name: '螺旋樓梯', nameEn: 'Spiral Staircase', floors: ['roof', 'upper', 'ground'], type: 'none', symbol: null, doors: ['north', 'south', 'east', 'west'], description: '連接各層的螺旋樓梯', color: '#5A5A5A', isOfficial: true, set: 'ww', specialText: 'Move between landings' },
+  { id: 'storm_cellar', name: '避風窖', nameEn: 'Storm Cellar', floors: ['basement'], type: 'item', symbol: 'I', doors: ['south', 'east'], description: '躲避風暴的地下室', color: '#3A3A4A', isOfficial: true, set: 'ww' },
+  { id: 'study', name: '書房', nameEn: 'Study', floors: ['roof', 'upper', 'ground'], type: 'omen', symbol: 'O', doors: ['south', 'east'], description: '讀書研究的房間', color: '#5D4E37', isOfficial: true, set: 'ww', hasDumbwaiter: true, specialText: 'Once/game +1 mental' },
+  { id: 'theater', name: '劇院', nameEn: 'Theater', floors: ['upper', 'ground'], type: 'omen', symbol: 'O', doors: ['east', 'west'], description: '表演劇院的房間', color: '#4A3A4A', isOfficial: true, set: 'ww' },
+  { id: 'tree_house', name: '樹屋', nameEn: 'Tree House', floors: ['ground'], type: 'event', symbol: 'E', doors: ['south', 'east'], description: '樹上的小屋', color: '#3A5A3A', isOfficial: true, set: 'ww', isOutside: true, specialText: 'Connect to roof' },
+  { id: 'widows_walk', name: '寡婦步道', nameEn: 'Widow\'s Walk', floors: ['roof', 'upper'], type: 'event', symbol: 'E', doors: ['south', 'east', 'west'], description: '屋頂的步道', color: '#5A5A6A', isOfficial: true, set: 'ww', isOutside: true, specialText: '+Knowledge / -Speed' },
 ];
 
-// ==================== GROUND FLOOR (13 rooms) ====================
-export const GROUND_ROOMS: Room[] = [
-  { id: 'ballroom', name: '舞廳', nameEn: 'Ballroom', floor: 'ground', symbol: null, doors: ['north', 'south'], description: '華麗的舞廳', color: '#4A4A6A', icon: `${floor('#5A5A7A')}${doorN}${doorS}`, isOfficial: true, gallerySvg: '/gallery/rooms/ballroom.svg' },
-  { id: 'chapel', name: '禮拜堂', nameEn: 'Chapel', floor: 'ground', symbol: 'O', doors: ['north', 'east'], description: '小型的禮拜堂', color: '#4A4A5A', icon: `${floor('#5A5A6A')}${doorN}${doorE}${symO}`, isOfficial: true, gallerySvg: '/gallery/rooms/chapel.svg' },
-  { id: 'dining_room', name: '餐廳', nameEn: 'Dining Room', floor: 'ground', symbol: 'I', doors: ['north', 'east'], description: '長餐桌的餐廳', color: '#5A4A3A', icon: `${floor('#6B5B4B')}${doorN}${doorE}${symI}`, isOfficial: true, gallerySvg: '/gallery/rooms/dining_room.svg' },
-  { id: 'entrance_hall', name: '入口大廳', nameEn: 'Entrance Hall', floor: 'ground', symbol: null, doors: ['north', 'south', 'east', 'west'], description: '房屋的入口', color: '#7B6354', icon: `${floor('#6B5344')}${doorN}${doorS}${doorE}${doorW}`, isOfficial: true, gallerySvg: '/gallery/rooms/entrance_hall.svg' },
-  { id: 'foyer', name: '玄關', nameEn: 'Foyer', floor: 'ground', symbol: null, doors: ['north', 'south'], description: '房屋的玄關', color: '#8B7355', icon: `${floor('#6B5344')}${doorN}${doorS}`, isOfficial: true, gallerySvg: '/gallery/rooms/foyer.svg' },
-  { id: 'garden', name: '花園', nameEn: 'Garden', floor: 'ground', symbol: 'E', doors: ['north', 'east'], description: '戶外花園', color: '#2F4F2F', icon: `${floor('#3A5A3A')}${doorN}${doorE}${symE}`, isOfficial: true, gallerySvg: '/gallery/rooms/garden.svg' },
-  { id: 'gymnasium', name: '健身房', nameEn: 'Gymnasium', floor: 'ground', symbol: 'E', doors: ['north', 'east'], description: '室內健身房', color: '#5A6A5A', icon: `${floor('#6A7A6A')}${doorN}${doorE}${symE}`, isOfficial: true, gallerySvg: '/gallery/rooms/gymnasium.svg' },
-  { id: 'kitchen', name: '廚房', nameEn: 'Kitchen', floor: 'ground', symbol: 'I', doors: ['north', 'east'], description: '家庭廚房', color: '#4A6741', icon: `${floor('#5A5A4A')}${doorN}${doorE}${symI}`, isOfficial: true, gallerySvg: '/gallery/rooms/kitchen.svg' },
-  { id: 'library', name: '圖書室', nameEn: 'Library', floor: 'ground', symbol: 'I', doors: ['north', 'south', 'east', 'west'], description: '滿是書的圖書室', color: '#5D4E37', icon: `${floor('#6B5B4B')}${doorN}${doorS}${doorE}${doorW}${symI}`, isOfficial: true, gallerySvg: '/gallery/rooms/library.svg' },
-  { id: 'menagerie', name: '動物園', nameEn: 'Menagerie', floor: 'ground', symbol: 'E', doors: ['east', 'west'], description: '動物展示室', color: '#4A5A4A', icon: `${floor('#5A6A6A')}${doorE}${doorW}${symE}`, isOfficial: true, gallerySvg: '/gallery/rooms/menagerie.svg' },
-  { id: 'patio', name: '庭院', nameEn: 'Patio', floor: 'ground', symbol: null, doors: ['north', 'east'], description: '戶外庭院', color: '#6A6A5A', icon: `${floor('#7A7A6A')}${doorN}${doorE}`, isOfficial: true, gallerySvg: '/gallery/rooms/patio.svg' },
-  { id: 'storeroom', name: '儲物間', nameEn: 'Storeroom', floor: 'ground', symbol: 'I', doors: ['north'], description: '存放雜物的房間', color: '#4A4A4A', icon: `${floor('#5A5A5A')}${doorN}${symI}`, gallerySvg: '/gallery/rooms/storeroom.svg', isOfficial: true },
-  { id: 'tower', name: '塔樓', nameEn: 'Tower', floor: 'ground', symbol: null, doors: ['north'], description: '高聳的塔樓', color: '#556B8B', icon: `${floor('#5A6B7B')}${doorN}`, isOfficial: true, gallerySvg: '/gallery/rooms/tower.svg' },
-  { id: 'coal_chute', name: '煤槽', nameEn: 'Coal Chute', floor: 'ground', symbol: null, doors: ['north'], description: '滑向地下室的煤槽', color: '#2A2A2A', icon: `${floor('#3A3A3A')}${doorN}`, isOfficial: true, gallerySvg: '/gallery/rooms/coal_chute.svg', notes: 'one-way to basement' },
-];
+// ==================== ROOMS BY ID ====================
+export const ROOMS_BY_ID: Record<string, Room> = ALL_ROOMS.reduce((acc, room) => {
+  acc[room.id] = room;
+  return acc;
+}, {} as Record<string, Room>);
 
-// ==================== UPPER FLOOR (10 rooms) ====================
-export const UPPER_ROOMS: Room[] = [
-  { id: 'attic', name: '閣樓', nameEn: 'Attic', floor: 'upper', symbol: 'I', doors: ['north'], description: '屋頂的閣樓', color: '#4A4A3A', icon: `${floor('#5A5A4A')}${doorN}${symI}`, isOfficial: true, gallerySvg: '/gallery/rooms/attic.svg' },
-  { id: 'balcony', name: '陽台', nameEn: 'Balcony', floor: 'upper', symbol: null, doors: ['north', 'south'], description: '俯瞰的陽台', color: '#6A6A5A', icon: `${floor('#7A7A6A')}${doorN}${doorS}`, isOfficial: true, gallerySvg: '/gallery/rooms/balcony.svg' },
-  { id: 'bedroom', name: '臥室', nameEn: 'Bedroom', floor: 'upper', symbol: 'O', doors: ['north', 'east'], description: '普通的臥室', color: '#6B4B4B', icon: `${floor('#5A3B3B')}${doorN}${doorE}${symO}`, isOfficial: true, gallerySvg: '/gallery/rooms/bedroom.svg' },
-  { id: 'gallery', name: '畫廊', nameEn: 'Gallery', floor: 'upper', symbol: null, doors: ['north', 'south', 'east', 'west'], description: '展示畫作的畫廊', color: '#5A4A4A', icon: `${floor('#6A5A5A')}${doorN}${doorS}${doorE}${doorW}`, gallerySvg: '/gallery/rooms/gallery.svg', isOfficial: true },
-  { id: 'junk_room', name: '雜物間', nameEn: 'Junk Room', floor: 'upper', symbol: 'O', doors: ['north'], description: '堆滿雜物的房間', color: '#4A4A3A', icon: `${floor('#5A5A4A')}${doorN}${symO}`, gallerySvg: '/gallery/rooms/junk_room.svg', isOfficial: true },
-  { id: 'master_bedroom', name: '主臥室', nameEn: 'Master Bedroom', floor: 'upper', symbol: 'O', doors: ['north', 'east'], description: '華麗的主臥室', color: '#7B4B4B', icon: `${floor('#6B4B4B')}${doorN}${doorE}${symO}`, isOfficial: true, gallerySvg: '/gallery/rooms/master_bedroom.svg' },
-  { id: 'nursery', name: '嬰兒房', nameEn: 'Nursery', floor: 'upper', symbol: 'O', doors: ['north'], description: '嬰兒的房間', color: '#8B6B7B', icon: `${floor('#9B7B8B')}${doorN}${symO}`, isOfficial: true, gallerySvg: '/gallery/rooms/nursery.svg' },
-  { id: 'walkway', name: '走道', nameEn: 'Walkway', floor: 'upper', symbol: null, doors: ['north', 'south'], description: '連接的走道', color: '#5A5A5A', icon: `${floor('#6A6A6A')}${doorN}${doorS}`, gallerySvg: '/gallery/rooms/walkway.svg', isOfficial: true },
-  // 額外的 Library, Tower, Research Lab 也可以在二樓
-  { id: 'library_upper', name: '圖書室(二樓)', nameEn: 'Library', floor: 'upper', symbol: 'I', doors: ['north'], description: '二樓的圖書室', color: '#5D4E37', icon: `${floor('#6B5B4B')}${doorN}${symI}`, gallerySvg: '/gallery/rooms/library.svg', isOfficial: true },
-  { id: 'tower_upper', name: '塔樓(二樓)', nameEn: 'Tower', floor: 'upper', symbol: null, doors: ['north'], description: '二樓的塔樓', color: '#556B8B', icon: `${floor('#5A6B7B')}${doorN}`, gallerySvg: '/gallery/rooms/tower.svg', isOfficial: true },
-];
+// ==================== ROOMS BY FLOOR ====================
+export const GROUND_ROOMS = ALL_ROOMS.filter(r => r.floors.includes('ground'));
+export const UPPER_ROOMS = ALL_ROOMS.filter(r => r.floors.includes('upper'));
+export const BASEMENT_ROOMS = ALL_ROOMS.filter(r => r.floors.includes('basement'));
+export const ROOF_ROOMS = ALL_ROOMS.filter(r => r.floors.includes('roof'));
 
-// ==================== MULTI-FLOOR ROOMS ====================
-export const MULTI_FLOOR_ROOMS: Room[] = [
-  { id: 'grand_staircase', name: '大樓梯', nameEn: 'Grand Staircase', floor: 'ground', symbol: null, doors: ['north', 'south'], description: '連接一樓和二樓', color: '#8B7355', icon: `${floor('#6B5344')}${doorN}${doorS}`, isOfficial: true, gallerySvg: '/gallery/rooms/grand_staircase.svg', notes: 'connects Ground <-> Upper' },
-  { id: 'stairs_from_basement', name: '地下室樓梯', nameEn: 'Stairs from Basement', floor: 'basement', symbol: null, doors: ['north'], description: '通往一樓', color: '#4A4A3A', icon: `${floor('#5A5A4A')}${doorN}`, gallerySvg: '/gallery/rooms/stairs_from_basement.svg', isOfficial: true },
-  { id: 'stairs_from_ground', name: '一樓樓梯(下)', nameEn: 'Stairs from Ground', floor: 'ground', symbol: null, doors: ['north'], description: '通往地下室', color: '#6B5344', icon: `${floor('#5A4334')}${doorN}`, gallerySvg: '/gallery/rooms/stairs_from_ground.svg', isOfficial: true },
-  { id: 'stairs_from_upper', name: '二樓樓梯', nameEn: 'Stairs from Upper', floor: 'upper', symbol: null, doors: ['north'], description: '通往一樓', color: '#5A4A4A', icon: `${floor('#4A3A3A')}${doorN}`, gallerySvg: '/gallery/rooms/stairs_from_upper.svg', isOfficial: true },
-  { id: 'mystic_elevator', name: '神秘電梯', nameEn: 'Mystic Elevator', floor: 'ground', symbol: null, doors: ['north'], description: '可移動到任何樓層', color: '#4A4A6A', icon: `${floor('#5A5A7A')}${doorN}`, isOfficial: true, gallerySvg: '/gallery/rooms/mystic_elevator.svg', notes: 'moves to any floor' },
-  { id: 'collapsed_room', name: '坍塌房間', nameEn: 'Collapsed Room', floor: 'upper', symbol: null, doors: ['north'], description: '會掉到地下室', color: '#5A5A4A', icon: `${floor('#6A6A5A')}${doorN}`, isOfficial: true, gallerySvg: '/gallery/rooms/collapsed_room.svg', notes: 'drop to B' },
-];
+// ==================== STARTING ROOMS ====================
+export const STARTING_ROOMS = {
+  entranceHall: ROOMS_BY_ID['entrance_hall'],
+  basementLanding: ROOMS_BY_ID['basement_landing'],
+  upperLanding: ROOMS_BY_ID['upper_landing'],
+};
 
-// 所有官方房間（用於遊戲）
-export const OFFICIAL_ROOMS: Room[] = [
-  ...BASEMENT_ROOMS,
-  ...GROUND_ROOMS,
-  ...UPPER_ROOMS,
-  ...MULTI_FLOOR_ROOMS,
-];
+// ==================== ROOMS BY SET ====================
+export const SECOND_EDITION_ROOMS = ALL_ROOMS.filter(r => r.set === '2nd');
+export const WIDOWS_WALK_ROOMS = ALL_ROOMS.filter(r => r.set === 'ww');
 
-// 向後兼容
-export const ROOMS = OFFICIAL_ROOMS;
-export const ALL_ROOMS = OFFICIAL_ROOMS;
-
-// 牌堆管理類
-export class RoomDeck {
-  private ground: Room[] = [];
-  private upper: Room[] = [];
-  private basement: Room[] = [];
-  private drawn: Set<string> = new Set();
-
-  constructor() {
-    this.reset();
-  }
-
-  reset() {
-    // 只使用官方房間
-    this.ground = [...GROUND_ROOMS.filter(r => r.type !== 'entrance'), ...MULTI_FLOOR_ROOMS.filter(r => r.floor === 'ground')];
-    this.upper = [...UPPER_ROOMS, ...MULTI_FLOOR_ROOMS.filter(r => r.floor === 'upper')];
-    this.basement = [...BASEMENT_ROOMS, ...MULTI_FLOOR_ROOMS.filter(r => r.floor === 'basement')];
-    this.drawn.clear();
-    this.shuffleAll();
-  }
-
-  private shuffleAll() {
-    this.ground = this.shuffle(this.ground);
-    this.upper = this.shuffle(this.upper);
-    this.basement = this.shuffle(this.basement);
-  }
-
-  private shuffle<T>(array: T[]): T[] {
-    const arr = [...array];
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-  }
-
-  draw(floor: Floor): Room | null {
-    let deck: Room[];
-    switch (floor) {
-      case 'ground': deck = this.ground; break;
-      case 'upper': deck = this.upper; break;
-      case 'basement': deck = this.basement; break;
-      default: return null;
-    }
-
-    const index = deck.findIndex(r => !this.drawn.has(r.id));
-    if (index === -1) return null;
-
-    const room = deck[index];
-    this.drawn.add(room.id);
-    return room;
-  }
-
-  getCounts() {
-    return {
-      ground: this.ground.filter(r => !this.drawn.has(r.id)).length,
-      upper: this.upper.filter(r => !this.drawn.has(r.id)).length,
-      basement: this.basement.filter(r => !this.drawn.has(r.id)).length,
-    };
-  }
-
-  getTotalRemaining() {
-    const counts = this.getCounts();
-    return counts.ground + counts.upper + counts.basement;
-  }
-}
-
-// 舊的隨機函數（保留向後兼容）
-export function getRandomRoom(): Room {
-  const available = OFFICIAL_ROOMS.filter(r => r.type !== 'entrance');
-  return available[Math.floor(Math.random() * available.length)];
-}
+// ==================== STATISTICS ====================
+export const ROOM_STATS = {
+  total: ALL_ROOMS.length,
+  bySet: {
+    '2nd': SECOND_EDITION_ROOMS.length,
+    'ww': WIDOWS_WALK_ROOMS.length,
+  },
+  byFloor: {
+    ground: GROUND_ROOMS.length,
+    upper: UPPER_ROOMS.length,
+    basement: BASEMENT_ROOMS.length,
+    roof: ROOF_ROOMS.length,
+  },
+  byType: {
+    omen: ALL_ROOMS.filter(r => r.type === 'omen').length,
+    event: ALL_ROOMS.filter(r => r.type === 'event').length,
+    item: ALL_ROOMS.filter(r => r.type === 'item').length,
+    none: ALL_ROOMS.filter(r => r.type === 'none').length,
+    landing: ALL_ROOMS.filter(r => r.type === 'landing').length,
+    special: ALL_ROOMS.filter(r => r.type === 'special').length,
+  },
+};
