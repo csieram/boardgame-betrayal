@@ -1,13 +1,13 @@
 <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background - energetic orange for athletic -->
-  <rect width="200" height="200" fill="#D35400"/>
+  <!-- Background - dark brown as specified -->
+  <rect width="200" height="200" fill="#2A2A1A"/>
   
   <!-- Neck -->
   <rect x="85" y="128" width="30" height="25" fill="#8D5524"/>
   
   <!-- Athletic jersey collar -->
   <path d="M75 140 L100 155 L125 140 L125 150 L100 165 L75 150 Z" fill="#FFF"/>
-  <path d="M85 140 L100 148 L115 140" fill="none" stroke="#E74C3C" stroke-width="2"/>
+  <path d="M85 140 L100 148 L115 140" fill="none" stroke="#FF4500" stroke-width="2"/>
   
   <!-- Face shape -->
   <ellipse cx="100" cy="92" rx="40" ry="44" fill="#8D5524"/>
@@ -20,8 +20,8 @@
   <path d="M60 85 Q55 55 70 42 Q85 32 100 32 Q115 32 130 42 Q145 55 140 85 Q142 65 132 52 Q118 38 100 38 Q82 38 68 52 Q58 65 60 85" fill="#1A1A1A"/>
   <path d="M65 50 Q80 42 100 44 Q120 42 135 50" fill="none" stroke="#0A0A0A" stroke-width="2"/>
   
-  <!-- Headband for sports -->
-  <path d="M62 60 Q80 52 100 54 Q120 52 138 60" fill="none" stroke="#E74C3C" stroke-width="5" stroke-linecap="round"/>
+  <!-- Headband for sports - using character color -->
+  <path d="M62 60 Q80 52 100 54 Q120 52 138 60" fill="none" stroke="#FF4500" stroke-width="5" stroke-linecap="round"/>
   
   <!-- Eyes - determined, confident -->
   <ellipse cx="85" cy="88" rx="7" ry="5" fill="#FFF"/>
