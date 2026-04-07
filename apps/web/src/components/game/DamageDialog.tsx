@@ -11,7 +11,7 @@
  * - 一般傷害：可以減少任何屬性
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@betrayal/ui';
 import {
@@ -86,6 +86,14 @@ export function DamageDialog({
   
   const [selectedTrait, setSelectedTrait] = useState<StatType | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
+
+  // Issue #299-fix: Reset selectedTrait when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedTrait(null);
+      setIsAnimating(false);
+    }
+  }, [isOpen, damage?.type, damage?.amount]);
 
   // 計算安全的選項（不會導致死亡）
   const safeTraits = useMemo(() => {
@@ -166,18 +174,18 @@ export function DamageDialog({
     return 'bg-gray-900 border-gray-700 text-gray-500 cursor-not-allowed';
   };
 
-  if (!isOpen || !damage) return null;
-
   return (
     <AnimatePresence>
-      {isOpen && (
+      {isOpen && damage && (
         <motion.div
+          key="damage-dialog-backdrop"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
         >
           <motion.div
+            key="damage-dialog-content"
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}

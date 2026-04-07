@@ -509,6 +509,16 @@ export default function SoloGamePage() {
     });
   }, [map, currentFloor]);
 
+  // Issue #299-debug: 追蹤 eventDamageState 變化
+  useEffect(() => {
+    console.log('[DEBUG #299] eventDamageState changed:', {
+      showDialog: eventDamageState.showDialog,
+      hasDamage: !!eventDamageState.damage,
+      damage: eventDamageState.damage,
+      timestamp: Date.now(),
+    });
+  }, [eventDamageState]);
+
   // 從 sessionStorage 讀取選擇的角色和 AI 設置
   useEffect(() => {
     const storedSetup = sessionStorage.getItem('solo-game-setup');
@@ -4444,23 +4454,24 @@ export default function SoloGamePage() {
       )}
 
       {/* Issue #270: 事件卡傷害對話框 */}
-      {playerState && (
-        <DamageDialog
-          isOpen={eventDamageState.showDialog}
-          damage={eventDamageState.damage}
-          // Issue #298: 轉換 CharacterStat 為 CharacterStats
-          currentStats={{
-            speed: getStatValue(playerState.stats.speed),
-            might: getStatValue(playerState.stats.might),
-            sanity: getStatValue(playerState.stats.sanity),
-            knowledge: getStatValue(playerState.stats.knowledge),
-          }}
-          isHauntActive={hauntState.isActive}
-          playerName={player?.name || '玩家'}
-          onConfirm={handleEventDamageConfirm}
-          onCancel={handleEventDamageCancel}
-        />
-      )}
+      {/* Issue #299-fix: Always render DamageDialog, control visibility with isOpen prop */}
+      {/* Issue #299-fix: Add key prop to force re-render when damage changes */}
+      <DamageDialog
+        key={`damage-dialog-${eventDamageState.damage?.type}-${eventDamageState.damage?.amount}-${eventDamageState.showDialog}`}
+        isOpen={eventDamageState.showDialog && !!playerState}
+        damage={eventDamageState.damage}
+        // Issue #298: 轉換 CharacterStat 為 CharacterStats
+        currentStats={playerState ? {
+          speed: getStatValue(playerState.stats.speed),
+          might: getStatValue(playerState.stats.might),
+          sanity: getStatValue(playerState.stats.sanity),
+          knowledge: getStatValue(playerState.stats.knowledge),
+        } : { speed: 4, might: 4, sanity: 4, knowledge: 4 }}
+        isHauntActive={hauntState.isActive}
+        playerName={player?.name || '玩家'}
+        onConfirm={handleEventDamageConfirm}
+        onCancel={handleEventDamageCancel}
+      />
 
     </main>
   );
