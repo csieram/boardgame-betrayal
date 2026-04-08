@@ -420,7 +420,6 @@ export function GameBoard({
                     players={hasPlayer ? [playerCharacter] : []}
                     currentPlayerIndex={0}
                     size="md"
-                    showDoors={true}
                     isHighlighted={selectedRoom?.x === x && selectedRoom?.y === y}
                     // Issue #159: 已探索的房間不顯示發現動畫
                     showDiscoveryAnimation={false}

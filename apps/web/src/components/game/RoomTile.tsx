@@ -2,21 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Room, SymbolType, Direction } from '@betrayal/shared';
+import { Room, SymbolType } from '@betrayal/shared';
 import { PlayerTokenGroup } from './PlayerToken';
 import { Character } from '@betrayal/shared';
-
-// Issue #305: 旋轉門方向函數
-function rotateDoors(doors: Direction[], rotation: 0 | 90 | 180 | 270): Direction[] {
-  const rotationMap: Record<Direction, Record<typeof rotation, Direction>> = {
-    north: { 0: 'north', 90: 'east', 180: 'south', 270: 'west' },
-    east: { 0: 'east', 90: 'south', 180: 'west', 270: 'north' },
-    south: { 0: 'south', 90: 'west', 180: 'north', 270: 'east' },
-    west: { 0: 'west', 90: 'north', 180: 'east', 270: 'south' },
-  };
-  
-  return doors.map(door => rotationMap[door][rotation]);
-}
 
 /** 樓梯房間 ID */
 const STAIR_ROOM_IDS = [
@@ -55,8 +43,6 @@ interface RoomTileProps {
   currentPlayerIndex?: number;
   /** 尺寸 */
   size?: 'sm' | 'md' | 'lg';
-  /** 是否顯示門 */
-  showDoors?: boolean;
   /** 是否高亮 */
   isHighlighted?: boolean;
   /** 是否顯示樓梯圖示 */
@@ -72,7 +58,7 @@ interface RoomTileProps {
 /**
  * 房間磚塊組件
  * 
- * 顯示單個房間，包含 SVG 圖像、名稱、符號標記和門指示器
+ * 顯示單個房間，包含 SVG 圖像、名稱、符號標記
  * 
  * @example
  * <RoomTile 
@@ -91,7 +77,6 @@ export function RoomTile({
   players = [],
   currentPlayerIndex = 0,
   size = 'md',
-  showDoors = true,
   isHighlighted = false,
   showStairIcon = true,
   children,
@@ -100,18 +85,6 @@ export function RoomTile({
 }: RoomTileProps) {
   const [svgContent, setSvgContent] = useState<string>('');
   const [isLoaded, setIsLoaded] = useState(false);
-
-  // Issue #305-debug: 添加門連接調試日誌
-  console.log('[Room UI] Rendering room:', room?.id);
-  console.log('[Room UI] Room doors:', room?.doors);
-  console.log('[Room UI] Visual door states:', {
-    north: room?.doors?.includes('north'),
-    south: room?.doors?.includes('south'),
-    east: room?.doors?.includes('east'),
-    west: room?.doors?.includes('west'),
-  });
-  console.log('[Room UI] Rotation:', rotation);
-  console.log('[Room UI] showDoors:', showDoors);
 
   // 載入 SVG 內容
   useEffect(() => {
@@ -230,13 +203,12 @@ export function RoomTile({
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.98 }}
     >
-      {/* SVG 圖像 - Issue #310: 移除 p-1 padding 讓 SVG 填滿容器 */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <svg
-          viewBox="0 0 100 100"
+      {/* SVG 圖像 - 房間 SVG 已包含門的繪製 */}
+      <div className="absolute inset-0 flex items-center justify-center p-1">
+        <svg 
+          viewBox="0 0 100 100" 
           className="w-full h-full"
-          preserveAspectRatio="xMidYMid slice"
-          style={{
+          style={{ 
             transform: `rotate(${rotation}deg)`,
             filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
           }}
@@ -244,32 +216,6 @@ export function RoomTile({
           <g dangerouslySetInnerHTML={{ __html: svgContent }}/>
         </svg>
       </div>
-
-      {/* Issue #305: 門指示器 - 使用旋轉後的門方向 */}
-      {showDoors && room.doors && (
-        (() => {
-          const rotatedDoors = rotateDoors(room.doors, rotation || 0);
-          console.log('[Room UI] Rotated doors:', rotatedDoors);
-          return (
-            <>
-              {rotatedDoors.includes('north') && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-2 bg-gradient-to-b from-amber-600 to-amber-800 rounded-b-md shadow-md border-b border-amber-900/50" />
-              )}
-              {rotatedDoors.includes('south') && (
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-2 bg-gradient-to-t from-amber-600 to-amber-800 rounded-t-md shadow-md border-t border-amber-900/50" />
-              )}
-              {rotatedDoors.includes('east') && (
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-6 bg-gradient-to-l from-amber-600 to-amber-800 rounded-l-md shadow-md border-l border-amber-900/50" />
-              )}
-              {rotatedDoors.includes('west') && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-6 bg-gradient-to-r from-amber-600 to-amber-800 rounded-r-md shadow-md border-r border-amber-900/50" />
-              )}
-            </>
-          );
-        })()
-      )}
-
-
 
       {/* 符號標記 */}
       {room.symbol && (
