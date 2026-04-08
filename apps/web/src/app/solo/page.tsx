@@ -3204,15 +3204,31 @@ export default function SoloGamePage() {
         });
         break;
 
-      case 'take_damage':
-        // 承受 1 點物理傷害
-        setLog(prev => [...prev, '承受 1 點物理傷害']);
-        // 結束回合
-        setTurnState({
-          hasEnded: true,
-          endedByDiscovery: true,
-        });
+      case 'take_damage': {
+        // 從卡牌的 tieredOutcomes 獲取傷害資訊
+        const damageOutcome = card.tieredOutcomes?.find(o => o.damage);
+        if (damageOutcome?.damage) {
+          const damageAllocation = createDamageAllocation(
+            damageOutcome.damage.type,
+            damageOutcome.damage.amount
+          );
+          // 顯示 DamageDialog
+          setEventDamageState({
+            showDialog: true,
+            damage: damageAllocation,
+            pendingEventResult: {
+              success: true,
+              roll: 0,
+              dice: [],
+              stat: 'might',
+              target: 0,
+              message: '承受傷害',
+              effectDescription: damageOutcome.effect,
+            },
+          });
+        }
         break;
+      }
 
       case 'bury_item':
         // 顯示物品捨棄對話框
@@ -3525,6 +3541,12 @@ export default function SoloGamePage() {
       pendingEventResult: null,
     });
 
+    // Issue #307: 傷害應用後結束回合
+    setTurnState({
+      hasEnded: true,
+      endedByDiscovery: true,
+    });
+
     // 顯示卡牌彈窗，帶上檢定結果
     if (pendingResult) {
       setCardDrawState(prev => ({
@@ -3543,6 +3565,12 @@ export default function SoloGamePage() {
       showDialog: false,
       damage: null,
       pendingEventResult: null,
+    });
+
+    // Issue #307: 取消時也結束回合
+    setTurnState({
+      hasEnded: true,
+      endedByDiscovery: true,
     });
 
     // 顯示卡牌彈窗，帶上檢定結果
