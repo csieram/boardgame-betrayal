@@ -204,10 +204,10 @@ export function RoomTile({
       whileTap={{ scale: 0.98 }}
     >
       {/* SVG 圖像 - 房間 SVG 已包含門的繪製 */}
-      <div className="absolute inset-0 flex items-center justify-center">
+      <div className="absolute inset-0 flex items-center justify-center overflow-visible">
         <svg 
           viewBox="0 0 100 100" 
-          className="w-[105%] h-[105%]"
+          className="w-full h-full"
           style={{ 
             transform: `rotate(${rotation}deg)`,
             filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'

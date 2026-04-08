@@ -355,7 +355,7 @@ export function GameBoard({
         {/* 房間網格 - 可拖動，無滾動條 */}
         <div className="overflow-hidden pb-4 max-h-[60vh] relative">
           <motion.div
-            className="inline-grid gap-0 p-2 sm:p-4 bg-gray-900/50 rounded-xl min-w-max cursor-grab active:cursor-grabbing"
+            className="inline-grid gap-px p-2 sm:p-4 bg-gray-900/50 rounded-xl min-w-max cursor-grab active:cursor-grabbing"
             style={{
               gridTemplateColumns: `repeat(${mapBounds.maxX - mapBounds.minX + 1}, auto)`,
             }}
