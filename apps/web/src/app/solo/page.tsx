@@ -509,9 +509,9 @@ export default function SoloGamePage() {
     });
   }, [map, currentFloor]);
 
-  // Issue #299-debug: 追蹤 eventDamageState 變化
+  // [DEBUG #303] 追蹤 eventDamageState 變化
   useEffect(() => {
-    console.log('[DEBUG #299] eventDamageState changed:', {
+    console.log('[DEBUG #303] eventDamageState changed:', {
       showDialog: eventDamageState.showDialog,
       hasDamage: !!eventDamageState.damage,
       damage: eventDamageState.damage,
@@ -3267,13 +3267,18 @@ export default function SoloGamePage() {
 
     // 執行檢定
     const result = effectApplier.performEventCheck(eventCheckState.card, playerState);
-    
-    // Issue #274: Debug logging for event damage
-    console.log('[DEBUG #274] Event check result:', result);
-    console.log('[DEBUG #274] Result.damage:', result.damage);
-    console.log('[DEBUG #274] Has damage?', !!result.damage);
-    console.log('[DEBUG #274] Result type:', typeof result);
-    console.log('[DEBUG #274] Result keys:', Object.keys(result));
+
+    // [DEBUG #303] Event check result logging
+    console.log('[DEBUG #303] Event check result:', result);
+    console.log('[DEBUG #303] Result has damage?', !!result.damage);
+    console.log('[DEBUG #303] Damage type:', result.damage?.type);
+    console.log('[DEBUG #303] Damage object full:', JSON.stringify(result.damage, null, 2));
+    console.log('[DEBUG #303] Player state when damage received:', {
+      exists: !!playerState,
+      id: playerState?.id,
+      stats: playerState?.stats,
+    });
+    console.log('[DEBUG #303] Current eventDamageState:', eventDamageState);
 
     // Issue #113: Debug logging for dice sum calculation
     console.log('[EventCheck] Dice roll result:', {
@@ -3349,17 +3354,16 @@ export default function SoloGamePage() {
     // Issue #190: 檢定完成後，關閉 EventCheckModal 並在 CardDisplay 中顯示結果
     // Issue #270: 如果有傷害，顯示 DamageDialog 讓玩家選擇屬性
     setTimeout(() => {
-      // Issue #274: Debug logging in setTimeout
-      console.log('[DEBUG #274] In setTimeout, checking damage');
-      console.log('[DEBUG #274] result.damage:', result.damage);
-      console.log('[DEBUG #274] Has damage in setTimeout?', !!result.damage);
-      
-      // Issue #300-debug: Physical damage detection
-      console.log('[Physical Damage] Damage object:', result.damage);
-      console.log('[Physical Damage] Damage type:', result.damage?.type);
-      console.log('[Physical Damage] Setting eventDamageState:', { showDialog: true, damage: result.damage });
-      console.log('[Physical Damage] Current eventDamageState:', eventDamageState);
-      
+      // [DEBUG #303] In setTimeout, checking damage
+      console.log('[DEBUG #303] In setTimeout, checking damage');
+      console.log('[DEBUG #303] result.damage:', result.damage);
+      console.log('[DEBUG #303] Has damage in setTimeout?', !!result.damage);
+
+      // [DEBUG #303] Physical damage detection
+      console.log('[DEBUG #303] Damage object:', result.damage);
+      console.log('[DEBUG #303] Damage type:', result.damage?.type);
+      console.log('[DEBUG #303] Setting eventDamageState - BEFORE:', { showDialog: true, damage: result.damage, playerStateExists: !!playerState });
+
       // 關閉 EventCheckModal
       setEventCheckState({
         showModal: false,
@@ -3372,24 +3376,24 @@ export default function SoloGamePage() {
       // Issue #274: Also check for damage.amount to ensure it's valid
       // Issue #274-fix: Check for result.damage.type and result.damage.amount
       // Issue #300-fix: Check for physical damage specifically
-      const hasDamage = result.damage && 
-                        typeof result.damage === 'object' && 
-                        result.damage.type && 
-                        typeof result.damage.amount === 'number' && 
+      const hasDamage = result.damage &&
+                        typeof result.damage === 'object' &&
+                        result.damage.type &&
+                        typeof result.damage.amount === 'number' &&
                         result.damage.amount > 0;
-      
-      // Issue #300-debug: Log damage detection details
-      console.log('[Physical Damage] hasDamage check:', hasDamage);
-      console.log('[Physical Damage] result.damage:', result.damage);
-      console.log('[Physical Damage] Is physical damage?', result.damage?.type === 'physical');
-      
+
+      // [DEBUG #303] Log damage detection details
+      console.log('[DEBUG #303] hasDamage check:', hasDamage);
+      console.log('[DEBUG #303] result.damage:', result.damage);
+      console.log('[DEBUG #303] Is physical damage?', result.damage?.type === 'physical');
+
       if (hasDamage && result.damage) {
-        console.log('[DEBUG #274] Damage detected, showing DamageDialog:', result.damage);
+        console.log('[DEBUG #303] Damage detected, showing DamageDialog:', result.damage);
         // 顯示 DamageDialog 讓玩家選擇屬性
         // Issue #274-fix: Use createDamageAllocation to ensure correct structure with availableTraits
         const damageAllocation = createDamageAllocation(result.damage.type, result.damage.amount);
-        console.log('[DEBUG #274] Created damageAllocation:', damageAllocation);
-        console.log('[Physical Damage] Calling setEventDamageState with:', { showDialog: true, damage: damageAllocation });
+        console.log('[DEBUG #303] Created damageAllocation:', damageAllocation);
+        console.log('[DEBUG #303] Calling setEventDamageState with:', { showDialog: true, damage: damageAllocation });
         setEventDamageState({
           showDialog: true,
           damage: damageAllocation,
@@ -3403,10 +3407,10 @@ export default function SoloGamePage() {
             effectDescription: result.effectDescription,
           },
         });
-        console.log('[DEBUG #274] eventDamageState set with showDialog: true');
+        console.log('[DEBUG #303] eventDamageState set with showDialog: true');
         return;
       } else {
-        console.log('[DEBUG #274] No valid damage in result:', result.damage);
+        console.log('[DEBUG #303] No valid damage in result:', result.damage);
       }
 
       // 重新顯示卡牌彈窗，並帶上檢定結果

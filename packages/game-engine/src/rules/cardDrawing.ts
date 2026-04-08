@@ -482,7 +482,7 @@ export class CardEffectApplier {
   /**
    * 執行事件卡屬性檢定
    * Rulebook Reference: 事件卡需要進行屬性檢定時使用
-   * 
+   *
    * @param card 事件卡
    * @param player 玩家狀態
    * @returns 檢定結果，包含成功/失敗和對應效果
@@ -505,29 +505,38 @@ export class CardEffectApplier {
       amount: number;
     };
   } {
+    // [DEBUG #303] Event card drawn logging
+    console.log('[DEBUG #303] Event card drawn:', card);
+
     if (!card.rollRequired) {
       throw new Error(`Card ${card.name} does not require a roll`);
     }
 
     const { stat, target } = card.rollRequired;
     const playerStatValue = getStatValue(player.stats[stat]);
-    
+
     // 執行檢定擲骰
     const rollResult = this.performRoll(stat, target, playerStatValue);
-    
+
+    // [DEBUG #303] Roll result logging
+    console.log('[DEBUG #303] Event check roll result:', rollResult);
+
     // Issue #270: 優先使用 tieredOutcomes 系統
     if (card.tieredOutcomes && card.tieredOutcomes.length > 0) {
+      // [DEBUG #303] Tiered outcomes found
+      console.log('[DEBUG #303] Card has tieredOutcomes:', card.tieredOutcomes);
+
       // 根據擲骰結果找到對應的 outcome
       const outcome = card.tieredOutcomes.find(
         o => rollResult.roll >= o.minRoll && rollResult.roll <= o.maxRoll
       );
-      
+
       if (outcome) {
-        console.log(`[CardEffectApplier] Tiered outcome found: ${outcome.effect}`);
-        
+        console.log('[DEBUG #303] Tiered outcome found:', outcome);
+
         // Issue #270: 檢查是否有 damage 欄位
         if (outcome.damage) {
-          console.log(`[CardEffectApplier] Damage outcome: ${outcome.damage.type} ${outcome.damage.amount}`);
+          console.log(`[DEBUG #303] Damage outcome detected:`, outcome.damage);
           return {
             success: rollResult.success,
             roll: rollResult.roll,

@@ -80,13 +80,10 @@ export function DamageDialog({
   onConfirm,
   onCancel,
 }: DamageDialogProps) {
-  // Issue #274: Debug logging
-  console.log('[DEBUG #274] DamageDialog rendered, isOpen:', isOpen);
-  console.log('[DEBUG #274] DamageDialog props:', { isOpen, damage, currentStats });
-  
-  // Issue #300-debug: Log props received
-  console.log('[DamageDialog] Props received:', { isOpen, damage });
-  console.log('[DamageDialog] Available traits:', damage?.availableTraits);
+  // [DEBUG #303] DamageDialog render logging
+  console.log('[DEBUG #303] DamageDialog rendered with:', { isOpen, damage });
+  console.log('[DEBUG #303] Available traits:', damage?.availableTraits);
+  console.log('[DEBUG #303] DamageDialog props:', { isOpen, damage, currentStats, playerName });
   
   const [selectedTrait, setSelectedTrait] = useState<StatType | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -177,6 +174,9 @@ export function DamageDialog({
 
     return 'bg-gray-900 border-gray-700 text-gray-500 cursor-not-allowed';
   };
+
+  // [DEBUG #303] Check render conditions
+  console.log('[DEBUG #303] DamageDialog render check:', { isOpen, hasDamage: !!damage, damageType: damage?.type, damageAmount: damage?.amount, availableTraits: damage?.availableTraits });
 
   return (
     <AnimatePresence>
