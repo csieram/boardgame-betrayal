@@ -6,6 +6,18 @@ import { Room, SymbolType, Direction } from '@betrayal/shared';
 import { PlayerTokenGroup } from './PlayerToken';
 import { Character } from '@betrayal/shared';
 
+// Issue #305: 旋轉門方向函數
+function rotateDoors(doors: Direction[], rotation: 0 | 90 | 180 | 270): Direction[] {
+  const rotationMap: Record<Direction, Record<typeof rotation, Direction>> = {
+    north: { 0: 'north', 90: 'east', 180: 'south', 270: 'west' },
+    east: { 0: 'east', 90: 'south', 180: 'west', 270: 'north' },
+    south: { 0: 'south', 90: 'west', 180: 'north', 270: 'east' },
+    west: { 0: 'west', 90: 'north', 180: 'east', 270: 'south' },
+  };
+  
+  return doors.map(door => rotationMap[door][rotation]);
+}
+
 /** 樓梯房間 ID */
 const STAIR_ROOM_IDS = [
   'grand_staircase',
@@ -89,15 +101,17 @@ export function RoomTile({
   const [svgContent, setSvgContent] = useState<string>('');
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Issue #160-debug: 添加調試日誌追蹤 RoomTile 渲染
-  console.log('[Debug #160] RoomTile render:', {
-    roomName: room?.name,
-    roomId: room?.id,
-    isExplored,
-    isReachable,
-    rotation,
-    timestamp: Date.now(),
+  // Issue #305-debug: 添加門連接調試日誌
+  console.log('[Room UI] Rendering room:', room?.id);
+  console.log('[Room UI] Room doors:', room?.doors);
+  console.log('[Room UI] Visual door states:', {
+    north: room?.doors?.includes('north'),
+    south: room?.doors?.includes('south'),
+    east: room?.doors?.includes('east'),
+    west: room?.doors?.includes('west'),
   });
+  console.log('[Room UI] Rotation:', rotation);
+  console.log('[Room UI] showDoors:', showDoors);
 
   // 載入 SVG 內容
   useEffect(() => {
@@ -230,22 +244,28 @@ export function RoomTile({
         </svg>
       </div>
 
-      {/* 門指示器 - 改進樣式 */}
+      {/* Issue #305: 門指示器 - 使用旋轉後的門方向 */}
       {showDoors && room.doors && (
-        <>
-          {room.doors.includes('north') && (
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-2 bg-gradient-to-b from-amber-600 to-amber-800 rounded-b-md shadow-md border-b border-amber-900/50" />
-          )}
-          {room.doors.includes('south') && (
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-2 bg-gradient-to-t from-amber-600 to-amber-800 rounded-t-md shadow-md border-t border-amber-900/50" />
-          )}
-          {room.doors.includes('east') && (
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-6 bg-gradient-to-l from-amber-600 to-amber-800 rounded-l-md shadow-md border-l border-amber-900/50" />
-          )}
-          {room.doors.includes('west') && (
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-6 bg-gradient-to-r from-amber-600 to-amber-800 rounded-r-md shadow-md border-r border-amber-900/50" />
-          )}
-        </>
+        (() => {
+          const rotatedDoors = rotateDoors(room.doors, rotation || 0);
+          console.log('[Room UI] Rotated doors:', rotatedDoors);
+          return (
+            <>
+              {rotatedDoors.includes('north') && (
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-2 bg-gradient-to-b from-amber-600 to-amber-800 rounded-b-md shadow-md border-b border-amber-900/50" />
+              )}
+              {rotatedDoors.includes('south') && (
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-2 bg-gradient-to-t from-amber-600 to-amber-800 rounded-t-md shadow-md border-t border-amber-900/50" />
+              )}
+              {rotatedDoors.includes('east') && (
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-6 bg-gradient-to-l from-amber-600 to-amber-800 rounded-l-md shadow-md border-l border-amber-900/50" />
+              )}
+              {rotatedDoors.includes('west') && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-6 bg-gradient-to-r from-amber-600 to-amber-800 rounded-r-md shadow-md border-r border-amber-900/50" />
+              )}
+            </>
+          );
+        })()
       )}
 
 
