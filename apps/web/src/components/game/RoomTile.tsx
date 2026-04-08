@@ -230,12 +230,13 @@ export function RoomTile({
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.98 }}
     >
-      {/* SVG 圖像 */}
-      <div className="absolute inset-0 flex items-center justify-center p-1">
-        <svg 
-          viewBox="0 0 100 100" 
+      {/* SVG 圖像 - Issue #310: 移除 p-1 padding 讓 SVG 填滿容器 */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <svg
+          viewBox="0 0 100 100"
           className="w-full h-full"
-          style={{ 
+          preserveAspectRatio="xMidYMid slice"
+          style={{
             transform: `rotate(${rotation}deg)`,
             filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
           }}
