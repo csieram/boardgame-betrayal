@@ -163,9 +163,28 @@ export class TilePlacementValidator {
       const neighborTile = this.getTileAt(state, neighborPos);
       
       let neighborHasDoor = false;
+      let neighborRoomId = null;
       if (neighborTile && neighborTile.room && neighborTile.discovered) {
         const oppositeDir = OPPOSITE_DIRECTION[dir];
         neighborHasDoor = neighborTile.room.doors.includes(oppositeDir);
+        neighborRoomId = neighborTile.room.id;
+      }
+
+      // DEBUG #312: Log door connection check
+      if (neighborTile && neighborTile.discovered) {
+        console.log('[DEBUG #312] Checking connection:', {
+          roomId: room.id,
+          roomDoors: room.doors,
+          neighborId: neighborRoomId,
+          neighborDoors: neighborTile?.room?.doors,
+          direction: dir,
+          oppositeDirection: OPPOSITE_DIRECTION[dir],
+          hasDoor,
+          neighborHasDoor,
+          matches: !neighborTile || !neighborTile.discovered || !neighborTile.room
+            ? true
+            : hasDoor === neighborHasDoor
+        });
       }
 
       // 門匹配規則：
