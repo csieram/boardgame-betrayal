@@ -316,45 +316,7 @@ export function RoomTile({
         </div>
       )}
 
-      {/* Issue #315: Door indicators - show actual rotated door positions */}
-      <DoorIndicators doors={room.doors} rotation={rotation} />
     </motion.div>
-  );
-}
-
-/**
- * Door indicator component - shows where doors are after rotation
- * This fixes the visual mismatch between SVG rotation and door data
- */
-function DoorIndicators({ 
-  doors, 
-  rotation 
-}: { 
-  doors: ('north' | 'south' | 'east' | 'west')[]; 
-  rotation: 0 | 90 | 180 | 270; 
-}) {
-  // Calculate which doors are visible after rotation
-  const rotatedDoors = rotateDoors(doors, rotation);
-
-  return (
-    <div className="absolute inset-0 pointer-events-none overflow-visible">
-      {/* North door indicator */}
-      {rotatedDoors.includes('north') && (
-        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-6 h-3 bg-amber-600/80 rounded-sm border border-amber-400/60 z-20" />
-      )}
-      {/* South door indicator */}
-      {rotatedDoors.includes('south') && (
-        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-6 h-3 bg-amber-600/80 rounded-sm border border-amber-400/60 z-20" />
-      )}
-      {/* East door indicator */}
-      {rotatedDoors.includes('east') && (
-        <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-3 h-6 bg-amber-600/80 rounded-sm border border-amber-400/60 z-20" />
-      )}
-      {/* West door indicator */}
-      {rotatedDoors.includes('west') && (
-        <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-3 h-6 bg-amber-600/80 rounded-sm border border-amber-400/60 z-20" />
-      )}
-    </div>
   );
 }
 
