@@ -277,33 +277,6 @@ export function RoomTile({
         </p>
       </div>
 
-      {/* Issue #315: Door indicators - show rotated doors correctly */}
-      <div className="absolute inset-0 pointer-events-none z-5">
-        {(() => {
-          const rotatedDoors = rotateDoors(room.doors, rotation);
-          return (
-            <>
-              {/* North door indicator */}
-              {rotatedDoors.includes('north') && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-1.5 bg-amber-500/80 rounded-full" />
-              )}
-              {/* South door indicator */}
-              {rotatedDoors.includes('south') && (
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-1.5 bg-amber-500/80 rounded-full" />
-              )}
-              {/* East door indicator */}
-              {rotatedDoors.includes('east') && (
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-amber-500/80 rounded-full" />
-              )}
-              {/* West door indicator */}
-              {rotatedDoors.includes('west') && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-amber-500/80 rounded-full" />
-              )}
-            </>
-          );
-        })()}
-      </div>
-
       {/* Issue #122: 玩家和 AI 標記容器 */}
       <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
         <div className="flex items-center gap-1">
