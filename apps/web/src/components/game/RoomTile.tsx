@@ -178,7 +178,7 @@ export function RoomTile({
     <motion.div
       className={`
         relative ${sizeClasses[size]} cursor-pointer
-        rounded-lg overflow-hidden
+        rounded-lg
         transition-all duration-200
         ${isReachable ? 'ring-2 ring-green-500 ring-offset-2 ring-offset-gray-900' : ''}
         ${isHighlighted ? 'ring-2 ring-yellow-500 ring-offset-2 ring-offset-gray-900' : ''}
@@ -189,6 +189,8 @@ export function RoomTile({
         border: `2px solid ${room.color}`,
         // Issue #159: 已探索房間有較亮的邊框，未探索（剛發現）的有較暗邊框
         boxShadow: isExplored ? `0 0 8px ${room.color}40` : 'none',
+        // DEBUG #313: Remove overflow-hidden to prevent door clipping
+        overflow: 'visible',
       }}
       onClick={onClick}
       // Issue #159: 只有首次發現時顯示縮放動畫，已探索房間直接顯示
@@ -203,14 +205,32 @@ export function RoomTile({
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.98 }}
     >
+      {/* DEBUG #313: Log room rendering details */}
+      {(() => {
+        console.log('[DEBUG #313-UI] Rendering room:', {
+          roomId: room.id,
+          roomName: room.name,
+          roomDoors: room.doors,
+          rotation: rotation,
+          svgContentLength: svgContent.length,
+          hasNorthDoor: room.doors.includes('north'),
+          hasSouthDoor: room.doors.includes('south'),
+          hasEastDoor: room.doors.includes('east'),
+          hasWestDoor: room.doors.includes('west'),
+        });
+        return null;
+      })()}
+      
       {/* SVG 圖像 - 房間 SVG 已包含門的繪製 */}
+      {/* DEBUG #313: Changed from overflow-visible to ensure doors are visible */}
       <div className="absolute inset-0 flex items-center justify-center overflow-visible">
         <svg 
           viewBox="0 0 100 100" 
           className="w-full h-full"
           style={{ 
             transform: `rotate(${rotation}deg)`,
-            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
+            overflow: 'visible'
           }}
         >
           <g dangerouslySetInnerHTML={{ __html: svgContent }}/>
