@@ -235,6 +235,24 @@ export function findValidRotation(
     }
   }
   
+  // CRITICAL #320: Special debug logging for Graveyard and Conservatory
+  if (room.id === 'graveyard' || room.id === 'conservatory' || 
+      room.name === '墓地' || room.name === '溫室') {
+    console.log('[CRITICAL #320] ========== GRAVEYARD/CONSERVATORY DEBUG ==========');
+    console.log('[CRITICAL #320] Room:', room.name, 'ID:', room.id);
+    console.log('[CRITICAL #320] Original doors:', room.doors);
+    console.log('[CRITICAL #320] Entry direction:', entryDirection);
+    console.log('[CRITICAL #320] Required door:', requiredDoor);
+    console.log('[CRITICAL #320] Position:', position);
+    console.log('[CRITICAL #320] ================================================');
+    for (const rotation of [0, 90, 180, 270] as const) {
+      const rotatedDoors = RoomDiscoveryManager.rotateDoors(room.doors, rotation);
+      const hasRequired = rotatedDoors.includes(requiredDoor);
+      const wouldClose = wouldCloseBoardWithRotation(gameState, position, room, rotation, floor, entryDirection);
+      console.log(`[CRITICAL #320] ${rotation}°: doors=${rotatedDoors}, hasRequired=${hasRequired}, wouldClose=${wouldClose}, valid=${hasRequired && !wouldClose}`);
+    }
+  }
+  
   for (const rotation of VALID_ROTATIONS) {
     // 旋轉房間的門
     const rotatedDoors = RoomDiscoveryManager.rotateDoors(room.doors, rotation);
