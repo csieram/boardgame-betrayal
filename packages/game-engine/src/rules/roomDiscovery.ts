@@ -81,11 +81,19 @@ export const VALID_ROTATIONS: (0 | 90 | 180 | 270)[] = [0, 90, 180, 270];
  * 檢查特定旋轉是否會封閉棋盤
  * Issue #72: 嘗試所有 4 個旋轉角度，檢查每個角度是否會封閉棋盤
  * Issue #87: 添加 floor 參數以支援多樓層探索
+ * Issue #318: 修正邏輯 - 單門房間連接到現有房間不應被視為封閉
+ * 
+ * 關鍵修正：
+ * - 單門房間（如 Graveyard、Conservatory）只有一個門
+ * - 當這個門用來連接到入口房間時，這是正常行為，不應被視為「封閉」
+ * - 「封閉棋盤」應該是指放置這個房間會導致某些區域無法到達
+ * - 真正的封閉只發生在：房間的所有門都連接到已探索區域，且沒有提供新的探索路徑
  * 
  * @param gameState 當前遊戲狀態
  * @param position 位置
  * @param room 房間
  * @param rotation 旋轉角度
+ * @param entryDirection 進入方向（用於識別哪個門是入口）
  * @param floor 樓層（預設使用玩家當前樓層）
  * @returns 是否會封閉棋盤
  */
@@ -94,7 +102,8 @@ export function wouldCloseBoardWithRotation(
   position: { x: number; y: number },
   room: Room,
   rotation: 0 | 90 | 180 | 270,
-  floor?: Floor
+  floor?: Floor,
+  entryDirection?: Direction
 ): boolean {
   // 旋轉房間的門
   const rotatedDoors = RoomDiscoveryManager.rotateDoors(room.doors, rotation);
@@ -108,7 +117,10 @@ export function wouldCloseBoardWithRotation(
   console.log(`[DEBUG #318]   Room: ${room.name}, doors: ${rotatedDoors}`);
   console.log(`[DEBUG #318]   Position: ${position.x},${position.y}, floor: ${targetFloor}`);
   
-  // 檢查每個門方向
+  // Issue #318 Fix: 計算未連接的門（不包括入口門）
+  const unconnectedDoors: Direction[] = [];
+  const entryDoor = entryDirection ? OPPOSITE_DOOR[entryDirection] : null;
+  
   for (const door of rotatedDoors) {
     const delta = DIRECTION_DELTAS[door];
     const neighborPos: Position3D = {
@@ -122,8 +134,17 @@ export function wouldCloseBoardWithRotation(
     // 檢查鄰居位置
     const floorMap = gameState.map[neighborPos.floor];
     if (!floorMap) {
-      console.log(`[DEBUG #318]     No floor map for ${targetFloor}, continue`);
-      // 位置超出邊界，這個門無法連接
+      console.log(`[DEBUG #318]     No floor map for ${targetFloor}, position out of bounds`);
+      // 位置超出邊界，這個門通向地圖外，算作未連接
+      unconnectedDoors.push(door);
+      continue;
+    }
+    
+    // 檢查是否在地圖範圍內
+    if (neighborPos.y < 0 || neighborPos.y >= floorMap.length ||
+        neighborPos.x < 0 || neighborPos.x >= floorMap[0].length) {
+      console.log(`[DEBUG #318]     Position out of map bounds`);
+      unconnectedDoors.push(door);
       continue;
     }
     
@@ -133,20 +154,38 @@ export function wouldCloseBoardWithRotation(
     
     // 如果鄰居位置沒有房間，這個門提供了探索路徑
     if (!neighborTile || !neighborTile.room || !neighborTile.discovered) {
-      console.log(`[DEBUG #318]     >>> This door leads to unexplored area, board NOT closed`);
-      return false; // 至少有一個未連接的門，不會封閉
+      console.log(`[DEBUG #318]     >>> This door leads to unexplored area`);
+      unconnectedDoors.push(door);
     }
   }
   
-  // 所有門都連接到現有房間，這會封閉棋盤
-  console.log(`[DEBUG #318]   >>> All doors connected to existing rooms, board WOULD CLOSE`);
-  return true;
+  // Issue #318 Fix: 關鍵邏輯修正
+  // 1. 如果房間有未連接的門（通向未探索區域），不會封閉棋盤
+  // 2. 單門房間（如 Graveyard、Conservatory）只有入口門是正常的
+  // 3. 只有當房間有 2+ 個門且所有門都連接到已探索區域時，才算封閉
+  
+  if (unconnectedDoors.length > 0) {
+    console.log(`[DEBUG #318]   >>> Has ${unconnectedDoors.length} unconnected door(s), board NOT closed`);
+    return false;
+  }
+  
+  // 所有門都連接到已探索區域
+  // 這只有在房間有 2+ 個門時才算封閉（因為單門房間本來就只有入口）
+  if (rotatedDoors.length >= 2) {
+    console.log(`[DEBUG #318]   >>> All ${rotatedDoors.length} doors connected to existing rooms, board WOULD CLOSE`);
+    return true;
+  }
+  
+  // 單門房間，即使有唯一門連接到現有房間，也不算封閉
+  console.log(`[DEBUG #318]   >>> Single-door room, board NOT closed (normal behavior)`);
+  return false;
 }
 
 /**
  * 尋找第一個不會封閉棋盤的有效旋轉角度
  * Issue #72: 嘗試所有 4 個旋轉角度
  * Issue #87: 添加 floor 參數以支援多樓層探索
+ * Issue #318: 傳入 entryDirection 以正確判斷單門房間
  * 
  * @param room 房間
  * @param gameState 當前遊戲狀態
@@ -183,7 +222,8 @@ export function findValidRotation(
     // 旋轉房間的門
     const rotatedDoors = RoomDiscoveryManager.rotateDoors(room.doors, rotation);
     const hasRequired = rotatedDoors.includes(requiredDoor);
-    const wouldClose = wouldCloseBoardWithRotation(gameState, position, room, rotation, floor);
+    // Issue #318: 傳入 entryDirection 以正確判斷單門房間
+    const wouldClose = wouldCloseBoardWithRotation(gameState, position, room, rotation, floor, entryDirection);
     
     console.log(`[DEBUG #318] Rotation ${rotation}°:`);
     console.log(`[DEBUG #318]   Rotated doors: ${rotatedDoors}`);
