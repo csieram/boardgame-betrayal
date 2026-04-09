@@ -218,39 +218,19 @@ export function findValidRotation(
   console.log('[DEBUG #318]   north,east + 180° =', RoomDiscoveryManager.rotateDoors(['north','east'], 180));
   console.log('[DEBUG #318]   north,east + 270° =', RoomDiscoveryManager.rotateDoors(['north','east'], 270));
   
-  // CRITICAL #319: Special debug logging for Library
-  if (room.id === 'library' || room.name === '書房' || room.name?.includes('Library')) {
-    console.log('[CRITICAL #319] ========== LIBRARY DEBUG ==========');
-    console.log('[CRITICAL #319] Room:', room.name);
-    console.log('[CRITICAL #319] Original doors:', room.doors);
-    console.log('[CRITICAL #319] Entry direction:', entryDirection);
-    console.log('[CRITICAL #319] Required door:', requiredDoor);
-    console.log('[CRITICAL #319] Position:', position);
-    console.log('[CRITICAL #319] ====================================');
-    for (const rotation of [0, 90, 180, 270] as const) {
-      const rotatedDoors = RoomDiscoveryManager.rotateDoors(room.doors, rotation);
-      const hasRequired = rotatedDoors.includes(requiredDoor);
-      const wouldClose = wouldCloseBoardWithRotation(gameState, position, room, rotation, floor, entryDirection);
-      console.log(`[CRITICAL #319] ${rotation}°: doors=${rotatedDoors}, hasRequired=${hasRequired}, wouldClose=${wouldClose}, valid=${hasRequired && !wouldClose}`);
-    }
-  }
-  
-  // CRITICAL #320: Special debug logging for Graveyard and Conservatory
-  if (room.id === 'graveyard' || room.id === 'conservatory' || 
-      room.name === '墓地' || room.name === '溫室') {
-    console.log('[CRITICAL #320] ========== GRAVEYARD/CONSERVATORY DEBUG ==========');
-    console.log('[CRITICAL #320] Room:', room.name, 'ID:', room.id);
-    console.log('[CRITICAL #320] Original doors:', room.doors);
-    console.log('[CRITICAL #320] Entry direction:', entryDirection);
-    console.log('[CRITICAL #320] Required door:', requiredDoor);
-    console.log('[CRITICAL #320] Position:', position);
-    console.log('[CRITICAL #320] ================================================');
-    for (const rotation of [0, 90, 180, 270] as const) {
-      const rotatedDoors = RoomDiscoveryManager.rotateDoors(room.doors, rotation);
-      const hasRequired = rotatedDoors.includes(requiredDoor);
-      const wouldClose = wouldCloseBoardWithRotation(gameState, position, room, rotation, floor, entryDirection);
-      console.log(`[CRITICAL #320] ${rotation}°: doors=${rotatedDoors}, hasRequired=${hasRequired}, wouldClose=${wouldClose}, valid=${hasRequired && !wouldClose}`);
-    }
+  // DEBUG: Log rotation selection for all rooms (can be filtered in console)
+  console.log('[DEBUG ROTATION] ========== Room Rotation Debug ==========');
+  console.log('[DEBUG ROTATION] Room:', room.name, 'ID:', room.id);
+  console.log('[DEBUG ROTATION] Original doors:', room.doors);
+  console.log('[DEBUG ROTATION] Entry direction:', entryDirection);
+  console.log('[DEBUG ROTATION] Required door:', requiredDoor);
+  console.log('[DEBUG ROTATION] Position:', position);
+  console.log('[DEBUG ROTATION] ==========================================');
+  for (const rotation of [0, 90, 180, 270] as const) {
+    const rotatedDoors = RoomDiscoveryManager.rotateDoors(room.doors, rotation);
+    const hasRequired = rotatedDoors.includes(requiredDoor);
+    const wouldClose = wouldCloseBoardWithRotation(gameState, position, room, rotation, floor, entryDirection);
+    console.log(`[DEBUG ROTATION] ${rotation}°: doors=${rotatedDoors}, hasRequired=${hasRequired}, wouldClose=${wouldClose}, valid=${hasRequired && !wouldClose}`);
   }
   
   for (const rotation of VALID_ROTATIONS) {
