@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Room, Character, Floor, Tile, Direction } from '@betrayal/shared';
+import { Room, Character, Floor, Tile, Direction, rotateDoors } from '@betrayal/shared';
 import { RoomTile, EmptyRoomTile } from './RoomTile';
 import { PlayerToken } from './PlayerToken';
 import { AIPawn, AIPawnGroup } from './AIPawn';
@@ -105,7 +105,7 @@ export function GameBoard({
   corpses = [],
   onCorpseClick,
 }: GameBoardProps) {
-  const [selectedRoom, setSelectedRoom] = useState<{ room: Room; x: number; y: number } | null>(null);
+  const [selectedRoom, setSelectedRoom] = useState<{ room: Room; x: number; y: number; rotation: number } | null>(null);
   const [activeFloor, setActiveFloor] = useState<Floor>(currentFloor);
   const [showStairModal, setShowStairModal] = useState(false);
   const [stairOptions, setStairOptions] = useState<Array<{ to: Floor; description: string }>>([]);
@@ -302,7 +302,8 @@ export function GameBoard({
   // 處理房間點擊 - 直接移動到相鄰房間
   const handleRoomClick = (room: Room | null, x: number, y: number) => {
     if (room) {
-      setSelectedRoom({ room, x, y });
+      const tile = map[y]?.[x];
+      setSelectedRoom({ room, x, y, rotation: tile?.rotation || 0 });
     }
     onRoomClick?.(room, x, y);
   };
@@ -658,11 +659,17 @@ export function GameBoard({
                 </p>
                 <div className="flex items-center gap-4 text-xs text-gray-500">
                   <span>位置: ({selectedRoom.x}, {selectedRoom.y})</span>
-                  <span>門: {selectedRoom.room.doors.map(d => 
+                  <span>原始門: {selectedRoom.room.doors.map(d => 
                     d === 'north' ? '北' : 
                     d === 'south' ? '南' : 
                     d === 'east' ? '東' : '西'
                   ).join(', ')}</span>
+                  <span className="text-amber-400">旋轉後門: {rotateDoors(selectedRoom.room.doors, selectedRoom.rotation as 0 | 90 | 180 | 270).map(d => 
+                    d === 'north' ? '北' : 
+                    d === 'south' ? '南' : 
+                    d === 'east' ? '東' : '西'
+                  ).join(', ')}</span>
+                  <span>(旋轉: {selectedRoom.rotation}°)</span>
                 </div>
               </div>
 

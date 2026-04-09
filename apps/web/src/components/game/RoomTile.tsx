@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Room, SymbolType } from '@betrayal/shared';
+import { Room, SymbolType, rotateDoors } from '@betrayal/shared';
 import { PlayerTokenGroup } from './PlayerToken';
 import { Character } from '@betrayal/shared';
 
@@ -205,18 +205,20 @@ export function RoomTile({
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.98 }}
     >
-      {/* DEBUG #313: Log room rendering details */}
+      {/* DEBUG #314: Log room rendering details with rotated doors */}
       {(() => {
-        console.log('[DEBUG #313-UI] Rendering room:', {
+        const rotatedDoors = rotateDoors(room.doors, rotation);
+        console.log('[DEBUG #314-UI] Rendering room:', {
           roomId: room.id,
           roomName: room.name,
-          roomDoors: room.doors,
+          originalDoors: room.doors,
           rotation: rotation,
+          rotatedDoors: rotatedDoors,
           svgContentLength: svgContent.length,
-          hasNorthDoor: room.doors.includes('north'),
-          hasSouthDoor: room.doors.includes('south'),
-          hasEastDoor: room.doors.includes('east'),
-          hasWestDoor: room.doors.includes('west'),
+          hasNorthDoor: rotatedDoors.includes('north'),
+          hasSouthDoor: rotatedDoors.includes('south'),
+          hasEastDoor: rotatedDoors.includes('east'),
+          hasWestDoor: rotatedDoors.includes('west'),
         });
         return null;
       })()}
