@@ -205,32 +205,27 @@ export function RoomTile({
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.98 }}
     >
-      {/* DEBUG #314: Log room rendering details with rotated doors */}
+      {/* DEBUG #318-UI: Log room rendering details with rotated doors */}
       {(() => {
         const rotatedDoors = rotateDoors(room.doors, rotation);
-        console.log('[DEBUG #314-UI] Rendering room:', {
-          roomId: room.id,
-          roomName: room.name,
-          originalDoors: room.doors,
-          rotation: rotation,
-          rotatedDoors: rotatedDoors,
-          svgContentLength: svgContent.length,
-          hasNorthDoor: rotatedDoors.includes('north'),
-          hasSouthDoor: rotatedDoors.includes('south'),
-          hasEastDoor: rotatedDoors.includes('east'),
-          hasWestDoor: rotatedDoors.includes('west'),
-        });
+        console.log('[DEBUG #318-UI] Room:', room.name);
+        console.log('[DEBUG #318-UI] Rotation from props:', rotation);
+        console.log('[DEBUG #318-UI] CSS transform:', `rotate(${rotation}deg)`);
+        console.log('[DEBUG #318-UI] Original doors:', room.doors);
+        console.log('[DEBUG #318-UI] Rotated doors:', rotatedDoors);
         return null;
       })()}
       
       {/* SVG 圖像 - 房間 SVG 已包含門的繪製 */}
       {/* DEBUG #313: Changed from overflow-visible to ensure doors are visible */}
+      {/* DEBUG #318: Added transform-origin: center to ensure correct rotation */}
       <div className="absolute inset-0 flex items-center justify-center overflow-visible">
         <svg 
           viewBox="0 0 100 100" 
           className="w-full h-full"
           style={{ 
             transform: `rotate(${rotation}deg)`,
+            transformOrigin: 'center center',
             filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
             overflow: 'visible'
           }}
