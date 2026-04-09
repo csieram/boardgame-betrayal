@@ -104,6 +104,10 @@ export function wouldCloseBoardWithRotation(
     ? gameState.players.find(p => p.id === gameState.turn.currentPlayerId)?.position.floor || 'ground'
     : 'ground');
   
+  console.log(`[DEBUG #318] wouldCloseBoardWithRotation for ${rotation}°:`);
+  console.log(`[DEBUG #318]   Room: ${room.name}, doors: ${rotatedDoors}`);
+  console.log(`[DEBUG #318]   Position: ${position.x},${position.y}, floor: ${targetFloor}`);
+  
   // 檢查每個門方向
   for (const door of rotatedDoors) {
     const delta = DIRECTION_DELTAS[door];
@@ -113,22 +117,29 @@ export function wouldCloseBoardWithRotation(
       floor: targetFloor,
     };
     
+    console.log(`[DEBUG #318]   Door ${door}: neighbor at ${neighborPos.x},${neighborPos.y}`);
+    
     // 檢查鄰居位置
     const floorMap = gameState.map[neighborPos.floor];
     if (!floorMap) {
+      console.log(`[DEBUG #318]     No floor map for ${targetFloor}, continue`);
       // 位置超出邊界，這個門無法連接
       continue;
     }
     
     const neighborTile = floorMap[neighborPos.y]?.[neighborPos.x];
     
+    console.log(`[DEBUG #318]     Neighbor tile: ${neighborTile ? (neighborTile.room?.name || 'empty') : 'undefined'}, discovered: ${neighborTile?.discovered}`);
+    
     // 如果鄰居位置沒有房間，這個門提供了探索路徑
     if (!neighborTile || !neighborTile.room || !neighborTile.discovered) {
+      console.log(`[DEBUG #318]     >>> This door leads to unexplored area, board NOT closed`);
       return false; // 至少有一個未連接的門，不會封閉
     }
   }
   
   // 所有門都連接到現有房間，這會封閉棋盤
+  console.log(`[DEBUG #318]   >>> All doors connected to existing rooms, board WOULD CLOSE`);
   return true;
 }
 
@@ -153,30 +164,49 @@ export function findValidRotation(
 ): { room: Room; rotation: 0 | 90 | 180 | 270 } | null {
   const requiredDoor = OPPOSITE_DOOR[entryDirection];
   
-  console.log(`[findValidRotation] Room: ${room.name}, doors: ${room.doors}, entry: ${entryDirection}, required: ${requiredDoor}, floor: ${floor}`);
+  console.log('[DEBUG #318] ========== findValidRotation ==========');
+  console.log('[DEBUG #318] Room:', room.name, 'Original doors:', room.doors);
+  console.log('[DEBUG #318] Entry direction:', entryDirection);
+  console.log('[DEBUG #318] Required door:', requiredDoor);
+  console.log('[DEBUG #318] Position:', position);
+  console.log('[DEBUG #318] Floor:', floor);
+  console.log('[DEBUG #318] ======================================');
+  
+  // Test rotateDoors function
+  console.log('[DEBUG #318] rotateDoors test:');
+  console.log('[DEBUG #318]   north,east + 0° =', RoomDiscoveryManager.rotateDoors(['north','east'], 0));
+  console.log('[DEBUG #318]   north,east + 90° =', RoomDiscoveryManager.rotateDoors(['north','east'], 90));
+  console.log('[DEBUG #318]   north,east + 180° =', RoomDiscoveryManager.rotateDoors(['north','east'], 180));
+  console.log('[DEBUG #318]   north,east + 270° =', RoomDiscoveryManager.rotateDoors(['north','east'], 270));
   
   for (const rotation of VALID_ROTATIONS) {
     // 旋轉房間的門
     const rotatedDoors = RoomDiscoveryManager.rotateDoors(room.doors, rotation);
-    console.log(`[findValidRotation] Trying rotation ${rotation}, rotated doors: ${rotatedDoors}`);
+    const hasRequired = rotatedDoors.includes(requiredDoor);
+    const wouldClose = wouldCloseBoardWithRotation(gameState, position, room, rotation, floor);
+    
+    console.log(`[DEBUG #318] Rotation ${rotation}°:`);
+    console.log(`[DEBUG #318]   Rotated doors: ${rotatedDoors}`);
+    console.log(`[DEBUG #318]   Has required (${requiredDoor})? ${hasRequired}`);
+    console.log(`[DEBUG #318]   Would close board? ${wouldClose}`);
+    console.log(`[DEBUG #318]   Is valid? ${hasRequired && !wouldClose}`);
     
     // 檢查旋轉後是否有門可以連接到進入方向
-    if (!rotatedDoors.includes(requiredDoor)) {
-      console.log(`[findValidRotation] Rotation ${rotation} rejected: no door matching entry direction`);
+    if (!hasRequired) {
+      console.log(`[DEBUG #318]   REJECTED: no door matching entry direction`);
       continue;
     }
     
-    // 檢查此旋轉是否會封閉棋盤
-    const wouldClose = wouldCloseBoardWithRotation(gameState, position, room, rotation, floor);
-    console.log(`[findValidRotation] Rotation ${rotation} would close board: ${wouldClose}`);
-    
-    if (!wouldClose) {
-      console.log(`[findValidRotation] Found valid rotation: ${rotation}`);
-      return { room, rotation };
+    if (wouldClose) {
+      console.log(`[DEBUG #318]   REJECTED: would close board`);
+      continue;
     }
+    
+    console.log(`[DEBUG #318] >>> SELECTING rotation ${rotation}°`);
+    return { room, rotation };
   }
   
-  console.log(`[findValidRotation] All rotations would close board for room: ${room.name}`);
+  console.log('[DEBUG #318] No valid rotation found!');
   return null;
 }
 
@@ -194,7 +224,19 @@ export function shuffleArray<T>(array: T[]): T[] {
   return result;
 }
 
-/** 方向旋轉映射（逆時針，與 CSS transform rotate 一致） */
+/** 方向旋轉映射（順時針，與 CSS transform rotate 一致）
+ *  Issue #318 Fix: 修正為正確的順時針旋轉映射
+ *  0°: 原始方向
+ *  90°: 順時針 90°
+ *  180°: 順時針 180°
+ *  270°: 順時針 270° (或逆時針 90°)
+ * 
+ *  驗證：Dining Room (north, east) 需要 west 門
+ *  - 0°: north, east → 沒有 west
+ *  - 90°: east, south → 沒有 west
+ *  - 180°: south, west → 有 west ✓
+ *  - 270°: west, north → 有 west ✓
+ */
 const DIRECTION_ROTATION_MAP: Record<Direction, Record<0 | 90 | 180 | 270, Direction>> = {
   north: { 0: 'north', 90: 'east', 180: 'south', 270: 'west' },
   east: { 0: 'east', 90: 'south', 180: 'west', 270: 'north' },
