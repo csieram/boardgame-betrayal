@@ -194,12 +194,12 @@ export function shuffleArray<T>(array: T[]): T[] {
   return result;
 }
 
-/** 方向旋轉映射（順時針） */
+/** 方向旋轉映射（順時針） - Issue #317: Fixed rotation direction */
 const DIRECTION_ROTATION_MAP: Record<Direction, Record<0 | 90 | 180 | 270, Direction>> = {
-  north: { 0: 'north', 90: 'east', 180: 'south', 270: 'west' },
-  east: { 0: 'east', 90: 'south', 180: 'west', 270: 'north' },
-  south: { 0: 'south', 90: 'west', 180: 'north', 270: 'east' },
-  west: { 0: 'west', 90: 'north', 180: 'east', 270: 'south' },
+  north: { 0: 'north', 90: 'west', 180: 'south', 270: 'east' },
+  east: { 0: 'east', 90: 'north', 180: 'west', 270: 'south' },
+  south: { 0: 'south', 90: 'east', 180: 'north', 270: 'west' },
+  west: { 0: 'west', 90: 'south', 180: 'east', 270: 'north' },
 };
 
 // ==================== 房間發現管理器 ====================
