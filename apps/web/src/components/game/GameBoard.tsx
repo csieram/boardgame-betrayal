@@ -34,7 +34,7 @@ interface GameBoardProps {
   /** 當前樓層 */
   currentFloor: Floor;
   /** 當前玩家位置 */
-  playerPosition: { x: number; y: number };
+  playerPosition: { x: number; y: number; floor: Floor };
   /** 玩家角色 */
   playerCharacter: Character;
   /** 點擊房間的回調 - room 可能為 null（未探索位置） */
@@ -206,7 +206,7 @@ export function GameBoard({
 
   // 檢查位置是否有玩家（包含樓層檢查）
   const hasPlayerAt = (x: number, y: number, floor: Floor) => {
-    return playerPosition.x === x && playerPosition.y === y && currentFloor === floor;
+    return playerPosition.x === x && playerPosition.y === y && playerPosition.floor === floor;
   };
 
   // Issue #118: 檢查位置有哪些 AI 玩家
@@ -696,7 +696,7 @@ export function GameBoard({
 interface MiniGameBoardProps {
   map: Tile[][];
   currentFloor: Floor;
-  playerPosition: { x: number; y: number };
+  playerPosition: { x: number; y: number; floor: Floor };
   playerCharacter: Character;
   onRoomClick?: (room: Room | null, x: number, y: number) => void;
   className?: string;
@@ -744,7 +744,7 @@ export function MiniGameBoard({
           isExplored={true}
           rotation={tile.rotation}
           onClick={() => tile.room && onRoomClick?.(tile.room, x, y)}
-          players={playerPosition.x === x && playerPosition.y === y ? [playerCharacter] : []}
+          players={playerPosition.x === x && playerPosition.y === y && playerPosition.floor === currentFloor ? [playerCharacter] : []}
           size="sm"
         />
       ))}

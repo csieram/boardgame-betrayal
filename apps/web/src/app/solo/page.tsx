@@ -3993,7 +3993,7 @@ export default function SoloGamePage() {
                 <GameBoard
                   map={map}
                   currentFloor={currentFloor}
-                  playerPosition={position}
+                  playerPosition={{ x: position.x, y: position.y, floor: currentFloor }}
                   playerCharacter={player!}
                   onRoomClick={handleRoomClick}
                   onFloorChange={setCurrentFloor}
