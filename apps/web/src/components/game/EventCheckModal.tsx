@@ -71,14 +71,16 @@ export function EventCheckModal({
   const [showResult, setShowResult] = useState(false);
   const [diceValues, setDiceValues] = useState<number[]>([]);
 
-  // 初始化骰子值（用於動畫）
+  // Issue #327-fix: 初始化骰子值（用於動畫）
+  // 只在 isOpen 時初始化，不移除 isRolling 依賴
   useEffect(() => {
-    if (isOpen && isRolling) {
+    if (isOpen) {
       const diceCount = Math.max(1, playerStatValue);
+      // 使用 null 而不是 0，這樣 DiceFace 會顯示 ?
       setDiceValues(Array(diceCount).fill(null as unknown as number));
       setShowResult(false);
     }
-  }, [isOpen, isRolling, playerStatValue]);
+  }, [isOpen, playerStatValue]);
 
   // 當結果出來時顯示
   useEffect(() => {
