@@ -44,7 +44,7 @@ interface GameBoardProps {
   /** 使用樓梯的回調 */
   onUseStairs?: (targetFloor: Floor) => void;
   /** 可達的房間位置 */
-  reachablePositions?: { x: number; y: number; isExplored?: boolean }[];
+  reachablePositions?: { x: number; y: number; floor: Floor; isExplored?: boolean }[];
   /** 是否顯示所有樓層 */
   showAllFloors?: boolean;
   /** 遊戲狀態（用於樓梯檢查） */
@@ -194,14 +194,14 @@ export function GameBoard({
     };
   }, [exploredRooms]);
 
-  // 檢查位置是否可達（用於探索 - 只檢查未探索的 tile）
+  // Issue #330: Check if position is reachable on current floor (for exploration - only unexplored tiles)
   const isReachable = (x: number, y: number) => {
-    return reachablePositions.some(pos => pos.x === x && pos.y === y && !pos.isExplored);
+    return reachablePositions.some(pos => pos.x === x && pos.y === y && pos.floor === activeFloor && !pos.isExplored);
   };
 
-  // 檢查位置是否可移動（用於移動 - 包括已探索和未探索）
+  // Issue #330: Check if position is movable on current floor (for movement - includes explored and unexplored)
   const isMovable = (x: number, y: number) => {
-    return reachablePositions.some(pos => pos.x === x && pos.y === y);
+    return reachablePositions.some(pos => pos.x === x && pos.y === y && pos.floor === activeFloor);
   };
 
   // 檢查位置是否有玩家（包含樓層檢查）

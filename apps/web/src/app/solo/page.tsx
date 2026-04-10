@@ -316,8 +316,13 @@ export default function SoloGamePage() {
   const [discovered, setDiscovered] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRoom, setSelectedRoom] = useState<{ room: Room | null; x: number; y: number } | null>(null);
-  const [reachablePositions, setReachablePositions] = useState<{ x: number; y: number; isExplored?: boolean }[]>([]);
+  const [reachablePositions, setReachablePositions] = useState<{ x: number; y: number; floor: Floor; isExplored?: boolean }[]>([]);
   const [validExploreDirections, setValidExploreDirections] = useState<Direction[]>([]);
+
+  // Issue #330: Filter reachable positions by current floor
+  const reachablePositionsOnCurrentFloor = useMemo(() => {
+    return reachablePositions.filter(pos => pos.floor === currentFloor);
+  }, [reachablePositions, currentFloor]);
   const [gameState, setGameState] = useState<SoloGameState>(() => createInitialGameState(Date.now().toString()));
   
   // Issue #202-fix: 使用共享的卡牌抽牌系統
@@ -762,7 +767,8 @@ export default function SoloGamePage() {
         }
 
         // 計算可達位置（從入口大廳開始）
-        updateReachablePositions(initialMultiFloorMap.ground, { x: MAP_CENTER, y: MAP_CENTER }, character.stats.speed.values[character.stats.speed.currentIndex], false);
+        // Issue #330: Include floor in position
+        updateReachablePositions(initialMultiFloorMap.ground, { x: MAP_CENTER, y: MAP_CENTER, floor: 'ground' }, character.stats.speed.values[character.stats.speed.currentIndex], false);
       } catch (error) {
         console.error('Error initializing game:', error);
         setLog(prev => [...prev, `錯誤：遊戲初始化失敗 - ${error instanceof Error ? error.message : '未知錯誤'}`]);
@@ -778,14 +784,16 @@ export default function SoloGamePage() {
   };
 
   // 計算可達位置
-  const updateReachablePositions = (currentMap: Tile[][], pos: { x: number; y: number }, remainingMoves: number, isDiscovered: boolean) => {
+  const updateReachablePositions = (currentMap: Tile[][], pos: { x: number; y: number; floor?: Floor }, remainingMoves: number, isDiscovered: boolean) => {
     if (remainingMoves <= 0 || isDiscovered) {
       setReachablePositions([]);
       setValidExploreDirections([]);
       return;
     }
 
-    const reachable: { x: number; y: number; isExplored: boolean }[] = [];
+    // Issue #330: Include floor information in reachable positions
+    const floor = pos.floor || currentFloor;
+    const reachable: { x: number; y: number; floor: Floor; isExplored: boolean }[] = [];
     const currentTile = currentMap[pos.y][pos.x];
     const currentRoom = currentTile.room;
 
@@ -817,7 +825,7 @@ export default function SoloGamePage() {
         
         // 只將未探索的位置標記為可探索（用於高亮顯示）
         if (!tile.discovered) {
-          reachable.push({ x: newX, y: newY, isExplored: false });
+          reachable.push({ x: newX, y: newY, floor, isExplored: false });
           validExploreDirs.push(direction);
         }
       }
@@ -841,7 +849,7 @@ export default function SoloGamePage() {
           if (tile.room.doors.includes(oppositeDirection)) {
             // 避免重複添加
             if (!reachable.some(r => r.x === newX && r.y === newY)) {
-              reachable.push({ x: newX, y: newY, isExplored: true });
+              reachable.push({ x: newX, y: newY, floor, isExplored: true });
             }
           }
         }
@@ -1964,7 +1972,8 @@ export default function SoloGamePage() {
       endedByDiscovery: false,
     });
     setLog(prev => [...prev, `回合 ${turn + 1}`]);
-    updateReachablePositions(multiFloorMap[currentFloor], position, player!.stats.speed.values[player!.stats.speed.currentIndex], false);
+    // Issue #330: Include floor in position
+    updateReachablePositions(multiFloorMap[currentFloor], { ...position, floor: currentFloor }, player!.stats.speed.values[player!.stats.speed.currentIndex], false);
   };
 
   // ==================== 屍體搜刮系統 (Issue #243) ====================
@@ -2312,10 +2321,10 @@ export default function SoloGamePage() {
   const moveToPosition = useCallback((x: number, y: number) => {
     if (discovered || moves <= 0 || !player) return;
 
-    // 檢查目標位置是否可達
-    const isReachable = reachablePositions.some(pos => pos.x === x && pos.y === y);
+    // Issue #330: Check if position is reachable on current floor
+    const isReachable = reachablePositionsOnCurrentFloor.some(pos => pos.x === x && pos.y === y);
     if (!isReachable) {
-      console.log('[moveToPosition] Position not reachable:', x, y);
+      console.log('[moveToPosition] Position not reachable on current floor:', x, y, currentFloor);
       return;
     }
 
@@ -2455,18 +2464,18 @@ export default function SoloGamePage() {
       setMoves(m => {
         const newMoves = m - 1;
         setLog(prev => [...prev, `移動到 (${x}, ${y})，剩餘移動: ${newMoves}`]);
-        updateReachablePositions(currentMap, { x, y }, newMoves, discovered);
+        updateReachablePositions(currentMap, { x, y, floor: currentFloor }, newMoves, discovered);
         return newMoves;
       });
     }
-  }, [multiFloorMap, player, moves, discovered, turn, currentFloor, position, gameState, reachablePositions]);
+  }, [multiFloorMap, player, moves, discovered, turn, currentFloor, position, gameState, reachablePositionsOnCurrentFloor]);
 
   // 處理房間點擊
   const handleRoomClick = (room: Room | null, x: number, y: number) => {
     setSelectedRoom({ room, x, y });
-    
-    // 如果點擊的是可達位置，移動過去
-    const isReachable = reachablePositions.some(pos => pos.x === x && pos.y === y);
+
+    // Issue #330: Check if clicked position is reachable on current floor
+    const isReachable = reachablePositionsOnCurrentFloor.some(pos => pos.x === x && pos.y === y);
     if (isReachable && !discovered) {
       moveToPosition(x, y);
     }
@@ -2816,8 +2825,9 @@ export default function SoloGamePage() {
       setLog(prev => [...prev, `回合 ${turn + 1}`]);
 
       // Issue #157-fix: 延遲更新可達位置，確保 multiFloorMap 已更新
+      // Issue #330: Include floor in position
       setTimeout(() => {
-        updateReachablePositions(multiFloorMap[currentFloor], position, player.stats.speed.values[player.stats.speed.currentIndex], false);
+        updateReachablePositions(multiFloorMap[currentFloor], { ...position, floor: currentFloor }, player.stats.speed.values[player.stats.speed.currentIndex], false);
       }, 100);
 
       // 完成回合切換
@@ -2828,7 +2838,8 @@ export default function SoloGamePage() {
       setMoves(player.stats.speed.values[player.stats.speed.currentIndex]);
       // Issue #144: 「回合結束」已在函數開始時記錄
       setLog(prev => [...prev, `回合 ${turn + 1}`]);
-      updateReachablePositions(multiFloorMap[currentFloor], position, player.stats.speed.values[player.stats.speed.currentIndex], false);
+      // Issue #330: Include floor in position
+      updateReachablePositions(multiFloorMap[currentFloor], { ...position, floor: currentFloor }, player.stats.speed.values[player.stats.speed.currentIndex], false);
 
       // 完成回合切換
       setIsProcessingTurnSwitch(false);
@@ -2913,7 +2924,8 @@ export default function SoloGamePage() {
     setCurrentFloor(targetFloor);
 
     // 設置角色位置到目標樓梯房間（Issue #86: 正確的目標位置）
-    setPosition({ x: targetPosition.x, y: targetPosition.y, floor: targetPosition.floor });
+    // Issue #330: Use targetFloor instead of targetPosition.floor
+    setPosition({ x: targetPosition.x, y: targetPosition.y, floor: targetFloor });
 
     // Issue #89: 重置移動點數和 discovered 狀態
     const resetMoves = player.stats.speed.values[player.stats.speed.currentIndex];
@@ -2926,7 +2938,8 @@ export default function SoloGamePage() {
     // 更新可達位置（Issue #85: 使用正確的地圖和位置）
     // Issue #89: 使用重置後的移動點數來計算可達位置
     // Issue #90: 直接傳入 false 避免 async state 問題
-    updateReachablePositions(updatedMultiFloorMap[targetFloor], { x: targetPosition.x, y: targetPosition.y }, resetMoves, false);
+    // Issue #330: Include floor in position
+    updateReachablePositions(updatedMultiFloorMap[targetFloor], { x: targetPosition.x, y: targetPosition.y, floor: targetFloor }, resetMoves, false);
   }, [player, position, currentFloor, multiFloorMap]);
 
   // Issue #238: 處理創建秘密通道
@@ -3998,7 +4011,7 @@ export default function SoloGamePage() {
                   onRoomClick={handleRoomClick}
                   onFloorChange={setCurrentFloor}
                   onUseStairs={handleUseStairs}
-                  reachablePositions={reachablePositions}
+                  reachablePositions={reachablePositionsOnCurrentFloor}
                   showAllFloors={false}
                   gameState={{
                     players: [{
@@ -4120,7 +4133,7 @@ export default function SoloGamePage() {
               <div className="flex justify-center mt-3">
                 <motion.div
                   animate={
-                    discovered || reachablePositions.length === 0
+                    discovered || reachablePositionsOnCurrentFloor.length === 0
                       ? {
                           scale: [1, 1.05, 1],
                           boxShadow: [
@@ -4132,7 +4145,7 @@ export default function SoloGamePage() {
                       : {}
                   }
                   transition={
-                    discovered || reachablePositions.length === 0
+                    discovered || reachablePositionsOnCurrentFloor.length === 0
                       ? {
                           duration: 1.5,
                           repeat: Infinity,
@@ -4146,10 +4159,10 @@ export default function SoloGamePage() {
                       console.log('[EndTurn] Button clicked!');
                       showEndTurnConfirmation(false);
                     }}
-                    variant={discovered || reachablePositions.length === 0 ? 'primary' : 'secondary'}
+                    variant={discovered || reachablePositionsOnCurrentFloor.length === 0 ? 'primary' : 'secondary'}
                     size="sm"
                     className={`h-10 sm:h-12 text-xs sm:text-sm ${
-                      discovered || reachablePositions.length === 0
+                      discovered || reachablePositionsOnCurrentFloor.length === 0
                         ? 'bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/30 animate-pulse'
                         : ''
                     }`}
