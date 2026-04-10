@@ -2194,11 +2194,13 @@ export default function SoloGamePage() {
     }
     
     // 嘗試找到最佳旋轉角度
+    // Issue #324 Fix: 修正旋轉映射以符合順時針旋轉（與後端 DIRECTION_ROTATION_MAP 一致）
+    // 0°: 原始方向, 90°: 順時針 90°, 180°: 順時針 180°, 270°: 順時針 270°
     const rotationMap: Record<string, Record<string, number>> = {
-      north: { south: 0, west: 90, north: 180, east: 270 },
-      south: { north: 0, east: 90, south: 180, west: 270 },
-      east: { west: 0, north: 90, east: 180, south: 270 },
-      west: { east: 0, south: 90, west: 180, north: 270 },
+      north: { north: 0, east: 90, south: 180, west: 270 },
+      east: { east: 0, south: 90, west: 180, north: 270 },
+      south: { south: 0, west: 90, north: 180, east: 270 },
+      west: { west: 0, north: 90, east: 180, south: 270 },
     };
     
     // 找到第一個可以旋轉到所需方向的門
