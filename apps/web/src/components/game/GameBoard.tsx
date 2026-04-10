@@ -204,9 +204,9 @@ export function GameBoard({
     return reachablePositions.some(pos => pos.x === x && pos.y === y);
   };
 
-  // 檢查位置是否有玩家
-  const hasPlayerAt = (x: number, y: number) => {
-    return playerPosition.x === x && playerPosition.y === y;
+  // 檢查位置是否有玩家（包含樓層檢查）
+  const hasPlayerAt = (x: number, y: number, floor: Floor) => {
+    return playerPosition.x === x && playerPosition.y === y && currentFloor === floor;
   };
 
   // Issue #118: 檢查位置有哪些 AI 玩家
@@ -375,7 +375,7 @@ export function GameBoard({
                 // 房間的 floor 屬性是原始樓層分類，不是實際放置的樓層
                 const isExplored = tile?.discovered && tile?.room;
                 const reachable = isReachable(x, y) && floor === activeFloor;
-                const hasPlayer = hasPlayerAt(x, y) && floor === activeFloor;
+                const hasPlayer = hasPlayerAt(x, y, floor);
 
                 if (!isExplored) {
                   // 只有當前樓層且真正可達（有門相連）的未探索 tile 才顯示高亮
