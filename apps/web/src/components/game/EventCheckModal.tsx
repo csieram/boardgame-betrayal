@@ -75,7 +75,7 @@ export function EventCheckModal({
   useEffect(() => {
     if (isOpen && isRolling) {
       const diceCount = Math.max(1, playerStatValue);
-      setDiceValues(Array(diceCount).fill(0));
+      setDiceValues(Array(diceCount).fill(null as unknown as number));
       setShowResult(false);
     }
   }, [isOpen, isRolling, playerStatValue]);
@@ -523,23 +523,25 @@ export function EventCheckModal({
  * 骰子面組件
  */
 interface DiceFaceProps {
-  value?: number;
+  value?: number | null;
 }
 
 function DiceFace({ value }: DiceFaceProps) {
+  const isNull = value === null || value === undefined;
+
   return (
     <div className="relative w-14 h-14 sm:w-16 sm:h-16">
       {/* 骰子外框 */}
       <div className={`
         absolute inset-0 rounded-xl border-2
-        ${value !== undefined 
-          ? 'bg-white border-gray-300' 
+        ${!isNull
+          ? 'bg-white border-gray-300'
           : 'bg-gradient-to-br from-emerald-400 to-emerald-600 border-emerald-300'
         }
         shadow-lg
       `}>
         {/* 骰子數值 */}
-        {value !== undefined ? (
+        {!isNull ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="text-3xl font-bold text-gray-800">{value}</span>
           </div>
