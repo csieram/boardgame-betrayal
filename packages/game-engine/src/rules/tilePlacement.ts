@@ -108,8 +108,16 @@ export class TilePlacementValidator {
       return { valid: false, error: 'Cannot place empty tile' };
     }
 
-    // 檢查門位置匹配
-    const doorMatches = this.checkDoorMatches(state, position, tile.room);
+    // Issue #323 Fix: 根據 tile.rotation 旋轉房間的門
+    // 確保驗證時使用正確的門方向
+    const rotatedDoors = RoomDiscoveryManager.rotateDoors(tile.room.doors, tile.rotation);
+    const rotatedRoom = {
+      ...tile.room,
+      doors: rotatedDoors,
+    };
+
+    // 檢查門位置匹配（使用旋轉後的房間）
+    const doorMatches = this.checkDoorMatches(state, position, rotatedRoom);
     const conflicts: TileConflict[] = [];
 
     for (const match of doorMatches) {
