@@ -121,12 +121,14 @@ export function CombatModal({
               rollResult={attackerRoll}
               total={attackerRoll.reduce((a, b) => a + b, 0)}
               selectedWeapon={selectedWeapon}
+              isRolling={isRolling}
             />
             <CombatCard
               player={defender}
               isAttacker={false}
               rollResult={defenderRoll}
               total={defenderRoll.reduce((a, b) => a + b, 0)}
+              isRolling={isRolling}
             />
           </div>
 

@@ -9,9 +9,11 @@ interface CombatCardProps {
   rollResult?: number[];
   total?: number;
   selectedWeapon?: { name: string };
+  /** Issue #325: 是否正在擲骰中（顯示問號） */
+  isRolling?: boolean;
 }
 
-export function CombatCard({ player, isAttacker, rollResult, total, selectedWeapon }: CombatCardProps) {
+export function CombatCard({ player, isAttacker, rollResult, total, selectedWeapon, isRolling }: CombatCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -60,29 +62,54 @@ export function CombatCard({ player, isAttacker, rollResult, total, selectedWeap
         </div>
       )}
 
-      {/* 擲骰結果 */}
-      {rollResult && rollResult.length > 0 && (
+      {/* Issue #325: 擲骰結果 - 支援問號狀態 */}
+      {(rollResult && rollResult.length > 0) || isRolling ? (
         <div className="bg-gray-800/50 rounded-lg p-3">
           <div className="flex flex-wrap gap-2 justify-center mb-2">
-            {rollResult.map((value, i) => (
-              <motion.div
-                key={i}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: i * 0.1 }}
-                className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-gray-900 font-bold text-lg shadow-lg"
-              >
-                {value}
-              </motion.div>
-            ))}
+            {isRolling ? (
+              // Issue #325: 擲骰中顯示問號
+              <>
+                {[0, 1, 2, 3].map((i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1, rotate: [0, 10, -10, 0] }}
+                    transition={{
+                      scale: { delay: i * 0.1 },
+                      rotate: { repeat: Infinity, duration: 0.5, delay: i * 0.1 }
+                    }}
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-lg shadow-lg ${
+                      isAttacker
+                        ? 'bg-gradient-to-br from-red-400 to-red-600 border-2 border-red-300'
+                        : 'bg-gradient-to-br from-blue-400 to-blue-600 border-2 border-blue-300'
+                    }`}
+                  >
+                    <span className="text-white text-xl">?</span>
+                  </motion.div>
+                ))}
+              </>
+            ) : (
+              // 擲骰完成顯示數值
+              rollResult?.map((value, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-gray-900 font-bold text-lg shadow-lg"
+                >
+                  {value}
+                </motion.div>
+              ))
+            )}
           </div>
-          {total !== undefined && (
+          {!isRolling && total !== undefined && (
             <p className="text-center text-xl font-bold text-white">
               總和: {total}
             </p>
           )}
         </div>
-      )}
+      ) : null}
     </motion.div>
   );
 }
