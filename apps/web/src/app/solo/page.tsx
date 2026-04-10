@@ -309,7 +309,7 @@ export default function SoloGamePage() {
   const [player, setPlayer] = useState<Character | null>(null);
   const [turn, setTurn] = useState(1);
   const [moves, setMoves] = useState(0);
-  const [position, setPosition] = useState({ x: MAP_CENTER, y: MAP_CENTER });
+  const [position, setPosition] = useState({ x: MAP_CENTER, y: MAP_CENTER, floor: 'ground' as Floor });
   const [currentFloor, setCurrentFloor] = useState<Floor>('ground');
   const [multiFloorMap, setMultiFloorMap] = useState<MultiFloorMap>(createEmptyMultiFloorMap());
   const [log, setLog] = useState<string[]>(['遊戲開始']);
@@ -2353,7 +2353,7 @@ export default function SoloGamePage() {
       if (wasModified) {
         console.log('[RoomDiscovery] Room was modified to prevent board closure:', room.name);
       }
-      setPosition({ x, y });
+      setPosition({ x, y, floor: currentFloor });
       setDiscovered(true);
       
       // 檢查房間符號並抽牌 (Issue #36)
@@ -2451,7 +2451,7 @@ export default function SoloGamePage() {
       });
     } else {
       // 移動到已探索的房間
-      setPosition({ x, y });
+      setPosition({ x, y, floor: currentFloor });
       setMoves(m => {
         const newMoves = m - 1;
         setLog(prev => [...prev, `移動到 (${x}, ${y})，剩餘移動: ${newMoves}`]);
@@ -2913,7 +2913,7 @@ export default function SoloGamePage() {
     setCurrentFloor(targetFloor);
 
     // 設置角色位置到目標樓梯房間（Issue #86: 正確的目標位置）
-    setPosition({ x: targetPosition.x, y: targetPosition.y });
+    setPosition({ x: targetPosition.x, y: targetPosition.y, floor: targetPosition.floor });
 
     // Issue #89: 重置移動點數和 discovered 狀態
     const resetMoves = player.stats.speed.values[player.stats.speed.currentIndex];
