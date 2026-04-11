@@ -22,6 +22,13 @@ interface CardDisplayProps {
     message: string;
     effectDescription: string;
   } | null;
+  /** Issue #331: 作祟檢定結果（用於顯示 AI 的作祟檢定） */
+  hauntRoll?: {
+    triggered: boolean;
+    roll: number;
+    threshold: number;
+    dice: number[];
+  } | null;
 }
 
 /**
@@ -42,6 +49,7 @@ export function CardDisplay({
   onClose,
   animate = true,
   eventCheckResult,
+  hauntRoll,
 }: CardDisplayProps) {
   // ESC 鍵關閉
   useEffect(() => {
@@ -121,6 +129,7 @@ export function CardDisplay({
             animate={animate}
             typeConfig={getCardTypeConfig(card.type)}
             eventCheckResult={eventCheckResult}
+            hauntRoll={hauntRoll}
           />
         </motion.div>
       )}
@@ -150,9 +159,10 @@ interface CardContentProps {
   animate: boolean;
   typeConfig: CardTypeConfig;
   eventCheckResult?: CardDisplayProps['eventCheckResult'];
+  hauntRoll?: CardDisplayProps['hauntRoll'];
 }
 
-function CardContent({ card, onClose, animate, typeConfig, eventCheckResult }: CardContentProps) {
+function CardContent({ card, onClose, animate, typeConfig, eventCheckResult, hauntRoll }: CardContentProps) {
   const cardVariants = {
     hidden: {
       opacity: 0,
@@ -379,6 +389,55 @@ function CardContent({ card, onClose, animate, typeConfig, eventCheckResult }: C
             <div className={`text-center text-sm font-medium py-2 px-3 rounded-lg bg-black/20 ${eventCheckResult.success ? 'text-green-300' : 'text-red-300'}`}>
               <span className="text-white/60 block text-xs mb-1">效果</span>
               {eventCheckResult.effectDescription}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Issue #331: AI 作祟檢定結果顯示 */}
+        {hauntRoll && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.7, type: 'spring', stiffness: 200 }}
+            className={`mt-4 rounded-xl p-4 border-2 ${
+              hauntRoll.triggered
+                ? 'bg-red-900/40 border-red-500/50'
+                : 'bg-green-900/40 border-green-500/50'
+            }`}
+          >
+            {/* 作祟檢定標題 */}
+            <div className="text-center mb-3">
+              <p className="text-white/80 text-sm mb-1">🎲 作祟檢定</p>
+              <div className={`text-2xl font-bold ${hauntRoll.triggered ? 'text-red-400' : 'text-green-400'}`}>
+                {hauntRoll.triggered ? '⚠️ 作祟被觸發！' : '✅ 作祟未觸發'}
+              </div>
+            </div>
+
+            {/* 擲骰結果顯示 */}
+            <div className="bg-black/20 rounded-lg p-3 mb-3">
+              <p className="text-white/60 text-xs mb-2">擲骰結果</p>
+              <div className="flex items-center justify-center gap-2 flex-wrap">
+                {/* 骰子 */}
+                {hauntRoll.dice.map((die, index) => (
+                  <div
+                    key={index}
+                    className="w-8 h-8 rounded-lg bg-white/90 flex items-center justify-center shadow-lg"
+                  >
+                    <span className="text-lg font-bold text-gray-800">{die}</span>
+                  </div>
+                ))}
+                {/* 總和 */}
+                <span className="text-white/60 mx-1">=</span>
+                <span className={`text-xl font-bold ${hauntRoll.triggered ? 'text-red-400' : 'text-green-400'}`}>
+                  {hauntRoll.roll}
+                </span>
+              </div>
+            </div>
+
+            {/* 閾值與結果說明 */}
+            <div className={`text-center text-sm font-medium py-2 px-3 rounded-lg bg-black/20 ${hauntRoll.triggered ? 'text-red-300' : 'text-green-300'}`}>
+              <span className="text-white/60 block text-xs mb-1">檢定條件</span>
+              擲出 {hauntRoll.roll} &lt; 閾值 {hauntRoll.threshold} → {hauntRoll.triggered ? '作祟開始！' : '安全'}
             </div>
           </motion.div>
         )}

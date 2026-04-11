@@ -180,6 +180,13 @@ export interface TurnExecutionResult {
       amount: number;
     };
   };
+  /** Issue #331: AI 作祟檢定結果 */
+  hauntRoll?: {
+    triggered: boolean;
+    roll: number;
+    threshold: number;
+    dice: number[];
+  };
 }
 
 // ==================== 個性權重配置 ====================
@@ -650,6 +657,14 @@ export class AIPlayer {
                     const hauntRoll = cardManager.performHauntRoll();
                     result.logs.push(`${this.state.playerName} 進行作祟檢定: 擲出 ${hauntRoll.roll} (閾值 ${hauntRoll.threshold}) - ${hauntRoll.triggered ? '作祟觸發！' : '作祟未觸發'}`);
                     this.log(`Haunt roll: ${hauntRoll.roll} vs ${hauntRoll.threshold}, triggered: ${hauntRoll.triggered}`);
+
+                    // Issue #331: 儲存作祟檢定結果
+                    result.hauntRoll = {
+                      triggered: hauntRoll.triggered,
+                      roll: hauntRoll.roll,
+                      threshold: hauntRoll.threshold,
+                      dice: hauntRoll.dice || [hauntRoll.roll],
+                    };
                   }
                 }
 

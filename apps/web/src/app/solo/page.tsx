@@ -411,11 +411,19 @@ export default function SoloGamePage() {
       message: string;
       effectDescription: string;
     } | null;
+    // Issue #331: AI 作祟檢定結果
+    hauntRoll?: {
+      triggered: boolean;
+      roll: number;
+      threshold: number;
+      dice: number[];
+    } | null;
   }>({
     showCard: false,
     cardResult: null,
     aiPlayerName: '',
     eventCheckResult: null,
+    hauntRoll: null,
   });
 
   // Issue #119: Character Tabs 狀態
@@ -2753,6 +2761,15 @@ export default function SoloGamePage() {
               ]);
             }
 
+            // Issue #331: 如果有作祟檢定結果，記錄到遊戲日誌
+            if (result.hauntRoll) {
+              const { triggered, roll, threshold, dice } = result.hauntRoll;
+              setLog(prev => [...prev,
+                `  作祟檢定: ${dice.join(' + ')} = ${roll} (閾值: ${threshold})`,
+                triggered ? '  ⚠️ 作祟被觸發！' : '  ✅ 作祟未觸發'
+              ]);
+            }
+
             // Issue #201-fix: 更新 AI 玩家物品到前端狀態
             if (result.drawnCard && (result.drawnCard.type === 'item' || result.drawnCard.type === 'omen')) {
               setAiPlayers(prev => prev.map(p => {
@@ -2801,6 +2818,13 @@ export default function SoloGamePage() {
                 success: result.eventCheckResult.success,
                 effectDescription: result.eventCheckResult.effect,
                 message: `${result.eventCheckResult.success ? '成功' : '失敗'}: ${result.eventCheckResult.effect}`,
+              } : null,
+              // Issue #331: 如果有作祟檢定結果，一併傳遞
+              hauntRoll: result.hauntRoll ? {
+                triggered: result.hauntRoll.triggered,
+                roll: result.hauntRoll.roll,
+                threshold: result.hauntRoll.threshold,
+                dice: result.hauntRoll.dice,
               } : null,
             });
             // 只顯示第一張抽到的卡
@@ -2853,6 +2877,7 @@ export default function SoloGamePage() {
       cardResult: null,
       aiPlayerName: '',
       eventCheckResult: null,
+      hauntRoll: null,
     });
   };
 
@@ -4407,11 +4432,13 @@ export default function SoloGamePage() {
 
       {/* Issue #189: AI 抽卡顯示 */}
       {/* Issue #192: 傳遞事件檢定結果給 CardDisplay */}
+      {/* Issue #331: 傳遞作祟檢定結果給 CardDisplay */}
       <CardDisplay
         card={aiCardDrawState.showCard ? aiCardDrawState.cardResult?.card || null : null}
         onClose={handleAICardDisplayClose}
         animate={true}
         eventCheckResult={aiCardDrawState.eventCheckResult}
+        hauntRoll={aiCardDrawState.hauntRoll}
       />
 
       {/* Issue #232: 物品捨棄選擇對話框 */}
