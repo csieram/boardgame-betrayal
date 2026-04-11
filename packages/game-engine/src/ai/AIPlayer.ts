@@ -767,6 +767,98 @@ export class AIPlayer {
         movesRemaining--;
         this.state.position = decision.targetPosition;
         result.newPosition = decision.targetPosition;
+
+        // Issue #333: Check if room has symbol and draw card when moving to existing rooms
+        const tile = this.getTileAt(gameState, decision.targetPosition);
+        if (tile?.room?.symbol) {
+          const cardRequirement = RoomDiscoveryManager.getCardDrawRequirement(tile.room);
+          if (cardRequirement) {
+            const cardType = cardRequirement.type;
+
+            // Initialize card manager if needed
+            let cardManager: CardDrawingManager;
+            if (this.cardManager) {
+              cardManager = this.cardManager;
+              this.log('Using shared CardDrawingManager for existing room');
+            } else {
+              // Create new card manager if not exists
+              const seed = gameState.config?.seed || Date.now().toString();
+              const initialDecks = gameState.cardDecks || undefined;
+              cardManager = new CardDrawingManager(seed, initialDecks);
+
+              // Set deck state change callback
+              cardManager.setDeckStateChangeCallback((newState) => {
+                if (gameState.cardDecks) {
+                  gameState.cardDecks.event = newState.event;
+                  gameState.cardDecks.item = newState.item;
+                  gameState.cardDecks.omen = newState.omen;
+                  this.log('Card deck state updated after draw from existing room');
+                }
+              });
+              this.cardManager = cardManager;
+            }
+
+            const effectApplier = new CardEffectApplier(gameState.config?.seed || Date.now().toString());
+
+            // Get current player state for card effect
+            const currentPlayer = this.getPlayer(gameState);
+            if (currentPlayer) {
+              // Convert CharacterStats to CharacterStat structure
+              const playerState = {
+                id: currentPlayer.id,
+                name: currentPlayer.name,
+                stats: {
+                  speed: { values: [0, 1, 2, 3, 4, 5, 6, 7, 8], currentIndex: currentPlayer.currentStats.speed },
+                  might: { values: [0, 1, 2, 3, 4, 5, 6, 7, 8], currentIndex: currentPlayer.currentStats.might },
+                  sanity: { values: [0, 1, 2, 3, 4, 5, 6, 7, 8], currentIndex: currentPlayer.currentStats.sanity },
+                  knowledge: { values: [0, 1, 2, 3, 4, 5, 6, 7, 8], currentIndex: currentPlayer.currentStats.knowledge },
+                },
+                items: currentPlayer.items,
+                omens: currentPlayer.omens,
+              };
+
+              // Draw and apply card
+              const drawResult = drawAndApplyCard(
+                cardManager,
+                effectApplier,
+                cardType,
+                playerState
+              );
+
+              if (drawResult.success && drawResult.card) {
+                result.drawnCard = drawResult.card;
+                result.logs.push(`${this.state.playerName} 抽到 ${cardType === 'event' ? '事件' : cardType === 'item' ? '物品' : '預兆'}卡: ${drawResult.card.name}`);
+                this.log(`Drew ${cardType} card from existing room: ${drawResult.card.name}`);
+
+                // Handle haunt roll for omen cards
+                if (cardType === 'omen' && cardRequirement.requiresHauntCheck) {
+                  if (cardManager.shouldTriggerHauntRoll()) {
+                    const hauntRoll = cardManager.performHauntRoll();
+                    result.logs.push(`${this.state.playerName} 進行作祟檢定: 擲出 ${hauntRoll.roll} (閾值 ${hauntRoll.threshold}) - ${hauntRoll.triggered ? '作祟觸發！' : '作祟未觸發'}`);
+                    this.log(`Haunt roll from existing room: ${hauntRoll.roll} vs ${hauntRoll.threshold}, triggered: ${hauntRoll.triggered}`);
+
+                    result.hauntRoll = {
+                      triggered: hauntRoll.triggered,
+                      roll: hauntRoll.roll,
+                      threshold: hauntRoll.threshold,
+                      dice: hauntRoll.dice || [hauntRoll.roll],
+                    };
+                  }
+                }
+
+                // Add card to player
+                if (cardType === 'item') {
+                  currentPlayer.items.push(drawResult.card);
+                } else if (cardType === 'omen') {
+                  currentPlayer.omens.push(drawResult.card);
+                }
+              } else {
+                result.logs.push(`${this.state.playerName} 無法抽取 ${cardType} 卡: ${drawResult.message}`);
+                this.log(`Failed to draw ${cardType} card from existing room: ${drawResult.message}`);
+              }
+            }
+          }
+        }
       } else if (decision.action === 'useItem') {
         // 使用物品不消耗移動點數
       }
