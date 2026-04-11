@@ -238,7 +238,7 @@ export class CardDrawingManager {
    * @returns 是否需要檢定
    */
   shouldTriggerHauntRoll(): boolean {
-    return this.omenCount > 0 && !this.hauntTriggered;
+    return !this.hauntTriggered;
   }
 
   /**
@@ -248,8 +248,10 @@ export class CardDrawingManager {
    * @returns 是否觸發作祟
    */
   performHauntRoll(): { triggered: boolean; roll: number; dice: number[]; threshold: number } {
-    // 擲 omenCount 顆骰子（每顆 0, 0, 1, 1, 2, 2）
-    const diceCount = Math.max(1, this.omenCount);
+    // 閾值應該是新的預兆數量（包含剛抽的這張卡）
+    const threshold = this.omenCount;
+    // 擲 threshold 顆骰子（每顆 0, 0, 1, 1, 2, 2）
+    const diceCount = Math.max(1, threshold);
     const dice: number[] = [];
     const DICE_FACES = [0, 0, 1, 1, 2, 2];
     
@@ -259,7 +261,6 @@ export class CardDrawingManager {
     }
     
     const roll = dice.reduce((sum, val) => sum + val, 0);
-    const threshold = this.omenCount;
     const triggered = roll < threshold;
 
     console.log(`[CardDrawingManager] Haunt roll: ${dice.join('+')} = ${roll} vs threshold ${threshold}`);
