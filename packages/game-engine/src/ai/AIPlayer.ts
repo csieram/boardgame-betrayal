@@ -651,21 +651,19 @@ export class AIPlayer {
                 this.log(`Drew ${cardType} card: ${drawResult.card.name}`);
 
                 // Handle haunt roll for omen cards
-                if (cardType === 'omen' && discoveryResult.cardDrawRequired.requiresHauntCheck) {
-                  // Check if haunt roll should be triggered
-                  if (cardManager.shouldTriggerHauntRoll()) {
-                    const hauntRoll = cardManager.performHauntRoll();
-                    result.logs.push(`${this.state.playerName} 進行作祟檢定: 擲出 ${hauntRoll.roll} (閾值 ${hauntRoll.threshold}) - ${hauntRoll.triggered ? '作祟觸發！' : '作祟未觸發'}`);
-                    this.log(`Haunt roll: ${hauntRoll.roll} vs ${hauntRoll.threshold}, triggered: ${hauntRoll.triggered}`);
+                // Issue #333-fix: Use hauntRoll from drawResult instead of calling performHauntRoll again
+                if (cardType === 'omen' && drawResult.hauntRoll) {
+                  const hauntRoll = drawResult.hauntRoll;
+                  result.logs.push(`${this.state.playerName} 進行作祟檢定: 擲出 ${hauntRoll.roll} (閾值 ${hauntRoll.threshold}) - ${hauntRoll.triggered ? '作祟觸發！' : '作祟未觸發'}`);
+                  this.log(`Haunt roll: ${hauntRoll.roll} vs ${hauntRoll.threshold}, triggered: ${hauntRoll.triggered}`);
 
-                    // Issue #331: 儲存作祟檢定結果
-                    result.hauntRoll = {
-                      triggered: hauntRoll.triggered,
-                      roll: hauntRoll.roll,
-                      threshold: hauntRoll.threshold,
-                      dice: hauntRoll.dice || [hauntRoll.roll],
-                    };
-                  }
+                  // Issue #331: 儲存作祟檢定結果
+                  result.hauntRoll = {
+                    triggered: hauntRoll.triggered,
+                    roll: hauntRoll.roll,
+                    threshold: hauntRoll.threshold,
+                    dice: hauntRoll.dice || [hauntRoll.roll],
+                  };
                 }
 
                 // Issue #194: Handle event card stat check with AI event check logic
@@ -831,19 +829,18 @@ export class AIPlayer {
                 this.log(`Drew ${cardType} card from existing room: ${drawResult.card.name}`);
 
                 // Handle haunt roll for omen cards
-                if (cardType === 'omen' && cardRequirement.requiresHauntCheck) {
-                  if (cardManager.shouldTriggerHauntRoll()) {
-                    const hauntRoll = cardManager.performHauntRoll();
-                    result.logs.push(`${this.state.playerName} 進行作祟檢定: 擲出 ${hauntRoll.roll} (閾值 ${hauntRoll.threshold}) - ${hauntRoll.triggered ? '作祟觸發！' : '作祟未觸發'}`);
-                    this.log(`Haunt roll from existing room: ${hauntRoll.roll} vs ${hauntRoll.threshold}, triggered: ${hauntRoll.triggered}`);
+                // Issue #333-fix: Use hauntRoll from drawResult instead of calling performHauntRoll again
+                if (cardType === 'omen' && drawResult.hauntRoll) {
+                  const hauntRoll = drawResult.hauntRoll;
+                  result.logs.push(`${this.state.playerName} 進行作祟檢定: 擲出 ${hauntRoll.roll} (閾值 ${hauntRoll.threshold}) - ${hauntRoll.triggered ? '作祟觸發！' : '作祟未觸發'}`);
+                  this.log(`Haunt roll from existing room: ${hauntRoll.roll} vs ${hauntRoll.threshold}, triggered: ${hauntRoll.triggered}`);
 
-                    result.hauntRoll = {
-                      triggered: hauntRoll.triggered,
-                      roll: hauntRoll.roll,
-                      threshold: hauntRoll.threshold,
-                      dice: hauntRoll.dice || [hauntRoll.roll],
-                    };
-                  }
+                  result.hauntRoll = {
+                    triggered: hauntRoll.triggered,
+                    roll: hauntRoll.roll,
+                    threshold: hauntRoll.threshold,
+                    dice: hauntRoll.dice || [hauntRoll.roll],
+                  };
                 }
 
                 // Add card to player
