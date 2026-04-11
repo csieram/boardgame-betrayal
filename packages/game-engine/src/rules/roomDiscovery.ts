@@ -1252,6 +1252,10 @@ export const STAIR_ROOM_IDS = {
   MYSTIC_ELEVATOR: 'mystic_elevator',
   /** 坍塌房間：會掉到地下室 */
   COLLAPSED_ROOM: 'collapsed_room',
+  /** 煤槽：從一樓滑到地下室 */
+  COAL_CHUTE: 'coal_chute',
+  /** 螺旋樓梯：連接屋頂、二樓、一樓 */
+  SPIRAL_STAIRCASE: 'spiral_staircase',
 } as const;
 
 /**
@@ -1301,6 +1305,17 @@ export const STAIR_CONNECTIONS: Record<string, StairConnection[]> = {
   ],
   [STAIR_ROOM_IDS.COLLAPSED_ROOM]: [
     { from: 'upper', to: 'basement', description: '地板坍塌，你掉到了地下室', requiresCheck: true, checkStat: 'speed', checkTarget: 4 },
+  ],
+  [STAIR_ROOM_IDS.COAL_CHUTE]: [
+    { from: 'ground', to: 'basement', description: '滑到地下室' },
+  ],
+  [STAIR_ROOM_IDS.SPIRAL_STAIRCASE]: [
+    { from: 'roof', to: 'upper', description: '螺旋樓梯通往二樓' },
+    { from: 'roof', to: 'ground', description: '螺旋樓梯通往一樓' },
+    { from: 'upper', to: 'roof', description: '螺旋樓梯通往屋頂' },
+    { from: 'upper', to: 'ground', description: '螺旋樓梯通往一樓' },
+    { from: 'ground', to: 'roof', description: '螺旋樓梯通往屋頂' },
+    { from: 'ground', to: 'upper', description: '螺旋樓梯通往二樓' },
   ],
 };
 
@@ -1399,7 +1414,15 @@ export function getStairTargetPosition(
     case STAIR_ROOM_IDS.COLLAPSED_ROOM:
       // 坍塌房間：掉到地下室的隨機位置或特定位置
       return { x: currentPosition.x, y: currentPosition.y, floor: 'basement' };
-      
+
+    case STAIR_ROOM_IDS.COAL_CHUTE:
+      // 煤槽：從一樓滑到地下室，保持在相同 X,Y 位置
+      return { x: currentPosition.x, y: currentPosition.y, floor: 'basement' };
+
+    case STAIR_ROOM_IDS.SPIRAL_STAIRCASE:
+      // 螺旋樓梯：保持在相同 X,Y 位置，只改變樓層
+      return { ...currentPosition, floor: targetFloor };
+
     default:
       // 默認：保持在相同 X,Y 位置
       return { ...currentPosition, floor: targetFloor };
