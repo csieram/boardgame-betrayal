@@ -1305,6 +1305,7 @@ export const STAIR_CONNECTIONS: Record<string, StairConnection[]> = {
   ],
   [STAIR_ROOM_IDS.COLLAPSED_ROOM]: [
     { from: 'upper', to: 'basement', description: '地板坍塌，你掉到了地下室', requiresCheck: true, checkStat: 'speed', checkTarget: 4 },
+    { from: 'ground', to: 'basement', description: '地板坍塌，你掉到了地下室', requiresCheck: true, checkStat: 'speed', checkTarget: 4 },
   ],
   [STAIR_ROOM_IDS.COAL_CHUTE]: [
     { from: 'ground', to: 'basement', description: '滑到地下室' },
