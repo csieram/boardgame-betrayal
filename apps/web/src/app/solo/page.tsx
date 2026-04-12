@@ -34,6 +34,7 @@ import {
   SeededRng,
   StairManager,
   STAIR_ROOM_IDS,
+  getStairConnections,
   CardDrawingManager,
   CardEffectApplier,
   drawAndApplyCard,
@@ -2881,26 +2882,6 @@ export default function SoloGamePage() {
     });
   };
 
-  // 樓梯連接配置 - 定義每個樓梯房間對應的目標房間
-  const STAIR_CONNECTIONS: Record<string, { targetRoom: string; targetFloor: Floor }> = {
-    'grand_staircase': { targetRoom: 'stairs_from_upper', targetFloor: 'upper' },
-    'stairs_from_upper': { targetRoom: 'grand_staircase', targetFloor: 'ground' },
-    'stairs_from_ground': { targetRoom: 'stairs_from_basement', targetFloor: 'basement' },
-    'stairs_from_basement': { targetRoom: 'stairs_from_ground', targetFloor: 'ground' },
-  };
-
-  // 輔助函數：在指定地圖中查找房間位置
-  const findRoomPosition = (map: Tile[][], roomId: string): { x: number; y: number } | null => {
-    for (let y = 0; y < map.length; y++) {
-      for (let x = 0; x < map[y].length; x++) {
-        if (map[y][x].room?.id === roomId) {
-          return { x, y };
-        }
-      }
-    }
-    return null;
-  };
-
   // 處理使用樓梯
   const handleUseStairs = useCallback((targetFloor: Floor) => {
     if (!player) return;
@@ -2909,62 +2890,45 @@ export default function SoloGamePage() {
     const currentTile = multiFloorMap[currentFloor][position.y][position.x];
     const currentStairRoomId = currentTile.room?.id;
 
-    if (!currentStairRoomId || !STAIR_CONNECTIONS[currentStairRoomId]) {
-      console.log('[handleUseStairs] Not in a valid stair room:', currentStairRoomId);
+    if (!currentStairRoomId) {
+      console.log('[handleUseStairs] Not in a stair room');
       return;
     }
 
-    // 根據樓梯連接配置找到目標房間
-    const connection = STAIR_CONNECTIONS[currentStairRoomId];
-    const targetRoomId = connection.targetRoom;
+    // 使用 game-engine 的 getStairConnections 函數獲取連接
+    const connections = getStairConnections(currentStairRoomId, currentFloor);
+    const connection = connections.find((c: { to: Floor }) => c.to === targetFloor);
 
-    // 在目標樓層地圖中查找目標房間位置
-    const targetPosition = findRoomPosition(multiFloorMap[targetFloor], targetRoomId);
-
-    if (!targetPosition) {
-      console.log('[handleUseStairs] Target room not found:', targetRoomId);
+    if (!connection) {
+      console.log('[handleUseStairs] No connection to target floor:', targetFloor);
       return;
     }
 
-    console.log('[handleUseStairs] Using stairs from', currentStairRoomId, 'to', targetRoomId, 'at', targetPosition);
-
-    // 先確保目標樓層的樓梯房間已探索
-    const targetMap = multiFloorMap[targetFloor];
-    const targetTile = targetMap[targetPosition.y][targetPosition.x];
-    let updatedMultiFloorMap = multiFloorMap;
-
-    if (!targetTile.discovered && targetTile.room) {
-      // 標記目標樓梯房間為已探索
-      updatedMultiFloorMap = { ...multiFloorMap };
-      updatedMultiFloorMap[targetFloor] = [...targetMap];
-      updatedMultiFloorMap[targetFloor][targetPosition.y] = [...targetMap[targetPosition.y]];
-      updatedMultiFloorMap[targetFloor][targetPosition.y][targetPosition.x] = {
-        ...targetTile,
-        discovered: true,
-      };
-      setMultiFloorMap(updatedMultiFloorMap);
+    // Handle stat check for Collapsed Room
+    if (connection.requiresCheck) {
+      // Perform stat check (Speed 4+)
+      // If failed, fall to basement with damage
+      // For now, just proceed
+      console.log('[handleUseStairs] Stat check required for Collapsed Room');
     }
 
-    // 立即切換樓層（Issue #84: 確保 setCurrentFloor 被立即調用）
+    // Move player to target floor (same X,Y position)
+    const targetPosition = { x: position.x, y: position.y, floor: targetFloor };
+
+    // Update game state
     setCurrentFloor(targetFloor);
-
-    // 設置角色位置到目標樓梯房間（Issue #86: 正確的目標位置）
-    // Issue #330: Use targetFloor instead of targetPosition.floor
-    setPosition({ x: targetPosition.x, y: targetPosition.y, floor: targetFloor });
+    setPosition(targetPosition);
 
     // Issue #89: 重置移動點數和 discovered 狀態
     const resetMoves = player.stats.speed.values[player.stats.speed.currentIndex];
     setMoves(resetMoves);
     setDiscovered(false);
 
-    // 更新日誌
-    setLog(prev => [...prev, `使用樓梯從 ${FLOOR_NAMES[currentFloor]} 移動到 ${FLOOR_NAMES[targetFloor]}`]);
+    // Log the movement
+    setLog(prev => [...prev, `${player.name} ${connection.description}`]);
 
-    // 更新可達位置（Issue #85: 使用正確的地圖和位置）
-    // Issue #89: 使用重置後的移動點數來計算可達位置
-    // Issue #90: 直接傳入 false 避免 async state 問題
-    // Issue #330: Include floor in position
-    updateReachablePositions(updatedMultiFloorMap[targetFloor], { x: targetPosition.x, y: targetPosition.y, floor: targetFloor }, resetMoves, false);
+    // 更新可達位置
+    updateReachablePositions(multiFloorMap[targetFloor], targetPosition, resetMoves, false);
   }, [player, position, currentFloor, multiFloorMap]);
 
   // Issue #238: 處理創建秘密通道
