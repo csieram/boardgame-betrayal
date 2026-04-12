@@ -97,6 +97,8 @@ export {
   canUseStairs,
   getStairConnections,
   getStairTargetPosition,
+  // Drop Room Selection (Issue #336)
+  getAvailableDropRooms,
 } from './rules/roomDiscovery';
 export type {
   RoomDiscoveryResult,

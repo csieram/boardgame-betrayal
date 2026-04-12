@@ -1498,6 +1498,38 @@ export class StairManager {
   }
 }
 
+// ==================== 掉落房間選擇系統 (Issue #336) ====================
+
+/**
+ * 獲取可用的掉落房間列表
+ * Issue #336: Collapsed Room 和 Coal Chute 需要選擇地下室的已發現房間
+ * 
+ * @param gameState 當前遊戲狀態
+ * @param targetFloor 目標樓層（通常是地下室）
+ * @returns 可用的房間列表，包含房間資訊和位置
+ */
+export function getAvailableDropRooms(
+  gameState: GameState,
+  targetFloor: Floor
+): Array<{ room: Room; position: Position3D }> {
+  const targetMap = gameState.map[targetFloor];
+  const rooms: Array<{ room: Room; position: Position3D }> = [];
+  
+  for (let y = 0; y < targetMap.length; y++) {
+    for (let x = 0; x < targetMap[y].length; x++) {
+      const tile = targetMap[y][x];
+      if (tile.discovered && tile.room) {
+        rooms.push({ 
+          room: tile.room, 
+          position: { x, y, floor: targetFloor } 
+        });
+      }
+    }
+  }
+  
+  return rooms;
+}
+
 // ==================== 預設匯出 ====================
 
 export default RoomDiscoveryManager;

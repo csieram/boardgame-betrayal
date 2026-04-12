@@ -8,7 +8,7 @@ import { PlayerToken } from './PlayerToken';
 import { AIPawn, AIPawnGroup } from './AIPawn';
 import { TokenMarker } from './TokenMarker';
 import { CorpseMarker } from './CorpseMarker';
-import { STAIR_ROOM_IDS, StairManager, AIPlayerInfo, AIPersonality, MapToken, Corpse } from '@betrayal/game-engine';
+import { STAIR_ROOM_IDS, StairManager, AIPlayerInfo, AIPersonality, MapToken, Corpse, getAvailableDropRooms, Position3D } from '@betrayal/game-engine';
 
 /** 樓梯房間 ID 列表 */
 const STAIR_ROOM_LIST = [
@@ -45,6 +45,8 @@ interface GameBoardProps {
   onFloorChange?: (floor: Floor) => void;
   /** 使用樓梯的回調 */
   onUseStairs?: (targetFloor: Floor) => void;
+  /** Issue #336: 選擇掉落房間的回調 */
+  onDropRoomSelect?: (targetPosition: Position3D) => void;
   /** 可達的房間位置 */
   reachablePositions?: { x: number; y: number; floor: Floor; isExplored?: boolean }[];
   /** 是否顯示所有樓層 */
@@ -97,6 +99,7 @@ export function GameBoard({
   onRoomClick,
   onFloorChange,
   onUseStairs,
+  onDropRoomSelect,
   reachablePositions = [],
   showAllFloors = true,
   gameState,
@@ -112,6 +115,10 @@ export function GameBoard({
   const [showStairModal, setShowStairModal] = useState(false);
   const [stairOptions, setStairOptions] = useState<Array<{ to: Floor; description: string }>>([]);
   const [currentStairRoom, setCurrentStairRoom] = useState<Room | null>(null);
+  
+  // Issue #336: 掉落房間選擇相關狀態
+  const [showDropRoomModal, setShowDropRoomModal] = useState(false);
+  const [availableDropRooms, setAvailableDropRooms] = useState<Array<{ room: Room; position: Position3D }>>([]);
 
   // Issue #84: 同步 activeFloor 與 currentFloor prop
   // 當父組件改變 currentFloor 時，更新內部 activeFloor 狀態
@@ -295,10 +302,30 @@ export function GameBoard({
     }
   }, [gameState, currentFloor]);
 
-  // 處理樓梯使用
+  // Issue #336: 處理樓梯使用
   const handleUseStairs = (targetFloor: Floor) => {
+    // 檢查是否為 Collapsed Room 或 Coal Chute
+    if (currentStairRoom?.id === 'collapsed_room' || currentStairRoom?.id === 'coal_chute') {
+      // 獲取目標樓層的可用房間
+      if (gameState) {
+        const rooms = getAvailableDropRooms(gameState as any, targetFloor);
+        if (rooms.length > 0) {
+          setAvailableDropRooms(rooms);
+          setShowDropRoomModal(true);
+          return;
+        }
+      }
+    }
+    
     setShowStairModal(false);
     onUseStairs?.(targetFloor);
+  };
+  
+  // Issue #336: 處理掉落房間選擇
+  const handleDropRoomSelect = (targetPosition: Position3D) => {
+    setShowDropRoomModal(false);
+    setShowStairModal(false);
+    onDropRoomSelect?.(targetPosition);
   };
 
   // 處理房間點擊 - 直接移動到相鄰房間
@@ -598,6 +625,83 @@ export function GameBoard({
               {/* 取消按鈕 */}
               <button
                 onClick={() => setShowStairModal(false)}
+                className="w-full py-2 px-4 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-xl font-medium transition-all"
+              >
+                取消
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Issue #336: 掉落房間選擇彈窗 */}
+      <AnimatePresence>
+        {showDropRoomModal && availableDropRooms.length > 0 && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowDropRoomModal(false)}
+          >
+            <motion.div
+              className="bg-gray-800 rounded-2xl p-6 max-w-md w-full mx-4 border border-red-600/50 shadow-2xl"
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* 標題 */}
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-red-600/20 flex items-center justify-center text-3xl">
+                  💥
+                </div>
+                <h3 className="text-xl font-bold text-white mb-1">
+                  {currentStairRoom?.name}
+                </h3>
+                <p className="text-gray-400 text-sm">
+                  選擇要掉落到哪個房間
+                </p>
+              </div>
+
+              {/* 可用房間列表 */}
+              <div className="space-y-2 mb-6 max-h-64 overflow-y-auto">
+                <p className="text-sm text-gray-400 text-center mb-3">
+                  選擇地下室的一個房間：
+                </p>
+                {availableDropRooms.map((roomData, index) => (
+                  <button
+                    key={`${roomData.position.x}-${roomData.position.y}-${index}`}
+                    onClick={() => handleDropRoomSelect(roomData.position)}
+                    className="w-full py-3 px-4 bg-gray-700 hover:bg-gray-600 active:bg-gray-500 text-white rounded-xl font-medium transition-all flex items-center gap-3"
+                  >
+                    {roomData.room.gallerySvg ? (
+                      <img
+                        src={`/betrayal${roomData.room.gallerySvg}`}
+                        alt={roomData.room.name}
+                        className="w-10 h-10 rounded-lg object-cover bg-gray-600"
+                      />
+                    ) : (
+                      <div 
+                        className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold"
+                        style={{ backgroundColor: roomData.room.color }}
+                      >
+                        {roomData.room.name[0]}
+                      </div>
+                    )}
+                    <div className="flex-1 text-left">
+                      <span className="block">{roomData.room.name}</span>
+                      <span className="text-xs text-gray-400">
+                        位置: ({roomData.position.x}, {roomData.position.y})
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* 取消按鈕 */}
+              <button
+                onClick={() => setShowDropRoomModal(false)}
                 className="w-full py-2 px-4 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-xl font-medium transition-all"
               >
                 取消

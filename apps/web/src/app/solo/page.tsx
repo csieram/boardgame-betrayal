@@ -40,6 +40,7 @@ import {
   drawAndApplyCard,
   CardDrawResult,
   PlayerState,
+  Position3D,
   makeHauntRoll,
   revealHaunt,
   HauntRollResult,
@@ -2882,6 +2883,26 @@ export default function SoloGamePage() {
     });
   };
 
+  // Issue #336: 處理掉落房間選擇
+  const handleDropRoomSelect = useCallback((targetPosition: Position3D) => {
+    if (!player) return;
+    
+    // 更新玩家位置到選擇的房間
+    setPosition(targetPosition);
+    setCurrentFloor(targetPosition.floor);
+    
+    // Issue #89: 重置移動點數和 discovered 狀態
+    const resetMoves = player.stats.speed.values[player.stats.speed.currentIndex];
+    setMoves(resetMoves);
+    setDiscovered(false);
+    
+    // 記錄日誌
+    setLog(prev => [...prev, `${player.name} 掉到了 ${targetPosition.floor === 'basement' ? '地下室' : targetPosition.floor}`]);
+    
+    // 更新可達位置
+    updateReachablePositions(multiFloorMap[targetPosition.floor], targetPosition, resetMoves, false);
+  }, [player, multiFloorMap]);
+
   // 處理使用樓梯
   const handleUseStairs = useCallback((targetFloor: Floor) => {
     if (!player) return;
@@ -2901,6 +2922,13 @@ export default function SoloGamePage() {
 
     if (!connection) {
       console.log('[handleUseStairs] No connection to target floor:', targetFloor);
+      return;
+    }
+
+    // Issue #336: Collapsed Room 和 Coal Chute 的處理已移至 GameBoard
+    // 這裡只處理普通樓梯
+    if (currentStairRoomId === 'collapsed_room' || currentStairRoomId === 'coal_chute') {
+      // 這些房間的處理在 GameBoard 中通過 onDropRoomSelect 回調處理
       return;
     }
 
@@ -4000,6 +4028,7 @@ export default function SoloGamePage() {
                   onRoomClick={handleRoomClick}
                   onFloorChange={setCurrentFloor}
                   onUseStairs={handleUseStairs}
+                  onDropRoomSelect={handleDropRoomSelect}
                   reachablePositions={reachablePositionsOnCurrentFloor}
                   showAllFloors={false}
                   gameState={{
