@@ -397,3 +397,6 @@ export type {
   AIActionLog,
   GameSetupOptions,
 } from './ai';
+
+// Issue #336: Export Position3D type
+export type { Position3D } from './types';
