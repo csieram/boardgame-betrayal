@@ -18,6 +18,8 @@ const STAIR_ROOM_LIST = [
   'stairs_from_upper',
   'mystic_elevator',
   'collapsed_room',
+  'coal_chute',
+  'spiral_staircase',
 ];
 
 /** 樓層名稱對照（繁體中文） */
